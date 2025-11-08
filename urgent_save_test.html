@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>URGENT: Save Changes Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f0f0; }
+        .urgent { background: #ff4444; color: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .test-form { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; }
+        .result { background: #e8f5e8; padding: 15px; border-radius: 8px; margin: 10px 0; }
+        .error { background: #ffe8e8; color: #cc0000; }
+        .success { background: #e8f5e8; color: #006600; }
+        button { padding: 12px 24px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        input, select { padding: 8px; margin: 5px; width: 200px; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="urgent">
+        <h1>🚨 URGENT: Save Changes Debug Test</h1>
+        <p><strong>This will test EXACTLY what happens when you click Save Changes!</strong></p>
+    </div>
+
+    <div class="test-form">
+        <h3>Step 1: Test Backend Connection</h3>
+        <button onclick="testConnection()">TEST CONNECTION NOW</button>
+        <div id="connection-result"></div>
+    </div>
+
+    <div class="test-form">
+        <h3>Step 2: Simulate Save Changes</h3>
+        <p>This will simulate exactly what happens when you click Save Changes:</p>
+        
+        <label>Student Name:</label><br>
+        <input type="text" id="test-name" value="Test Student" /><br>
+        
+        <label>Course:</label><br>
+        <select id="test-course">
+            <option value="Bachelor of Science in Computer Engineering">Computer Engineering</option>
+            <option value="Bachelor of Science in Civil Engineering">Civil Engineering</option>
+        </select><br>
+        
+        <label>Year:</label><br>
+        <input type="number" id="test-year" value="2023" /><br>
+        
+        <label>Exam Date:</label><br>
+        <input type="date" id="test-date" value="2023-10-15" /><br>
+        
+        <button onclick="testSaveChanges()" style="background: #ff4444; font-size: 16px; font-weight: bold;">🚨 TEST SAVE CHANGES</button>
+        <div id="save-result"></div>
+    </div>
+
+    <div class="test-form">
+        <h3>Step 3: Raw Response</h3>
+        <div id="raw-response"></div>
+    </div>
+
+    <script>
+        function log(message, type = 'info') {
+            console.log(message);
+            const div = document.createElement('div');
+            div.className = `result ${type}`;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            return div;
+        }
+
+        function testConnection() {
+            const resultDiv = document.getElementById('connection-result');
+            resultDiv.innerHTML = '<div class="result">🔄 Testing connection...</div>';
+            
+            fetch('test_update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'test=connection'
+            })
+            .then(response => {
+                console.log('Connection test response:', response);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Connection test raw response:', text);
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="result success">✅ CONNECTION SUCCESSFUL!</div>
+                            <div>Records: ${data.engineering_records}</div>
+                            <div>User: ${data.session_user}</div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `<div class="result error">❌ CONNECTION FAILED: ${data.message}</div>`;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = `<div class="result error">❌ INVALID RESPONSE: ${text}</div>`;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `<div class="result error">❌ ERROR: ${error.message}</div>`;
+            });
+        }
+
+        function testSaveChanges() {
+            const resultDiv = document.getElementById('save-result');
+            const rawDiv = document.getElementById('raw-response');
+            
+            resultDiv.innerHTML = '<div class="result">🚨 TESTING SAVE CHANGES...</div>';
+            
+            // Create form data exactly like the dashboard does
+            const formData = new FormData();
+            formData.append('name', document.getElementById('test-name').value);
+            formData.append('course', document.getElementById('test-course').value);
+            formData.append('year_graduated', document.getElementById('test-year').value);
+            formData.append('board_exam_date', document.getElementById('test-date').value);
+            formData.append('result', 'Passed');
+            formData.append('exam_type', 'First Timer');
+            formData.append('board_exam_type', 'Computer Engineer');
+            
+            // Original data (required for update)
+            formData.append('original_name', 'Original Student Name');
+            formData.append('original_course', document.getElementById('test-course').value);
+            formData.append('original_year', document.getElementById('test-year').value);
+            formData.append('original_date', document.getElementById('test-date').value);
+            
+            console.log('Sending form data:');
+            for (let [key, value] of formData.entries()) {
+                console.log(key + ': ' + value);
+            }
+            
+            fetch('update_board_passer.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                console.log('Update response status:', response.status);
+                console.log('Update response ok:', response.ok);
+                return response.text();
+            })
+            .then(text => {
+                console.log('Update raw response:', text);
+                rawDiv.innerHTML = `<h4>Raw Server Response:</h4><pre>${text}</pre>`;
+                
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        resultDiv.innerHTML = `
+                            <div class="result success">🎉 SAVE CHANGES SUCCESSFUL!</div>
+                            <div>✅ ${data.message}</div>
+                            <div>Updated: ${data.updated_name}</div>
+                            <div>Affected rows: ${data.affected_rows || 'Unknown'}</div>
+                        `;
+                    } else {
+                        resultDiv.innerHTML = `
+                            <div class="result error">❌ SAVE CHANGES FAILED!</div>
+                            <div>Error: ${data.message}</div>
+                        `;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = `
+                        <div class="result error">❌ INVALID JSON RESPONSE!</div>
+                        <div>Server returned: ${text}</div>
+                        <div>Parse error: ${e.message}</div>
+                    `;
+                }
+            })
+            .catch(error => {
+                resultDiv.innerHTML = `
+                    <div class="result error">❌ NETWORK ERROR!</div>
+                    <div>${error.message}</div>
+                `;
+                console.error('Save changes error:', error);
+            });
+        }
+
+        // Auto-test connection when page loads
+        window.onload = function() {
+            testConnection();
+        };
+    </script>
+</body>
+</html>

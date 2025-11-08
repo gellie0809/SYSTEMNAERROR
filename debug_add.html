@@ -1,0 +1,82 @@
+<?php
+session_start();
+$_SESSION["users"] = 'eng_admin@lspu.edu.ph'; // Set session for testing
+?>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Add Board Passer</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/js/all.min.js"></script>
+</head>
+<body>
+    <h2>Debug Add Board Passer Form</h2>
+    <p>Session user: <?php echo $_SESSION["users"] ?? 'Not set'; ?></p>
+    
+    <form id="testForm">
+        <input type="text" name="first_name" value="Test" required><br>
+        <input type="text" name="last_name" value="Student" required><br>
+        <input type="text" name="middle_name" value="M"><br>
+        <input type="text" name="suffix" value=""><br>
+        <select name="sex" required>
+            <option value="Male" selected>Male</option>
+        </select><br>
+        <select name="course" required>
+            <option value="Bachelor of Science in Electrical Engineering" selected>Bachelor of Science in Electrical Engineering</option>
+        </select><br>
+        <input type="number" name="year_graduated" value="2023" required><br>
+        <input type="date" name="board_exam_date" value="2023-06-15" required><br>
+        <select name="result" required>
+            <option value="Passed" selected>Passed</option>
+        </select><br>
+        <select name="exam_type" required>
+            <option value="First Timer" selected>First Timer</option>
+        </select><br>
+        <select name="board_exam_type" required>
+            <option value="Registered Electrical Engineer Licensure Exam (REELE)" selected>Registered Electrical Engineer Licensure Exam (REELE)</option>
+        </select><br>
+        
+        <button type="submit">Test Add</button>
+    </form>
+    
+    <div id="result"></div>
+    
+    <script>
+    document.getElementById('testForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const resultDiv = document.getElementById('result');
+        
+        resultDiv.innerHTML = 'Submitting...';
+        
+        fetch('add_board_passer_engineering.php', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            console.log('Response headers:', response.headers);
+            return response.text(); // Get text first to see raw response
+        })
+        .then(text => {
+            console.log('Raw response:', text);
+            resultDiv.innerHTML = '<h3>Raw Response:</h3><pre>' + text + '</pre>';
+            
+            try {
+                const data = JSON.parse(text);
+                resultDiv.innerHTML += '<h3>Parsed JSON:</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (e) {
+                resultDiv.innerHTML += '<h3>JSON Parse Error:</h3><p>' + e.message + '</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            resultDiv.innerHTML = '<h3>Error:</h3><p>' + error.message + '</p>';
+        });
+    });
+    </script>
+</body>
+</html>

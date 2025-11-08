@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>JavaScript Syntax Checker</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .error { 
+            background: #ffebee; 
+            border: 1px solid #f44336; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .success { 
+            background: #e8f5e8; 
+            border: 1px solid #4caf50; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+        .warning { 
+            background: #fff3e0; 
+            border: 1px solid #ff9800; 
+            padding: 10px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 JavaScript Syntax Checker for Dashboard</h1>
+    <div id="results"></div>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(type, message) {
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        // Test JavaScript extraction and parsing
+        try {
+            // Fetch the dashboard file
+            fetch('dashboard_engineering.php')
+                .then(response => response.text())
+                .then(data => {
+                    console.log('✅ Dashboard file loaded successfully');
+                    
+                    // Extract JavaScript from PHP file
+                    const scriptMatches = data.match(/<script>([\s\S]*?)<\/script>/g);
+                    
+                    if (!scriptMatches) {
+                        addResult('error', '❌ No JavaScript found in file');
+                        return;
+                    }
+                    
+                    console.log('📄 Found', scriptMatches.length, 'script blocks');
+                    
+                    // Extract JavaScript content
+                    let jsContent = '';
+                    scriptMatches.forEach(script => {
+                        jsContent += script.replace(/<\/?script[^>]*>/g, '') + '\n';
+                    });
+                    
+                    console.log('📝 Extracted JavaScript length:', jsContent.length, 'characters');
+                    
+                    // Check for common syntax issues
+                    const issues = [];
+                    
+                    // 1. Check for unclosed braces
+                    const openBraces = (jsContent.match(/\{/g) || []).length;
+                    const closeBraces = (jsContent.match(/\}/g) || []).length;
+                    
+                    if (openBraces !== closeBraces) {
+                        issues.push(`❌ Brace mismatch: ${openBraces} opening braces, ${closeBraces} closing braces`);
+                    } else {
+                        addResult('success', `✅ Braces balanced: ${openBraces} pairs`);
+                    }
+                    
+                    // 2. Check for unclosed parentheses
+                    const openParens = (jsContent.match(/\(/g) || []).length;
+                    const closeParens = (jsContent.match(/\)/g) || []).length;
+                    
+                    if (openParens !== closeParens) {
+                        issues.push(`❌ Parenthesis mismatch: ${openParens} opening, ${closeParens} closing`);
+                    } else {
+                        addResult('success', `✅ Parentheses balanced: ${openParens} pairs`);
+                    }
+                    
+                    // 3. Check for duplicate function definitions
+                    const functionNames = [];
+                    const functionMatches = jsContent.match(/function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)\s*\(/g);
+                    
+                    if (functionMatches) {
+                        functionMatches.forEach(match => {
+                            const name = match.match(/function\s+([a-zA-Z_$][a-zA-Z0-9_$]*)/)[1];
+                            if (functionNames.includes(name)) {
+                                issues.push(`❌ Duplicate function: ${name}`);
+                            } else {
+                                functionNames.push(name);
+                            }
+                        });
+                        
+                        addResult('success', `✅ Found ${functionNames.length} unique functions`);
+                    }
+                    
+                    // 4. Check for incomplete if/else statements
+                    const ifElsePattern = /if\s*\([^)]*\)\s*\{[^}]*\}\s*else\s*\{[^}]*$/gm;
+                    const incompleteIfElse = jsContent.match(ifElsePattern);
+                    
+                    if (incompleteIfElse) {
+                        issues.push(`❌ Found ${incompleteIfElse.length} incomplete if/else statements`);
+                    }
+                    
+                    // 5. Check for orphaned else statements
+                    const orphanedElse = jsContent.match(/^\s*else\s*\{/gm);
+                    if (orphanedElse) {
+                        issues.push(`❌ Found ${orphanedElse.length} orphaned 'else' statements`);
+                    }
+                    
+                    // 6. Check for missing semicolons after function calls
+                    const missingSemicolons = jsContent.match(/\w+\([^)]*\)\s*\n(?!\s*[;}.])/g);
+                    if (missingSemicolons && missingSemicolons.length > 5) {
+                        addResult('warning', `⚠️ Potentially ${missingSemicolons.length} missing semicolons`);
+                    }
+                    
+                    // Display all issues
+                    if (issues.length === 0) {
+                        addResult('success', '🎉 No major syntax issues detected!');
+                    } else {
+                        issues.forEach(issue => {
+                            addResult('error', issue);
+                        });
+                    }
+                    
+                    // Try to execute a basic test
+                    try {
+                        // Test if we can create a function from the content
+                        const testFunction = new Function('document', 'window', 'console', jsContent);
+                        addResult('success', '✅ JavaScript syntax appears valid for execution');
+                    } catch (e) {
+                        addResult('error', `❌ JavaScript execution test failed: ${e.message}`);
+                    }
+                    
+                })
+                .catch(error => {
+                    addResult('error', `❌ Failed to load dashboard file: ${error.message}`);
+                });
+                
+        } catch (error) {
+            addResult('error', `❌ Critical error: ${error.message}`);
+        }
+    </script>
+</body>
+</html>

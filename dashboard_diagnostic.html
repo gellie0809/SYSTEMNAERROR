@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard Diagnostic</title>
+    <style>
+        body { 
+            font-family: Arial; 
+            padding: 20px; 
+            background: #f5f5f5; 
+        }
+        .test { 
+            background: white; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border-left: 4px solid #2196F3;
+        }
+        .success { border-left-color: #4CAF50; }
+        .error { border-left-color: #f44336; }
+        .warning { border-left-color: #FF9800; }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover { background: #1976D2; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Dashboard Diagnostic Tool</h1>
+    
+    <div class="test">
+        <h3>Quick Tests</h3>
+        <button onclick="testBasicFunctions()">Test Basic Functions</button>
+        <button onclick="testModalElements()">Test Modal Elements</button>
+        <button onclick="testEventListeners()">Test Event Listeners</button>
+        <button onclick="openDashboard()">Open Dashboard</button>
+    </div>
+    
+    <div id="results"></div>
+
+    <script>
+        function addResult(type, title, message) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `test ${type}`;
+            div.innerHTML = `<h3>${title}</h3><p>${message}</p>`;
+            results.appendChild(div);
+        }
+
+        function testBasicFunctions() {
+            addResult('info', 'Testing Basic Functions', 'Starting basic function tests...');
+            
+            // Test 1: Check if we can load the dashboard
+            fetch('dashboard_engineering.php')
+                .then(response => {
+                    if (response.ok) {
+                        addResult('success', '✅ Dashboard File', 'Dashboard PHP file is accessible');
+                        return response.text();
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                })
+                .then(html => {
+                    // Test 2: Check for script tags
+                    const scriptMatches = html.match(/<script[^>]*>([\s\S]*?)<\/script>/gi);
+                    if (scriptMatches) {
+                        addResult('success', '✅ JavaScript Found', `Found ${scriptMatches.length} script blocks`);
+                        
+                        // Test 3: Check for key functions
+                        const jsContent = scriptMatches.join('\\n');
+                        const functions = [
+                            'editRow', 'deleteRow', 'showEditModal', 'closeEditModal',
+                            'showAddStudentModal', 'closeAddModal', 'handleFormSubmission',
+                            'confirmLogout', 'initializeFilters', 'applyFilters'
+                        ];
+                        
+                        let foundFunctions = 0;
+                        functions.forEach(func => {
+                            if (jsContent.includes(`function ${func}`)) {
+                                foundFunctions++;
+                            }
+                        });
+                        
+                        if (foundFunctions === functions.length) {
+                            addResult('success', '✅ Functions Complete', `All ${foundFunctions} core functions found`);
+                        } else {
+                            addResult('warning', '⚠️ Functions Incomplete', `Found ${foundFunctions}/${functions.length} functions`);
+                        }
+                        
+                        // Test 4: Check for syntax issues
+                        const openBraces = (jsContent.match(/\\{/g) || []).length;
+                        const closeBraces = (jsContent.match(/\\}/g) || []).length;
+                        
+                        if (openBraces === closeBraces) {
+                            addResult('success', '✅ Syntax Check', `Braces balanced: ${openBraces} pairs`);
+                        } else {
+                            addResult('error', '❌ Syntax Error', `Brace mismatch: ${openBraces} open, ${closeBraces} close`);
+                        }
+                        
+                    } else {
+                        addResult('error', '❌ No JavaScript', 'No script tags found in dashboard');
+                    }
+                })
+                .catch(error => {
+                    addResult('error', '❌ Dashboard Access Failed', error.message);
+                });
+        }
+
+        function testModalElements() {
+            addResult('info', 'Testing Modal Elements', 'Opening dashboard to test modal elements...');
+            
+            const testWindow = window.open('dashboard_engineering.php', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    const modals = [
+                        'editStudentModal',
+                        'addStudentModal', 
+                        'deleteModal',
+                        'logoutModal',
+                        'updateModal'
+                    ];
+                    
+                    let foundModals = 0;
+                    modals.forEach(modalId => {
+                        const modal = testWindow.document.getElementById(modalId);
+                        if (modal) {
+                            foundModals++;
+                        }
+                    });
+                    
+                    if (foundModals === modals.length) {
+                        addResult('success', '✅ All Modals Found', `All ${foundModals} modals exist in DOM`);
+                    } else {
+                        addResult('warning', '⚠️ Missing Modals', `Found ${foundModals}/${modals.length} modals`);
+                    }
+                    
+                    // Test form elements
+                    const forms = testWindow.document.querySelectorAll('form');
+                    addResult('info', '📋 Forms Found', `Found ${forms.length} forms in dashboard`);
+                    
+                    testWindow.close();
+                    
+                } catch (error) {
+                    addResult('error', '❌ Modal Test Failed', error.message);
+                    if (testWindow) testWindow.close();
+                }
+            }, 2000);
+        }
+
+        function testEventListeners() {
+            addResult('info', 'Testing Event Listeners', 'Testing event listener setup...');
+            
+            const testWindow = window.open('dashboard_engineering.php', '_blank');
+            
+            setTimeout(() => {
+                try {
+                    // Test if DOMContentLoaded has fired
+                    if (testWindow.document.readyState === 'complete') {
+                        addResult('success', '✅ DOM Ready', 'Document loaded completely');
+                        
+                        // Check if initialization functions exist
+                        if (typeof testWindow.initializeFilters === 'function') {
+                            addResult('success', '✅ Filter Initialization', 'initializeFilters function available');
+                        } else {
+                            addResult('error', '❌ Missing Initialization', 'initializeFilters function not found');
+                        }
+                        
+                        // Check for button click handlers
+                        const buttons = testWindow.document.querySelectorAll('button');
+                        addResult('info', '🔘 Buttons Found', `Found ${buttons.length} buttons in dashboard`);
+                        
+                    } else {
+                        addResult('warning', '⚠️ DOM Not Ready', 'Document still loading');
+                    }
+                    
+                    testWindow.close();
+                    
+                } catch (error) {
+                    addResult('error', '❌ Event Test Failed', error.message);
+                    if (testWindow) testWindow.close();
+                }
+            }, 3000);
+        }
+
+        function openDashboard() {
+            addResult('info', 'Opening Dashboard', 'Opening dashboard in new window for manual testing...');
+            window.open('dashboard_engineering.php', '_blank');
+        }
+
+        // Auto-run basic tests on load
+        window.onload = function() {
+            setTimeout(testBasicFunctions, 1000);
+        };
+    </script>
+</body>
+</html>

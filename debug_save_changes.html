@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Save Changes Issue</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { background: #f5f5f5; padding: 15px; margin: 10px 0; border-radius: 8px; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; font-weight: bold; }
+        .info { color: blue; }
+        button { padding: 10px 20px; margin: 5px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer; }
+        button:hover { background: #005a8b; }
+        #results { background: white; padding: 15px; border: 1px solid #ddd; border-radius: 4px; margin-top: 10px; }
+        pre { background: #f8f8f8; padding: 10px; border-radius: 4px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Save Changes Debug Tool</h1>
+    <p>This tool will help us identify exactly why the Save Changes button isn't working.</p>
+
+    <div class="test-section">
+        <h3>Step 1: Test Backend Connectivity</h3>
+        <button onclick="testBackend()">Test Backend Connection</button>
+        <div id="backend-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 2: Test Session & Authentication</h3>
+        <button onclick="testSession()">Check Session Status</button>
+        <div id="session-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 3: Test Database Connection</h3>
+        <button onclick="testDatabase()">Test Database</button>
+        <div id="database-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 4: Test Update Functionality</h3>
+        <button onclick="testUpdate()">Test Update Script</button>
+        <div id="update-result"></div>
+    </div>
+
+    <div class="test-section">
+        <h3>Step 5: Check Dashboard Form</h3>
+        <button onclick="checkDashboardForm()">Check Dashboard Form Elements</button>
+        <div id="form-result"></div>
+    </div>
+
+    <div id="results"></div>
+
+    <script>
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            results.appendChild(div);
+            console.log(message);
+        }
+
+        function testBackend() {
+            const resultDiv = document.getElementById('backend-result');
+            resultDiv.innerHTML = '<div class="info">Testing backend connectivity...</div>';
+            
+            fetch('test_update.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'test=backend'
+            })
+            .then(response => {
+                log(`Backend Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                return response.json();
+            })
+            .then(data => {
+                log(`Backend Response: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Backend is accessible!</div>
+                        <div>Records found: ${data.engineering_records}</div>
+                        <div>Session user: ${data.session_user}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Backend Error: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                log(`Backend Error: ${error}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Connection Error: ${error.message}</div>`;
+            });
+        }
+
+        function testSession() {
+            const resultDiv = document.getElementById('session-result');
+            resultDiv.innerHTML = '<div class="info">Checking session...</div>';
+            
+            fetch('test_session.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=check_session'
+            })
+            .then(response => response.json())
+            .then(data => {
+                log(`Session Check: ${JSON.stringify(data, null, 2)}`);
+                if (data.valid_session) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Session is valid!</div>
+                        <div>User: ${data.user}</div>
+                        <div>User type: ${data.user_type}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Session Issue: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                log(`Session Error: ${error}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Session Error: ${error.message}</div>`;
+            });
+        }
+
+        function testDatabase() {
+            const resultDiv = document.getElementById('database-result');
+            resultDiv.innerHTML = '<div class="info">Testing database...</div>';
+            
+            fetch('test_database.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: 'action=test_db'
+            })
+            .then(response => response.json())
+            .then(data => {
+                log(`Database Test: ${JSON.stringify(data, null, 2)}`);
+                if (data.success) {
+                    resultDiv.innerHTML = `
+                        <div class="success">✅ Database is working!</div>
+                        <div>Total records: ${data.total_records}</div>
+                        <div>Engineering records: ${data.engineering_records}</div>
+                        <div>Sample record: ${JSON.stringify(data.sample_record)}</div>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `<div class="error">❌ Database Error: ${data.message}</div>`;
+                }
+            })
+            .catch(error => {
+                log(`Database Error: ${error}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Database Error: ${error.message}</div>`;
+            });
+        }
+
+        function testUpdate() {
+            const resultDiv = document.getElementById('update-result');
+            resultDiv.innerHTML = '<div class="info">Testing update functionality...</div>';
+            
+            // Test with sample data
+            const formData = new FormData();
+            formData.append('name', 'Test Student Update');
+            formData.append('course', 'Bachelor of Science in Computer Engineering');
+            formData.append('year_graduated', '2023');
+            formData.append('board_exam_date', '2023-10-15');
+            formData.append('result', 'Passed');
+            formData.append('exam_type', 'First Timer');
+            formData.append('board_exam_type', 'Computer Engineer');
+            formData.append('original_name', 'Test Student Original');
+            formData.append('original_course', 'Bachelor of Science in Computer Engineering');
+            formData.append('original_year', '2023');
+            formData.append('original_date', '2023-10-15');
+            
+            fetch('update_board_passer.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                log(`Update Response Status: ${response.status}`, response.ok ? 'success' : 'error');
+                return response.text();
+            })
+            .then(text => {
+                log(`Update Raw Response: ${text}`);
+                try {
+                    const data = JSON.parse(text);
+                    if (data.success) {
+                        resultDiv.innerHTML = `<div class="success">✅ Update script is working!</div>`;
+                    } else {
+                        resultDiv.innerHTML = `<div class="error">❌ Update failed: ${data.message}</div>`;
+                    }
+                } catch (e) {
+                    resultDiv.innerHTML = `<div class="error">❌ Invalid response: ${text}</div>`;
+                }
+            })
+            .catch(error => {
+                log(`Update Error: ${error}`, 'error');
+                resultDiv.innerHTML = `<div class="error">❌ Update Error: ${error.message}</div>`;
+            });
+        }
+
+        function checkDashboardForm() {
+            const resultDiv = document.getElementById('form-result');
+            resultDiv.innerHTML = '<div class="info">Checking dashboard form...</div>';
+            
+            // Open dashboard in iframe to check form elements
+            const iframe = document.createElement('iframe');
+            iframe.src = 'dashboard_engineering.php';
+            iframe.style.display = 'none';
+            document.body.appendChild(iframe);
+            
+            iframe.onload = function() {
+                try {
+                    const doc = iframe.contentDocument;
+                    const form = doc.getElementById('editStudentForm');
+                    const saveButton = doc.querySelector('#editStudentForm button[type="submit"]');
+                    const cancelButton = doc.querySelector('#editStudentForm button[type="button"]');
+                    
+                    let formInfo = '<div class="success">✅ Dashboard loaded successfully!</div>';
+                    formInfo += `<div>Edit form found: ${form ? 'Yes' : 'No'}</div>`;
+                    formInfo += `<div>Save button found: ${saveButton ? 'Yes' : 'No'}</div>`;
+                    formInfo += `<div>Cancel button found: ${cancelButton ? 'Yes' : 'No'}</div>`;
+                    
+                    if (saveButton) {
+                        formInfo += `<div>Save button text: "${saveButton.textContent.trim()}"</div>`;
+                        formInfo += `<div>Save button disabled: ${saveButton.disabled}</div>`;
+                    }
+                    
+                    resultDiv.innerHTML = formInfo;
+                    document.body.removeChild(iframe);
+                } catch (error) {
+                    resultDiv.innerHTML = `<div class="error">❌ Cannot access dashboard: ${error.message}</div>`;
+                    document.body.removeChild(iframe);
+                }
+            };
+        }
+
+        // Auto-run first test
+        window.onload = function() {
+            log('🔧 Debug tool loaded. Starting automatic tests...', 'info');
+            testBackend();
+        };
+    </script>
+</body>
+</html>

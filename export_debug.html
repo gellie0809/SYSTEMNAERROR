@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Export Debug Helper</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .test-button {
+            background: #3182ce;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #2563eb;
+        }
+        .console-output {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            min-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .status {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status.success { background: #d1fae5; color: #065f46; }
+        .status.error { background: #fee2e2; color: #991b1b; }
+        .status.info { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>Engineering Dashboard Export Debug Helper</h1>
+    
+    <div class="debug-container">
+        <h3>Export Functionality Test</h3>
+        <p>Use these buttons to test if the export feature is working correctly:</p>
+        
+        <button class="test-button" onclick="openDashboard()">1. Open Dashboard</button>
+        <button class="test-button" onclick="checkExportElements()">2. Check Export Elements</button>
+        <button class="test-button" onclick="testExportFunction()">3. Test Export Function</button>
+        <button class="test-button" onclick="testExportButton()">4. Test Export Button</button>
+        <button class="test-button" onclick="clearOutput()">Clear Output</button>
+        
+        <div id="status"></div>
+        <div id="console-output" class="console-output">Console output will appear here...</div>
+    </div>
+
+    <div class="debug-container">
+        <h3>Instructions</h3>
+        <ol>
+            <li><strong>Open Dashboard:</strong> Opens the engineering dashboard in a new tab</li>
+            <li><strong>Check Export Elements:</strong> Verifies if export elements exist in the dashboard</li>
+            <li><strong>Test Export Function:</strong> Directly calls the export function</li>
+            <li><strong>Test Export Button:</strong> Simulates clicking the export button</li>
+        </ol>
+        <p><strong>Note:</strong> Open your browser's developer console (F12) to see additional debugging information.</p>
+    </div>
+
+    <script>
+        let dashboardWindow = null;
+        
+        function log(message, type = 'info') {
+            const output = document.getElementById('console-output');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = `[${timestamp}] ${message}\n`;
+            output.textContent += logEntry;
+            output.scrollTop = output.scrollHeight;
+            console.log(message);
+            
+            // Update status
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+        
+        function clearOutput() {
+            document.getElementById('console-output').textContent = 'Console output cleared...\n';
+            document.getElementById('status').textContent = '';
+        }
+        
+        function openDashboard() {
+            log('Opening Engineering Dashboard...', 'info');
+            dashboardWindow = window.open('http://localhost/MEDJFINAL/dashboard_engineering.php', '_blank');
+            
+            if (dashboardWindow) {
+                log('Dashboard opened successfully. Check the new tab.', 'success');
+                
+                // Wait a bit then check if dashboard loaded
+                setTimeout(() => {
+                    try {
+                        if (dashboardWindow.document) {
+                            log('Dashboard page loaded successfully.', 'success');
+                        }
+                    } catch (e) {
+                        log('Dashboard opened but may not be on same domain.', 'info');
+                    }
+                }, 2000);
+            } else {
+                log('Failed to open dashboard. Check if popup is blocked.', 'error');
+            }
+        }
+        
+        function checkExportElements() {
+            if (!dashboardWindow) {
+                log('Please open dashboard first.', 'error');
+                return;
+            }
+            
+            try {
+                log('Checking export elements in dashboard...', 'info');
+                
+                // Try to access dashboard elements
+                const exportBtn = dashboardWindow.document.getElementById('exportFiltered');
+                const exportModal = dashboardWindow.document.getElementById('exportModal');
+                const tableBody = dashboardWindow.document.querySelector('.board-table tbody');
+                
+                log(`Export Button: ${exportBtn ? 'Found ✓' : 'Not Found ✗'}`, exportBtn ? 'success' : 'error');
+                log(`Export Modal: ${exportModal ? 'Found ✓' : 'Not Found ✗'}`, exportModal ? 'success' : 'error');
+                log(`Table Body: ${tableBody ? 'Found ✓' : 'Not Found ✗'}`, tableBody ? 'success' : 'error');
+                
+                if (tableBody) {
+                    const rows = tableBody.querySelectorAll('tr');
+                    log(`Table Rows: ${rows.length} found`, rows.length > 0 ? 'success' : 'error');
+                }
+                
+                // Check if allRows is defined
+                if (dashboardWindow.allRows) {
+                    log(`allRows variable: ${dashboardWindow.allRows.length} rows`, 'success');
+                } else {
+                    log('allRows variable: Not defined', 'error');
+                }
+                
+            } catch (e) {
+                log(`Error checking elements: ${e.message}`, 'error');
+                log('This may be due to cross-origin restrictions.', 'info');
+            }
+        }
+        
+        function testExportFunction() {
+            if (!dashboardWindow) {
+                log('Please open dashboard first.', 'error');
+                return;
+            }
+            
+            try {
+                log('Testing export function...', 'info');
+                
+                if (dashboardWindow.testExport) {
+                    log('Calling testExport() function...', 'info');
+                    dashboardWindow.testExport();
+                    log('testExport() called successfully. Check dashboard console.', 'success');
+                } else {
+                    log('testExport() function not found in dashboard.', 'error');
+                }
+                
+            } catch (e) {
+                log(`Error testing export function: ${e.message}`, 'error');
+            }
+        }
+        
+        function testExportButton() {
+            if (!dashboardWindow) {
+                log('Please open dashboard first.', 'error');
+                return;
+            }
+            
+            try {
+                log('Testing export button click...', 'info');
+                
+                if (dashboardWindow.testExportButton) {
+                    log('Calling testExportButton() function...', 'info');
+                    dashboardWindow.testExportButton();
+                    log('testExportButton() called successfully. Check dashboard console.', 'success');
+                } else {
+                    log('testExportButton() function not found in dashboard.', 'error');
+                }
+                
+            } catch (e) {
+                log(`Error testing export button: ${e.message}`, 'error');
+            }
+        }
+        
+        // Log initial load
+        window.onload = function() {
+            log('Export Debug Helper loaded successfully.', 'success');
+            log('Click "Open Dashboard" to start testing.', 'info');
+        };
+    </script>
+</body>
+</html>
