@@ -1,0 +1,72 @@
+# Python virtual environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Model files (too large for git)
+models/*.pkl
+models/*.joblib
+models/*.h5
+
+# Output files
+output/*.pdf
+output/*.csv
+output/*.txt
+output/*.png
+output/*.jpg
+output/graphs/*.png
+
+# Validation output
+validation_output/*.json
+validation_output/*.png
+
+# Accuracy validation
+accuracy_validation/*.csv
+accuracy_validation/*.txt
+
+# Interactive graphs
+interactive_graphs/*.html
+!interactive_graphs/dashboard.html
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
