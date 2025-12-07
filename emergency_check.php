@@ -4,12 +4,20 @@ if ($conn->connect_error) {
     die('Connection failed: ' . $conn->connect_error);
 }
 
-echo "EMERGENCY DATABASE INVESTIGATION\n";
-echo "================================\n\n";
+$departments = [
+    'Engineering',
+    'Arts and Science',
+    'Business Administration and Accountancy',
+    'Criminal Justice Education',
+    'Teacher Education'
+];
 
-// Check all records in board_passers table
+echo "EMERGENCY DATABASE INVESTIGATION\n";
+echo str_repeat("=", 40) . "\n\n";
+
+// 1. ALL RECORDS IN board_passers TABLE
 echo "1. ALL RECORDS IN board_passers TABLE:\n";
-echo "--------------------------------------\n";
+echo str_repeat("-", 40) . "\n";
 $result = $conn->query("SELECT id, name, course, department, board_exam_date, result FROM board_passers ORDER BY id");
 if ($result && $result->num_rows > 0) {
     echo "Total records found: " . $result->num_rows . "\n\n";
@@ -20,37 +28,31 @@ if ($result && $result->num_rows > 0) {
     echo "❌ NO RECORDS FOUND IN THE ENTIRE TABLE!\n";
 }
 
-echo "\n\n2. CHECKING BY DEPARTMENT:\n";
-echo "-------------------------\n";
-
-// Check Engineering department specifically
-$engResult = $conn->query("SELECT COUNT(*) as count FROM board_passers WHERE department = 'Engineering'");
-if ($engResult) {
-    $row = $engResult->fetch_assoc();
-    echo "Engineering department records: " . $row['count'] . "\n";
+echo "\n2. CHECKING BY DEPARTMENT:\n";
+echo str_repeat("-", 40) . "\n";
+foreach ($departments as $dept) {
+    $deptResult = $conn->query("SELECT COUNT(*) as count FROM board_passers WHERE department='$dept'");
+    if ($deptResult) {
+        $row = $deptResult->fetch_assoc();
+        echo "$dept department records: " . $row['count'] . "\n";
+    }
 }
 
-// Check College of Engineering department
-$collegeResult = $conn->query("SELECT COUNT(*) as count FROM board_passers WHERE department = 'College of Engineering'");
-if ($collegeResult) {
-    $row = $collegeResult->fetch_assoc();
-    echo "College of Engineering department records: " . $row['count'] . "\n";
-}
-
-// Check all department values
+// 3. ALL DEPARTMENT VALUES
 echo "\n3. ALL DEPARTMENT VALUES:\n";
-echo "------------------------\n";
-$deptResult = $conn->query("SELECT department, COUNT(*) as count FROM board_passers GROUP BY department");
-if ($deptResult && $deptResult->num_rows > 0) {
-    while ($row = $deptResult->fetch_assoc()) {
+echo str_repeat("-", 40) . "\n";
+$allDeptResult = $conn->query("SELECT department, COUNT(*) as count FROM board_passers GROUP BY department");
+if ($allDeptResult && $allDeptResult->num_rows > 0) {
+    while ($row = $allDeptResult->fetch_assoc()) {
         echo "Department: '" . $row['department'] . "' - Count: " . $row['count'] . "\n";
     }
 } else {
     echo "No department groups found\n";
 }
 
-echo "\n\n4. CHECKING TABLE STRUCTURE:\n";
-echo "----------------------------\n";
+// 4. TABLE STRUCTURE
+echo "\n4. CHECKING TABLE STRUCTURE:\n";
+echo str_repeat("-", 40) . "\n";
 $structure = $conn->query("DESCRIBE board_passers");
 if ($structure) {
     while ($row = $structure->fetch_assoc()) {
@@ -58,9 +60,9 @@ if ($structure) {
     }
 }
 
-echo "\n\n5. RECENT ACTIVITY CHECK:\n";
-echo "------------------------\n";
-// Check if there are any records with recent timestamps (if there's a timestamp column)
+// 5. RECENT ACTIVITY CHECK
+echo "\n5. RECENT ACTIVITY CHECK:\n";
+echo str_repeat("-", 40) . "\n";
 $recentCheck = $conn->query("SELECT * FROM board_passers ORDER BY id DESC LIMIT 5");
 if ($recentCheck && $recentCheck->num_rows > 0) {
     echo "Last 5 records:\n";
@@ -72,5 +74,5 @@ if ($recentCheck && $recentCheck->num_rows > 0) {
 }
 
 $conn->close();
-echo "\n\nINVESTIGATION COMPLETE!\n";
+echo "\nINVESTIGATION COMPLETE!\n";
 ?>

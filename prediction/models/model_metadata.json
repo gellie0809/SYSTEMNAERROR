@@ -1,0 +1,111 @@
+{
+  "trained_date": "2025-12-05T07:46:15.031263",
+  "best_model": "Linear Regression",
+  "features": [
+    "year_normalized",
+    "total_examinees",
+    "first_timer_ratio",
+    "repeater_ratio",
+    "fail_rate",
+    "conditional_rate",
+    "passing_rate_ma3",
+    "exam_Electronics Engineer Licensure Examination (ECELE)",
+    "exam_Electronics Technician Licensure Exam (ECTLE)",
+    "exam_Registered Electrical Engineer Licensure Exam (REELE)",
+    "exam_Registered Master Electrician Licensure Exam (RMELE)"
+  ],
+  "exam_types": [
+    "exam_Electronics Engineer Licensure Examination (ECELE)",
+    "exam_Electronics Technician Licensure Exam (ECTLE)",
+    "exam_Registered Electrical Engineer Licensure Exam (REELE)",
+    "exam_Registered Master Electrician Licensure Exam (RMELE)"
+  ],
+  "training_records": 33,
+  "testing_records": 9,
+  "all_models": [
+    {
+      "model": "Linear Regression",
+      "train_r2": 0.9999999990655025,
+      "test_r2": 0.9999999994961342,
+      "train_mse": 1.0108830817760063e-06,
+      "test_mse": 5.158042849800026e-07,
+      "train_mae": 0.0005562366371852553,
+      "test_mae": 0.0006151444112758339,
+      "cv_mean": 0.9999999966317858,
+      "cv_std": 3.5751923611133294e-09
+    },
+    {
+      "model": "Ridge Regression",
+      "train_r2": 0.998258928706072,
+      "test_r2": 0.997175515343236,
+      "train_mse": 1.8833860797050492,
+      "test_mse": 2.891406957089985,
+      "train_mae": 1.1135604136384016,
+      "test_mae": 1.4156880150783546,
+      "cv_mean": 0.9879173492397928,
+      "cv_std": 0.0078689773726427
+    },
+    {
+      "model": "Lasso Regression",
+      "train_r2": 0.9999820677436667,
+      "test_r2": 0.9999862663054803,
+      "train_mse": 0.019398035033731737,
+      "test_mse": 0.014059095624987321,
+      "train_mae": 0.10718087811398366,
+      "test_mae": 0.09722587540746493,
+      "cv_mean": 0.9999258271573359,
+      "cv_std": 7.459472800291001e-05
+    },
+    {
+      "model": "Random Forest",
+      "train_r2": 0.9969468297943143,
+      "test_r2": 0.9857013011511273,
+      "train_mse": 3.302735668787895,
+      "test_mse": 14.637486958888978,
+      "train_mae": 1.408057575757577,
+      "test_mae": 2.840833333333345,
+      "cv_mean": 0.9119383903534268,
+      "cv_std": 0.04149530453132566
+    },
+    {
+      "model": "Gradient Boosting",
+      "train_r2": 0.999998762260764,
+      "test_r2": 0.9817793600081047,
+      "train_mse": 0.0013389117696976703,
+      "test_mse": 18.65235313246726,
+      "train_mae": 0.026865831465839877,
+      "test_mae": 2.172922136977995,
+      "cv_mean": 0.9242433930469213,
+      "cv_std": 0.036501931971758335
+    },
+    {
+      "model": "XGBoost",
+      "train_r2": 0.9999999988394553,
+      "test_r2": 0.9718875979144176,
+      "train_mse": 1.2554073337190703e-06,
+      "test_mse": 28.778486998010724,
+      "train_mae": 0.0008160066443752809,
+      "test_mae": 3.7989232063293463,
+      "cv_mean": 0.8179584850602962,
+      "cv_std": 0.08968951216020374
+    },
+    {
+      "model": "Support Vector Regression",
+      "train_r2": 0.11558690010583994,
+      "test_r2": -0.16916891608791795,
+      "train_mse": 956.7048327420907,
+      "test_mse": 1196.8707742470172,
+      "train_mae": 25.283023990715247,
+      "test_mae": 28.031329206267895,
+      "cv_mean": -0.6433455760301885,
+      "cv_std": 0.7480430160395951
+    }
+  ],
+  "best_model_metrics": {
+    "r2_score": 0.9999999994961342,
+    "mae": 0.0006151444112758339,
+    "mse": 5.158042849800026e-07,
+    "cv_mean": 0.9999999966317858,
+    "cv_std": 3.5751923611133294e-09
+  }
+}

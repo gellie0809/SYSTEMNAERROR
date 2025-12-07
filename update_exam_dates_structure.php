@@ -1,5 +1,5 @@
 <?php
-// Update database structure to link exam dates with exam types
+// Update database structure to link exam dates with exam types dynamically per department
 $servername = "localhost";
 $username = "root";
 $password = "";
@@ -11,6 +11,9 @@ if ($conn->connect_error) {
 }
 
 echo "<h2>🔧 Updating Board Exam Dates Structure</h2>";
+
+// Define department dynamically (can be changed for each department)
+$department = 'Engineering'; // example; can be replaced dynamically
 
 // First, check if we need to add the exam_type_id column
 $check_column = $conn->query("SHOW COLUMNS FROM board_exam_dates LIKE 'exam_type_id'");
@@ -30,7 +33,7 @@ if ($check_column->num_rows == 0) {
 $create_exam_types_table = "CREATE TABLE IF NOT EXISTS board_exam_types (
     id INT AUTO_INCREMENT PRIMARY KEY,
     exam_type_name VARCHAR(255) NOT NULL,
-    department VARCHAR(100) NOT NULL DEFAULT 'Engineering',
+    department VARCHAR(100) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE KEY unique_exam_type_dept (exam_type_name, department)
 )";
@@ -41,7 +44,7 @@ if ($conn->query($create_exam_types_table)) {
     echo "<p>❌ Error creating board_exam_types table: " . $conn->error . "</p>";
 }
 
-// Insert default exam types for Engineering if they don't exist
+// Insert default exam types for the current department if they don't exist
 $default_exam_types = [
     'Civil Engineer Licensure Exam (CELE)',
     'Electrical Engineer Licensure Exam (REELE)', 
@@ -51,18 +54,19 @@ $default_exam_types = [
 ];
 
 foreach ($default_exam_types as $exam_type) {
-    $check_exists = $conn->prepare("SELECT id FROM board_exam_types WHERE exam_type_name = ? AND department = 'Engineering'");
-    $check_exists->bind_param("s", $exam_type);
+    $check_exists = $conn->prepare("SELECT id FROM board_exam_types WHERE exam_type_name = ? AND department = ?");
+    $check_exists->bind_param("ss", $exam_type, $department);
     $check_exists->execute();
     
     if ($check_exists->get_result()->num_rows == 0) {
-        $insert_type = $conn->prepare("INSERT INTO board_exam_types (exam_type_name, department) VALUES (?, 'Engineering')");
-        $insert_type->bind_param("s", $exam_type);
+        $insert_type = $conn->prepare("INSERT INTO board_exam_types (exam_type_name, department) VALUES (?, ?)");
+        $insert_type->bind_param("ss", $exam_type, $department);
         if ($insert_type->execute()) {
-            echo "<p>✅ Added exam type: $exam_type</p>";
+            echo "<p>✅ Added exam type: $exam_type ($department)</p>";
         } else {
             echo "<p>❌ Error adding exam type $exam_type: " . $conn->error . "</p>";
         }
+        $insert_type->close();
     }
     $check_exists->close();
 }
@@ -88,8 +92,12 @@ if ($check_fk->num_rows == 0) {
     echo "<p>ℹ️ Foreign key constraint already exists</p>";
 }
 
+// Dynamic link to manage courses page
 echo "<h3>🎉 Database structure update completed!</h3>";
-echo "<p><a href='manage_courses_engineering.php' style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>Go to Manage Courses</a></p>";
+echo "<p><a href='manage_courses.php?department=" . urlencode($department) . "' 
+        style='background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;'>
+        Go to Manage Courses ($department)
+      </a></p>";
 
 $conn->close();
 ?>

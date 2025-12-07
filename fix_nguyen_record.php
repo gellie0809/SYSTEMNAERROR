@@ -1,32 +1,48 @@
 <?php
 $conn = new mysqli('localhost', 'root', '', 'project_db');
+if ($conn->connect_error) die('Connection failed: ' . $conn->connect_error);
 
-echo "Updating Nguyen, Kim record (ID: 18) with '0' result...\n";
+$departments = [
+    'Engineering',
+    'Arts and Science',
+    'Business Administration and Accountancy',
+    'Criminal Justice Education',
+    'Teacher Education'
+];
 
-// Update the record
-$update_result = $conn->query("UPDATE board_passers SET result='Failed' WHERE id=18 AND result='0'");
+echo "Fixing '0' results in board_passers table...\n";
 
-if ($update_result) {
-    echo "Successfully updated record ID 18\n";
-    echo "Rows affected: " . $conn->affected_rows . "\n";
-} else {
-    echo "Error updating record: " . $conn->error . "\n";
+foreach ($departments as $dept) {
+    // Update all '0' results to 'Failed' for this department
+    $update = $conn->query("UPDATE board_passers SET result='Failed' WHERE result='0' AND department='$dept'");
+    if ($update) {
+        $affected = $conn->affected_rows;
+        if ($affected > 0) {
+            echo "Updated $affected record(s) in $dept department\n";
+        }
+    } else {
+        echo "Error updating $dept: " . $conn->error . "\n";
+    }
 }
 
-// Verify all records are now correct
-echo "\nVerifying all Engineering department results:\n";
-echo "===========================================\n";
-$result = $conn->query("SELECT id, name, result FROM board_passers WHERE department='Engineering' ORDER BY id");
-while ($row = $result->fetch_assoc()) {
-    echo "ID: " . $row['id'] . " | Name: " . $row['name'] . " | Result: '" . $row['result'] . "'\n";
-}
+// Verify all results per department
+echo "\nVerifying results for all departments:\n";
+foreach ($departments as $dept) {
+    echo "\nDepartment: $dept\n";
+    echo "====================\n";
+    $res = $conn->query("SELECT id, name, result FROM board_passers WHERE department='$dept' ORDER BY id");
+    while ($row = $res->fetch_assoc()) {
+        echo "ID: " . $row['id'] . " | Name: " . $row['name'] . " | Result: '" . $row['result'] . "'\n";
+    }
 
-echo "\nFinal result counts:\n";
-echo "===================\n";
-$result = $conn->query("SELECT result, COUNT(*) as count FROM board_passers WHERE department='Engineering' GROUP BY result");
-while ($row = $result->fetch_assoc()) {
-    echo "Result: '" . $row['result'] . "' - Count: " . $row['count'] . "\n";
+    // Show counts
+    $countRes = $conn->query("SELECT result, COUNT(*) as count FROM board_passers WHERE department='$dept' GROUP BY result");
+    echo "\nResult counts for $dept:\n";
+    while ($row = $countRes->fetch_assoc()) {
+        echo "Result: '" . $row['result'] . "' - Count: " . $row['count'] . "\n";
+    }
 }
 
 $conn->close();
+echo "\nAll '0' results fixed!\n";
 ?>

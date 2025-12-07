@@ -60,7 +60,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
     
     // FAILURE! No user was found with that email AND that exact password.
-    header("Location: mainpage.php?error=1");
+    header("Location: index.php?error=1");
     exit();
 }
 ?>

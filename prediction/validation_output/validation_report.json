@@ -1,0 +1,581 @@
+{
+  "step1_data_collection": {
+    "total_records": 364,
+    "date_range": {
+      "start": "2021-09-01",
+      "end": "2024-10-01"
+    },
+    "exam_types": [
+      "Registered Electrical Engineer Licensure Exam (REELE)",
+      "Registered Master Electrician Licensure Exam (RMELE)",
+      "Electronics Engineer Licensure Examination (ECELE)",
+      "Electronics Technician Licensure Exam (ECTLE)"
+    ],
+    "years": [
+      2021,
+      2022,
+      2023,
+      2024
+    ],
+    "columns": [
+      "id",
+      "year",
+      "month",
+      "board_exam_type",
+      "take_attempts",
+      "result",
+      "board_exam_date",
+      "department"
+    ]
+  },
+  "step2_data_cleaning": {
+    "initial_records": 364,
+    "final_records": 42,
+    "duplicates_removed": "0",
+    "missing_values_before": {
+      "id": 0,
+      "year": 0,
+      "month": 0,
+      "board_exam_type": 0,
+      "take_attempts": 0,
+      "result": 0,
+      "board_exam_date": 0,
+      "department": 0
+    },
+    "aggregation_groups": [
+      "year",
+      "month",
+      "board_exam_type",
+      "take_attempts"
+    ]
+  },
+  "step3_data_splitting": {
+    "total_samples": 42,
+    "training_samples": 33,
+    "testing_samples": 9,
+    "training_percentage": 80.0,
+    "testing_percentage": 20.0,
+    "random_state": 42,
+    "shuffle": true,
+    "training_target_range": {
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 43.38636363636363
+    },
+    "testing_target_range": {
+      "min": 0.0,
+      "max": 100.0,
+      "mean": 58.13111111111112
+    }
+  },
+  "step4_feature_selection": {
+    "total_features": 11,
+    "feature_list": [
+      "year_normalized",
+      "total_examinees",
+      "first_timer_ratio",
+      "repeater_ratio",
+      "fail_rate",
+      "conditional_rate",
+      "passing_rate_ma3",
+      "exam_Electronics Engineer Licensure Examination (ECELE)",
+      "exam_Electronics Technician Licensure Exam (ECTLE)",
+      "exam_Registered Electrical Engineer Licensure Exam (REELE)",
+      "exam_Registered Master Electrician Licensure Exam (RMELE)"
+    ],
+    "feature_categories": {
+      "temporal": [
+        "year_normalized"
+      ],
+      "volume": [
+        "total_examinees"
+      ],
+      "attempt_patterns": [
+        "first_timer_ratio",
+        "repeater_ratio"
+      ],
+      "performance": [
+        "fail_rate",
+        "conditional_rate",
+        "passing_rate_ma3"
+      ],
+      "exam_types": [
+        "exam_Electronics Engineer Licensure Examination (ECELE)",
+        "exam_Electronics Technician Licensure Exam (ECTLE)",
+        "exam_Registered Electrical Engineer Licensure Exam (REELE)",
+        "exam_Registered Master Electrician Licensure Exam (RMELE)"
+      ]
+    },
+    "feature_importance": [
+      {
+        "feature": "fail_rate",
+        "importance": 0.9682420908576472
+      },
+      {
+        "feature": "total_examinees",
+        "importance": 0.01662085941155666
+      },
+      {
+        "feature": "passing_rate_ma3",
+        "importance": 0.005106130610968092
+      },
+      {
+        "feature": "year_normalized",
+        "importance": 0.00420049887371323
+      },
+      {
+        "feature": "exam_Registered Master Electrician Licensure Exam (RMELE)",
+        "importance": 0.0014591749317671365
+      },
+      {
+        "feature": "exam_Electronics Engineer Licensure Examination (ECELE)",
+        "importance": 0.0012045007219055929
+      },
+      {
+        "feature": "first_timer_ratio",
+        "importance": 0.0010094857579338514
+      },
+      {
+        "feature": "exam_Registered Electrical Engineer Licensure Exam (REELE)",
+        "importance": 0.0008445166416812636
+      },
+      {
+        "feature": "conditional_rate",
+        "importance": 0.0006104391900162635
+      },
+      {
+        "feature": "repeater_ratio",
+        "importance": 0.0006033719141987715
+      },
+      {
+        "feature": "exam_Electronics Technician Licensure Exam (ECTLE)",
+        "importance": 9.893108861198813e-05
+      }
+    ]
+  },
+  "step5_model_selection": {
+    "total_models": 7,
+    "models": {
+      "Linear Regression": {
+        "description": "Basic linear relationship model",
+        "use_case": "Simple trends, baseline model"
+      },
+      "Ridge Regression": {
+        "description": "Linear regression with L2 regularization",
+        "use_case": "Prevents overfitting, handles multicollinearity"
+      },
+      "Lasso Regression": {
+        "description": "Linear regression with L1 regularization",
+        "use_case": "Feature selection, sparse models"
+      },
+      "Random Forest": {
+        "description": "Ensemble of decision trees",
+        "use_case": "Non-linear patterns, robust to outliers"
+      },
+      "Gradient Boosting": {
+        "description": "Sequential boosting algorithm",
+        "use_case": "High accuracy, complex patterns"
+      },
+      "XGBoost": {
+        "description": "Optimized gradient boosting",
+        "use_case": "Best performance, handles missing data"
+      },
+      "Support Vector Regression": {
+        "description": "Support vector machine for regression",
+        "use_case": "Non-linear patterns, robust"
+      }
+    }
+  },
+  "step6_model_training": {
+    "models_trained": 7,
+    "training_results": [
+      {
+        "model": "Linear Regression",
+        "training_time": 0.001493,
+        "train_r2": 0.9999999990655025,
+        "train_mse": 1.0108830817760063e-06,
+        "train_rmse": 0.0010054268157235545,
+        "train_mae": 0.0005562366371852553
+      },
+      {
+        "model": "Ridge Regression",
+        "training_time": 0.00405,
+        "train_r2": 0.998258928706072,
+        "train_mse": 1.8833860797050492,
+        "train_rmse": 1.372365140808032,
+        "train_mae": 1.1135604136384016
+      },
+      {
+        "model": "Lasso Regression",
+        "training_time": 0.002145,
+        "train_r2": 0.9999820677436667,
+        "train_mse": 0.019398035033731737,
+        "train_rmse": 0.13927682877539874,
+        "train_mae": 0.10718087811398366
+      },
+      {
+        "model": "Random Forest",
+        "training_time": 0.132058,
+        "train_r2": 0.9969468297943143,
+        "train_mse": 3.302735668787895,
+        "train_rmse": 1.8173430245245104,
+        "train_mae": 1.408057575757577
+      },
+      {
+        "model": "Gradient Boosting",
+        "training_time": 0.06516,
+        "train_r2": 0.999998762260764,
+        "train_mse": 0.0013389117696976703,
+        "train_rmse": 0.03659114332318232,
+        "train_mae": 0.026865831465839877
+      },
+      {
+        "model": "XGBoost",
+        "training_time": 0.04263,
+        "train_r2": 0.9999999988394553,
+        "train_mse": 1.2554073337190703e-06,
+        "train_rmse": 0.001120449612307073,
+        "train_mae": 0.0008160066443752809
+      },
+      {
+        "model": "Support Vector Regression",
+        "training_time": 0.00206,
+        "train_r2": 0.11558690010583994,
+        "train_mse": 956.7048327420907,
+        "train_rmse": 30.930645527406806,
+        "train_mae": 25.283023990715247
+      }
+    ]
+  },
+  "step7_model_evaluation": {
+    "evaluation_results": [
+      {
+        "model": "Linear Regression",
+        "test_r2": 0.9999999994961342,
+        "test_mse": 5.158042849800026e-07,
+        "test_rmse": 0.0007181951580037299,
+        "test_mae": 0.0006151444112758339,
+        "cv_mean": 0.9999999966317858,
+        "cv_std": 3.5751923611133294e-09,
+        "predictions": [
+          28.570599866211197,
+          87.4988091584815,
+          100.00054141060707,
+          66.66899851906979,
+          50.00006927299348,
+          100.00090090024526,
+          52.939842621553495,
+          37.50081056309309,
+          -0.00026458565618270313
+        ]
+      },
+      {
+        "model": "Ridge Regression",
+        "test_r2": 0.997175515343236,
+        "test_mse": 2.891406957089985,
+        "test_rmse": 1.7004137605565255,
+        "test_mae": 1.4156880150783546,
+        "cv_mean": 0.9879173492397928,
+        "cv_std": 0.0078689773726427,
+        "predictions": [
+          27.10466906351669,
+          88.67125034742722,
+          97.90476575096609,
+          65.6818193820046,
+          48.78442729760492,
+          97.09044370177484,
+          52.844681944649594,
+          34.822359836571685,
+          -0.12310876536640336
+        ]
+      },
+      {
+        "model": "Lasso Regression",
+        "test_r2": 0.9999862663054803,
+        "test_mse": 0.014059095624987321,
+        "test_rmse": 0.11857105728206745,
+        "test_mae": 0.09722587540746493,
+        "cv_mean": 0.9999258271573359,
+        "cv_std": 7.459472800291001e-05,
+        "predictions": [
+          28.587682472571274,
+          87.34200925222726,
+          99.80474613913884,
+          66.57410450387779,
+          49.9537985914925,
+          99.80474613913884,
+          52.885034307294106,
+          37.491061704580915,
+          0.10285104384616517
+        ]
+      },
+      {
+        "model": "Random Forest",
+        "test_r2": 0.9857013011511273,
+        "test_mse": 14.637486958888978,
+        "test_rmse": 3.8258968829398654,
+        "test_mae": 2.840833333333345,
+        "cv_mean": 0.9119383903534268,
+        "cv_std": 0.04149530453132566,
+        "predictions": [
+          28.2945,
+          96.85610000000001,
+          99.25,
+          70.19770000000005,
+          46.44209999999999,
+          98.75,
+          50.63909999999997,
+          36.0171,
+          3.0664999999999996
+        ]
+      },
+      {
+        "model": "Gradient Boosting",
+        "test_r2": 0.9817793600081047,
+        "test_mse": 18.65235313246726,
+        "test_rmse": 4.318837011565412,
+        "test_mae": 2.172922136977995,
+        "cv_mean": 0.9242433930469213,
+        "cv_std": 0.036501931971758335,
+        "predictions": [
+          29.5278307697315,
+          99.96101505601239,
+          99.9971804179075,
+          69.33946006362021,
+          48.873275203058604,
+          100.00019303547295,
+          54.691236929858434,
+          37.06126316342676,
+          0.14828216249934298
+        ]
+      },
+      {
+        "model": "XGBoost",
+        "test_r2": 0.9718875979144176,
+        "test_mse": 28.778486998010724,
+        "test_rmse": 5.364558415937953,
+        "test_mae": 3.7989232063293463,
+        "cv_mean": 0.8179584850602962,
+        "cv_std": 0.08968951216020374,
+        "predictions": [
+          27.156005859375,
+          99.80094909667969,
+          100.00421905517578,
+          63.707942962646484,
+          44.38336944580078,
+          99.9998779296875,
+          54.97924041748047,
+          39.9093017578125,
+          7.4437947273254395
+        ]
+      },
+      {
+        "model": "Support Vector Regression",
+        "test_r2": -0.16916891608791795,
+        "test_mse": 1196.8707742470172,
+        "test_rmse": 34.5958201846266,
+        "test_mae": 28.031329206267895,
+        "cv_mean": -0.6433455760301885,
+        "cv_std": 0.7480430160395951,
+        "predictions": [
+          38.81801726625615,
+          44.53145042522807,
+          42.66603267119986,
+          42.491163653996864,
+          40.086551727984684,
+          44.3543102462926,
+          43.07932983241914,
+          38.95541160216193,
+          40.67737254511416
+        ]
+      }
+    ],
+    "best_model": "Linear Regression",
+    "best_model_metrics": {
+      "model": "Linear Regression",
+      "test_r2": 0.9999999994961342,
+      "test_mse": 5.158042849800026e-07,
+      "test_rmse": 0.0007181951580037299,
+      "test_mae": 0.0006151444112758339,
+      "cv_mean": 0.9999999966317858,
+      "cv_std": 3.5751923611133294e-09,
+      "predictions": [
+        28.570599866211197,
+        87.4988091584815,
+        100.00054141060707,
+        66.66899851906979,
+        50.00006927299348,
+        100.00090090024526,
+        52.939842621553495,
+        37.50081056309309,
+        -0.00026458565618270313
+      ]
+    }
+  },
+  "step8_metrics_and_predictions": {
+    "regression_metrics": {
+      "r2_score": "Coefficient of determination (0-1, higher better)",
+      "mse": "Mean Squared Error (lower better)",
+      "rmse": "Root Mean Squared Error in % (lower better)",
+      "mae": "Mean Absolute Error in % (lower better)",
+      "cross_validation": "5-fold CV score for generalization"
+    },
+    "classification_metrics": {
+      "accuracy": 1.0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "confusion_matrix": [
+        [
+          3,
+          0
+        ],
+        [
+          0,
+          6
+        ]
+      ]
+    },
+    "model_rankings": [
+      {
+        "model": "Linear Regression",
+        "test_r2": 0.9999999994961342,
+        "test_mse": 5.158042849800026e-07,
+        "test_rmse": 0.0007181951580037299,
+        "test_mae": 0.0006151444112758339,
+        "cv_mean": 0.9999999966317858,
+        "cv_std": 3.5751923611133294e-09,
+        "predictions": [
+          28.570599866211197,
+          87.4988091584815,
+          100.00054141060707,
+          66.66899851906979,
+          50.00006927299348,
+          100.00090090024526,
+          52.939842621553495,
+          37.50081056309309,
+          -0.00026458565618270313
+        ]
+      },
+      {
+        "model": "Lasso Regression",
+        "test_r2": 0.9999862663054803,
+        "test_mse": 0.014059095624987321,
+        "test_rmse": 0.11857105728206745,
+        "test_mae": 0.09722587540746493,
+        "cv_mean": 0.9999258271573359,
+        "cv_std": 7.459472800291001e-05,
+        "predictions": [
+          28.587682472571274,
+          87.34200925222726,
+          99.80474613913884,
+          66.57410450387779,
+          49.9537985914925,
+          99.80474613913884,
+          52.885034307294106,
+          37.491061704580915,
+          0.10285104384616517
+        ]
+      },
+      {
+        "model": "Ridge Regression",
+        "test_r2": 0.997175515343236,
+        "test_mse": 2.891406957089985,
+        "test_rmse": 1.7004137605565255,
+        "test_mae": 1.4156880150783546,
+        "cv_mean": 0.9879173492397928,
+        "cv_std": 0.0078689773726427,
+        "predictions": [
+          27.10466906351669,
+          88.67125034742722,
+          97.90476575096609,
+          65.6818193820046,
+          48.78442729760492,
+          97.09044370177484,
+          52.844681944649594,
+          34.822359836571685,
+          -0.12310876536640336
+        ]
+      },
+      {
+        "model": "Random Forest",
+        "test_r2": 0.9857013011511273,
+        "test_mse": 14.637486958888978,
+        "test_rmse": 3.8258968829398654,
+        "test_mae": 2.840833333333345,
+        "cv_mean": 0.9119383903534268,
+        "cv_std": 0.04149530453132566,
+        "predictions": [
+          28.2945,
+          96.85610000000001,
+          99.25,
+          70.19770000000005,
+          46.44209999999999,
+          98.75,
+          50.63909999999997,
+          36.0171,
+          3.0664999999999996
+        ]
+      },
+      {
+        "model": "Gradient Boosting",
+        "test_r2": 0.9817793600081047,
+        "test_mse": 18.65235313246726,
+        "test_rmse": 4.318837011565412,
+        "test_mae": 2.172922136977995,
+        "cv_mean": 0.9242433930469213,
+        "cv_std": 0.036501931971758335,
+        "predictions": [
+          29.5278307697315,
+          99.96101505601239,
+          99.9971804179075,
+          69.33946006362021,
+          48.873275203058604,
+          100.00019303547295,
+          54.691236929858434,
+          37.06126316342676,
+          0.14828216249934298
+        ]
+      },
+      {
+        "model": "XGBoost",
+        "test_r2": 0.9718875979144176,
+        "test_mse": 28.778486998010724,
+        "test_rmse": 5.364558415937953,
+        "test_mae": 3.7989232063293463,
+        "cv_mean": 0.8179584850602962,
+        "cv_std": 0.08968951216020374,
+        "predictions": [
+          27.156005859375,
+          99.80094909667969,
+          100.00421905517578,
+          63.707942962646484,
+          44.38336944580078,
+          99.9998779296875,
+          54.97924041748047,
+          39.9093017578125,
+          7.4437947273254395
+        ]
+      },
+      {
+        "model": "Support Vector Regression",
+        "test_r2": -0.16916891608791795,
+        "test_mse": 1196.8707742470172,
+        "test_rmse": 34.5958201846266,
+        "test_mae": 28.031329206267895,
+        "cv_mean": -0.6433455760301885,
+        "cv_std": 0.7480430160395951,
+        "predictions": [
+          38.81801726625615,
+          44.53145042522807,
+          42.66603267119986,
+          42.491163653996864,
+          40.086551727984684,
+          44.3543102462926,
+          43.07932983241914,
+          38.95541160216193,
+          40.67737254511416
+        ]
+      }
+    ]
+  }
+}

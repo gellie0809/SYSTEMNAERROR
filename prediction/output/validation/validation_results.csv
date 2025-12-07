@@ -1,0 +1,13 @@
+year,exam_type,predicted,actual,error
+2022,Electronics Engineer Licensure Examination (ECELE),32.525747637748076,41.665,9.139252362251924
+2022,Electronics Technician Licensure Exam (ECTLE),34.27435730605612,66.67,32.395642693943884
+2022,Registered Electrical Engineer Licensure Exam (REELE),34.263604940941114,47.025,12.761395059058884
+2022,Registered Master Electrician Licensure Exam (RMELE),33.02017890474353,64.285,31.264821095256465
+2023,Electronics Engineer Licensure Examination (ECELE),48.08982795047023,52.605,4.515172049529767
+2023,Electronics Technician Licensure Exam (ECTLE),48.847671345443075,40.79,8.057671345443076
+2023,Registered Electrical Engineer Licensure Exam (REELE),48.60377094844623,43.010000000000005,5.5937709484462275
+2023,Registered Master Electrician Licensure Exam (RMELE),48.8706745061636,40.0,8.870674506163603
+2024,Electronics Engineer Licensure Examination (ECELE),35.77066567225293,34.09,1.6806656722529283
+2024,Electronics Technician Licensure Exam (ECTLE),80.07317069999168,72.725,7.348170699991684
+2024,Registered Electrical Engineer Licensure Exam (REELE),54.049764004848136,43.84,10.209764004848132
+2024,Registered Master Electrician Licensure Exam (RMELE),52.37565080354925,25.0,27.37565080354925

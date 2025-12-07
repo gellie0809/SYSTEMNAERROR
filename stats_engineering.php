@@ -61,7 +61,7 @@ $boardExamTypeId = isset($_GET['boardExamTypeId']) ? trim($_GET['boardExamTypeId
 $examDateId = isset($_GET['examDateId']) ? trim($_GET['examDateId']) : '';
 
 // Build WHERE clause and params
-$where = ["department = 'Engineering'"];
+$where = ["department = 'Engineering'", "is_deleted = 0"];
 $params = [];
 
 if ($nameSearch !== '') {
@@ -314,7 +314,7 @@ try {
     $exprFailed = $hasRes ? "(bps.result = 'Failed')" : ($hasPassedCol ? "(bps.passed IN ('0',0))" : "0");
 
     // Build filtered passers subquery
-    $passerWhere = "bp.department = 'Engineering'";
+    $passerWhere = "bp.department = 'Engineering' AND bp.is_deleted = 0";
     $subParams = [];
     $subTypes = '';
     if ($typeName !== '') {
@@ -400,7 +400,7 @@ try {
     }
     // ensure deterministic order and include types with no mapped subjects
     // fetch list of all types to add missing ones
-    $res2 = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' ORDER BY exam_type_name ASC");
+    $res2 = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' AND is_deleted = 0 ORDER BY exam_type_name ASC");
     if ($res2) {
       while ($r2 = $res2->fetch_assoc()) {
         $tid = (int)$r2['id'];
@@ -445,7 +445,7 @@ try {
     $subjectIds = array_keys($subjects);
 
     // Build passers filter
-    $pw = "bp.department='Engineering'"; $pp=[]; $pt='';
+    $pw = "bp.department='Engineering' AND bp.is_deleted = 0"; $pp=[]; $pt='';
     if ($typeName !== '') { $pw .= " AND (bp.exam_type = ? OR bp.board_exam_type = ? OR bp.exam_type LIKE ?)"; $pp[]=$typeName; $pp[]=$typeName; $pp[]='%'.$typeName.'%'; $pt.='sss'; }
     if ($dateStr !== '') { $pw .= " AND bp.board_exam_date = ?"; $pp[]=$dateStr; $pt.='s'; }
     if ($fromYear !== '' && $toYear !== '') { $pw .= " AND bp.board_exam_date BETWEEN ? AND ?"; $pp[]=$fromYear; $pp[]=$toYear; $pt.='ss'; }
@@ -551,9 +551,9 @@ try {
     $yearStart = isset($_GET['yearStart']) ? intval($_GET['yearStart']) : 2019;
     $yearEnd = isset($_GET['yearEnd']) ? intval($_GET['yearEnd']) : 2024;
     if ($yearStart > $yearEnd) { $t = $yearStart; $yearStart = $yearEnd; $yearEnd = $t; }
-    // Get engineering exam types
+    // Get engineering exam types (exclude deleted)
     $types = [];
-    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' ORDER BY exam_type_name ASC");
+    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' AND is_deleted = 0 ORDER BY exam_type_name ASC");
     while ($r = $res->fetch_assoc()) { $types[] = [ 'id' => (int)$r['id'], 'name' => $r['exam_type_name'] ]; }
     $years = [];
     for ($y=$yearStart; $y<=$yearEnd; $y++) $years[] = $y;
@@ -563,7 +563,7 @@ try {
       // Query totals per year for this type
       $sql = "SELECT YEAR(board_exam_date) AS y, COUNT(*) AS total, SUM(CASE WHEN result='Passed' THEN 1 ELSE 0 END) AS passed
               FROM board_passers
-              WHERE department='Engineering' AND board_exam_date BETWEEN ? AND ?
+              WHERE department='Engineering' AND is_deleted = 0 AND board_exam_date BETWEEN ? AND ?
                 AND (exam_type = ? OR board_exam_type = ? OR exam_type LIKE ?)
               GROUP BY y ORDER BY y ASC";
       $stmt = $conn->prepare($sql);
@@ -595,9 +595,9 @@ try {
     $yearStart = isset($_GET['yearStart']) ? intval($_GET['yearStart']) : 2019;
     $yearEnd = isset($_GET['yearEnd']) ? intval($_GET['yearEnd']) : 2024;
     if ($yearStart > $yearEnd) { $t = $yearStart; $yearStart = $yearEnd; $yearEnd = $t; }
-    // Get types
+    // Get types (exclude deleted)
     $types = [];
-    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' ORDER BY exam_type_name ASC");
+    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' AND is_deleted = 0 ORDER BY exam_type_name ASC");
     while ($r = $res->fetch_assoc()) { $types[] = [ 'id' => (int)$r['id'], 'name' => $r['exam_type_name'] ]; }
     $years = [];
     for ($y=$yearStart; $y<=$yearEnd; $y++) $years[] = $y;
@@ -607,7 +607,7 @@ try {
     foreach ($types as $t) {
       $sql = "SELECT YEAR(board_exam_date) AS y, SUM(CASE WHEN result='Passed' THEN 1 ELSE 0 END) AS passed
               FROM board_passers
-              WHERE department='Engineering' AND board_exam_date BETWEEN ? AND ?
+              WHERE department='Engineering' AND is_deleted = 0 AND board_exam_date BETWEEN ? AND ?
                 AND (exam_type = ? OR board_exam_type = ? OR exam_type LIKE ?)
               GROUP BY y ORDER BY y ASC";
       $stmt = $conn->prepare($sql);
@@ -647,9 +647,9 @@ try {
     $yearEnd = isset($_GET['yearEnd']) ? intval($_GET['yearEnd']) : 2024;
     if ($yearStart > $yearEnd) { $t = $yearStart; $yearStart = $yearEnd; $yearEnd = $t; }
 
-    // Fetch engineering exam types
+    // Fetch engineering exam types (exclude deleted)
     $types = [];
-    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' ORDER BY exam_type_name ASC");
+    $res = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' AND is_deleted = 0 ORDER BY exam_type_name ASC");
     while ($r = $res->fetch_assoc()) { $types[] = [ 'id' => (int)$r['id'], 'name' => $r['exam_type_name'] ]; }
 
     // Build inclusive year range array
@@ -661,7 +661,7 @@ try {
     foreach ($types as $t) {
       $sql = "SELECT YEAR(board_exam_date) AS y, COUNT(*) AS total
               FROM board_passers
-              WHERE department='Engineering' AND board_exam_date BETWEEN ? AND ?
+              WHERE department='Engineering' AND is_deleted = 0 AND board_exam_date BETWEEN ? AND ?
                 AND (exam_type = ? OR board_exam_type = ? OR exam_type LIKE ?)
               GROUP BY y ORDER BY y ASC";
       $stmt = $conn->prepare($sql);
@@ -702,7 +702,7 @@ try {
                    COUNT(*) AS total,
                    SUM(CASE WHEN result='Passed' THEN 1 ELSE 0 END) AS passed
             FROM board_passers
-            WHERE department='Engineering' AND board_exam_date BETWEEN ? AND ?
+            WHERE department='Engineering' AND is_deleted = 0 AND board_exam_date BETWEEN ? AND ?
             GROUP BY y ORDER BY y ASC";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ss', $from, $to);
@@ -747,7 +747,7 @@ try {
     $from = $yearStart.'-01-01';
     $to   = $yearEnd.'-12-31';
 
-    $filterSql = "WHERE department='Engineering' AND board_exam_date BETWEEN ? AND ?";
+    $filterSql = "WHERE department='Engineering' AND is_deleted = 0 AND board_exam_date BETWEEN ? AND ?";
     $bindTypes = 'ss';
     $bindVals  = [ $from, $to ];
     if ($typeName !== '') {

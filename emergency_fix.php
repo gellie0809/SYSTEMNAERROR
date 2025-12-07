@@ -1,41 +1,40 @@
 <?php
-echo "EMERGENCY FULL SYSTEM CHECK\n";
-echo "===========================\n\n";
+echo "EMERGENCY FULL SYSTEM CHECK (MULTI-DEPARTMENT)\n";
+echo str_repeat("=", 50) . "\n\n";
+
+// Departments to check
+$departments = [
+    'Engineering',
+    'Arts and Science',
+    'Business Administration and Accountancy',
+    'Criminal Justice Education',
+    'Teacher Education'
+];
 
 // 1. Check database connection
 $conn = new mysqli('localhost', 'root', '', 'project_db');
 if ($conn->connect_error) {
-    echo "❌ CRITICAL: Database connection failed: " . $conn->connect_error . "\n";
-    die();
-} else {
-    echo "✅ Database connection: OK\n";
+    die("❌ CRITICAL: Database connection failed: " . $conn->connect_error . "\n");
 }
+echo "✅ Database connection: OK\n";
 
-// 2. Check if database exists
+// 2. Ensure database exists
 $dbCheck = $conn->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = 'project_db'");
-if ($dbCheck && $dbCheck->num_rows > 0) {
-    echo "✅ Database 'project_db': EXISTS\n";
-} else {
-    echo "❌ Database 'project_db': MISSING\n";
-    echo "Creating database...\n";
+if (!($dbCheck && $dbCheck->num_rows > 0)) {
+    echo "❌ Database 'project_db' missing, creating...\n";
     if ($conn->query("CREATE DATABASE project_db")) {
         echo "✅ Database created\n";
         $conn->select_db('project_db');
     } else {
-        echo "❌ Failed to create database\n";
-        die();
+        die("❌ Failed to create database\n");
     }
+} else {
+    echo "✅ Database 'project_db': EXISTS\n";
 }
 
-// 3. Force table creation
-echo "\n2. FORCE CREATING TABLE:\n";
-echo "------------------------\n";
-
-$dropTable = "DROP TABLE IF EXISTS board_passers";
-if ($conn->query($dropTable)) {
-    echo "✅ Dropped existing table (if any)\n";
-}
-
+// 3. Force create table
+echo "\n2. FORCE CREATING TABLE 'board_passers'\n";
+$conn->query("DROP TABLE IF EXISTS board_passers");
 $createTable = "
 CREATE TABLE board_passers (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -48,117 +47,71 @@ CREATE TABLE board_passers (
     year_graduated INT NOT NULL,
     board_exam_date DATE NOT NULL,
     result VARCHAR(20) NOT NULL DEFAULT 'PASSED',
-    department VARCHAR(100) NOT NULL DEFAULT 'Engineering',
+    department VARCHAR(100) NOT NULL,
     exam_type VARCHAR(255) DEFAULT NULL,
     board_exam_type VARCHAR(255) DEFAULT 'Board Exam',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci";
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+if ($conn->query($createTable)) echo "✅ Table created successfully\n";
 
-if ($conn->query($createTable)) {
-    echo "✅ Table created successfully\n";
-} else {
-    echo "❌ Table creation failed: " . $conn->error . "\n";
-    die();
-}
-
-// 4. Insert test data immediately
-echo "\n3. INSERTING TEST DATA:\n";
-echo "-----------------------\n";
-
-$testData = [
-    ["John Doe Test", "Male", "Computer Engineering", 2023, "2023-05-15", "PASSED", "Engineering", "Board Exam", "Board Exam"],
-    ["Jane Smith Test", "Female", "Civil Engineering", 2023, "2023-06-20", "PASSED", "Engineering", "Board Exam", "Board Exam"],
-    ["Bob Johnson Test", "Male", "Electrical Engineering", 2023, "2023-07-10", "PASSED", "Engineering", "Board Exam", "Board Exam"]
-];
-
+// 4. Insert test data for each department
+echo "\n3. INSERTING TEST DATA FOR ALL DEPARTMENTS\n";
 $stmt = $conn->prepare("INSERT INTO board_passers (name, sex, course, year_graduated, board_exam_date, result, department, exam_type, board_exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-$inserted = 0;
-foreach ($testData as $data) {
-    $stmt->bind_param("sssisssss", $data[0], $data[1], $data[2], $data[3], $data[4], $data[5], $data[6], $data[7], $data[8]);
+foreach ($departments as $dept) {
+    $name = "TEST " . $dept . " " . date('H:i:s');
+    $sex = "Male";
+    $course = "Sample Course " . $dept;
+    $year = 2023;
+    $date = "2023-01-01";
+    $result = "PASSED";
+    $examType = "Test Exam";
+    $boardExamType = "Board Exam";
+    $stmt->bind_param("sssisssss", $name, $sex, $course, $year, $date, $result, $dept, $examType, $boardExamType);
     if ($stmt->execute()) {
-        $inserted++;
-        echo "✅ Inserted: " . $data[0] . " (ID: " . $conn->insert_id . ")\n";
+        echo "✅ Inserted for $dept (ID: " . $conn->insert_id . ")\n";
     } else {
-        echo "❌ Failed to insert " . $data[0] . ": " . $stmt->error . "\n";
+        echo "❌ Insert failed for $dept: " . $stmt->error . "\n";
     }
 }
 $stmt->close();
 
-// 5. Verify data persistence
-echo "\n4. VERIFYING DATA:\n";
-echo "------------------\n";
-$count = $conn->query("SELECT COUNT(*) as count FROM board_passers");
-if ($count) {
-    $total = $count->fetch_assoc()['count'];
-    echo "✅ Total records: $total\n";
-} else {
-    echo "❌ Cannot count records: " . $conn->error . "\n";
+// 5. Verify dashboard query per department
+echo "\n4. DASHBOARD QUERY TEST\n";
+foreach ($departments as $dept) {
+    $res = $conn->query("SELECT COUNT(*) as count FROM board_passers WHERE department='$dept'");
+    $count = $res ? $res->fetch_assoc()['count'] : 0;
+    echo "✅ $dept records: $count\n";
 }
 
-// 6. Test the exact query dashboard uses
-echo "\n5. TESTING DASHBOARD QUERY:\n";
-echo "---------------------------\n";
-$dashQuery = $conn->query("SELECT * FROM board_passers WHERE department='Engineering' ORDER BY name ASC");
-if ($dashQuery) {
-    echo "✅ Dashboard query works: " . $dashQuery->num_rows . " records found\n";
-    
-    // Show the actual records
-    echo "\nRecords found:\n";
-    while ($row = $dashQuery->fetch_assoc()) {
-        echo "- ID: " . $row['id'] . " | Name: " . $row['name'] . " | Course: " . $row['course'] . "\n";
-    }
-} else {
-    echo "❌ Dashboard query failed: " . $conn->error . "\n";
-}
-
-// 7. Test add board passer functionality
-echo "\n6. TESTING ADD FUNCTIONALITY:\n";
-echo "-----------------------------\n";
-$addStmt = $conn->prepare("INSERT INTO board_passers (name, sex, course, year_graduated, board_exam_date, result, department, exam_type, board_exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-
-$testName = "LIVE TEST " . date('H:i:s');
-$testSex = "Male";
-$testCourse = "Mechanical Engineering";
-$testYear = 2023;
-$testDate = "2023-08-15";
-$testResult = "PASSED";
-$testDept = "Engineering";
-$testExamType = "Mechanical Engineer Licensure Exam";
-$testBoardType = "Board Exam";
-
-$addStmt->bind_param("sssisssss", $testName, $testSex, $testCourse, $testYear, $testDate, $testResult, $testDept, $testExamType, $testBoardType);
-
-if ($addStmt->execute()) {
-    $newId = $conn->insert_id;
-    echo "✅ Add test successful (ID: $newId)\n";
-    
-    // Verify immediately
-    $verify = $conn->query("SELECT * FROM board_passers WHERE id = $newId");
-    if ($verify && $verify->num_rows > 0) {
-        echo "✅ New record verified in database\n";
+// 6. Test add board passer functionality for all departments
+echo "\n5. ADD BOARD PASSER TEST\n";
+$stmtAdd = $conn->prepare("INSERT INTO board_passers (name, sex, course, year_graduated, board_exam_date, result, department, exam_type, board_exam_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+foreach ($departments as $dept) {
+    $name = "LIVE ADD TEST " . $dept . " " . date('H:i:s');
+    $sex = "Female";
+    $course = "Add Course " . $dept;
+    $year = 2023;
+    $date = "2023-02-01";
+    $result = "PASSED";
+    $examType = "Add Exam";
+    $boardExamType = "Board Exam";
+    $stmtAdd->bind_param("sssisssss", $name, $sex, $course, $year, $date, $result, $dept, $examType, $boardExamType);
+    if ($stmtAdd->execute()) {
+        $newId = $conn->insert_id;
+        echo "✅ Add test successful for $dept (ID: $newId)\n";
     } else {
-        echo "❌ New record disappeared!\n";
+        echo "❌ Add test failed for $dept: " . $stmtAdd->error . "\n";
     }
-} else {
-    echo "❌ Add test failed: " . $addStmt->error . "\n";
 }
-$addStmt->close();
+$stmtAdd->close();
 
-// 8. Final count
-$finalCount = $conn->query("SELECT COUNT(*) as count FROM board_passers");
-if ($finalCount) {
-    $total = $finalCount->fetch_assoc()['count'];
-    echo "\n✅ FINAL COUNT: $total records\n";
-} else {
-    echo "\n❌ Cannot get final count\n";
-}
+// 7. Final count
+$resFinal = $conn->query("SELECT COUNT(*) as count FROM board_passers");
+$totalFinal = $resFinal ? $resFinal->fetch_assoc()['count'] : 0;
+echo "\n✅ FINAL RECORD COUNT: $totalFinal\n";
 
 $conn->close();
-
-echo "\n" . str_repeat("=", 50) . "\n";
-echo "SYSTEM CHECK COMPLETE!\n";
-echo "Now try refreshing the dashboard and add board passer pages.\n";
-echo str_repeat("=", 50) . "\n";
+echo "\n" . str_repeat("=", 50) . "\nSYSTEM CHECK COMPLETE!\n";
 ?>

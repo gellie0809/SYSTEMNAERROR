@@ -1,20 +1,33 @@
 <?php
 $conn = new mysqli('localhost', 'root', '', 'project_db');
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
 
-echo "Record with '0' as result:\n";
-echo "==========================\n";
+$departments = [
+    'Engineering',
+    'Arts and Science',
+    'Business Administration and Accountancy',
+    'Criminal Justice Education',
+    'Teacher Education'
+];
 
-$result = $conn->query("SELECT * FROM board_passers WHERE department='Engineering' AND result='0'");
-while ($row = $result->fetch_assoc()) {
-    echo "ID: " . $row['id'] . "\n";
-    echo "Name: " . $row['name'] . "\n";
-    echo "Result: '" . $row['result'] . "'\n";
-    echo "Exam Type: " . $row['exam_type'] . "\n";
-    echo "Course: " . $row['course'] . "\n";
-    echo "Year Graduated: " . $row['year_graduated'] . "\n";
-    echo "Board Exam Date: " . $row['board_exam_date'] . "\n";
-    echo "Department: " . $row['department'] . "\n";
-    echo "========================\n";
+foreach ($departments as $dept) {
+    echo "\n=== All unique result values in $dept department ===\n";
+    echo str_repeat("=", 50) . "\n";
+
+    $result = $conn->query("SELECT result, COUNT(*) as count 
+                            FROM board_passers 
+                            WHERE department='$dept' 
+                            GROUP BY result");
+
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            echo "Result: '" . $row['result'] . "' - Count: " . $row['count'] . "\n";
+        }
+    } else {
+        echo "No records found for $dept\n";
+    }
 }
 
 $conn->close();

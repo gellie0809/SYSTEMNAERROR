@@ -1,7 +1,6 @@
 <?php
 session_start();
 header('Content-Type: application/json; charset=utf-8');
-// Prevent PHP notices/warnings from corrupting JSON output
 @ini_set('display_errors', '0');
 @ini_set('html_errors', '0');
 error_reporting(E_ALL & ~E_NOTICE & ~E_WARNING & ~E_STRICT & ~E_DEPRECATED);
@@ -14,166 +13,128 @@ try {
     exit;
 }
 
-$boardExamTypeId = isset($_GET['boardExamTypeId']) ? intval($_GET['boardExamTypeId']) : 0;
-$examDateId = isset($_GET['examDateId']) ? intval($_GET['examDateId']) : 0;
-$examYearParam = isset($_GET['examYear']) ? intval($_GET['examYear']) : 0;
-$subjectId = isset($_GET['subjectId']) ? intval($_GET['subjectId']) : 0;
-$subjectResult = isset($_GET['subjectResult']) ? trim($_GET['subjectResult']) : '';
-$limit = isset($_GET['limit']) ? intval($_GET['limit']) : 500;
-if ($limit <= 0) $limit = 500;
+// Allowed departments
+$allowedDepartments = [
+    'Engineering',
+    'Arts and Science',
+    'Business Administration and Accountancy',
+    'Criminal Justice Education',
+    'Teacher Education'
+];
 
+// GET parameters
+$department       = $_GET['department'] ?? 'Engineering';
+$boardExamTypeId  = intval($_GET['boardExamTypeId'] ?? 0);
+$examDateId       = intval($_GET['examDateId'] ?? 0);
+$examYearParam    = intval($_GET['examYear'] ?? 0);
+$subjectId        = intval($_GET['subjectId'] ?? 0);
+$subjectResult    = trim($_GET['subjectResult'] ?? '');
+$limit            = max(1, intval($_GET['limit'] ?? 500));
+
+// Validate required params
+if (!in_array($department, $allowedDepartments)) {
+    echo json_encode(['success' => false, 'error' => 'Invalid department']);
+    exit;
+}
 if ($boardExamTypeId <= 0 || $subjectId <= 0) {
     echo json_encode(['success' => false, 'error' => 'Missing required parameters: boardExamTypeId, subjectId']);
     exit;
 }
 
-// Look up canonical exam type name and optional date string
-$typeName = '';
-$dateStr = '';
-$tstmt = null; $dstmt = null;
+// Lookup canonical exam type and exam date
+$typeName = ''; $dateStr = '';
 try {
-    $tstmt = $conn->prepare("SELECT exam_type_name FROM board_exam_types WHERE id = ? LIMIT 1");
-    if ($tstmt) { $tstmt->bind_param('i', $boardExamTypeId); $tstmt->execute(); $tr = $tstmt->get_result()->fetch_assoc(); if ($tr && !empty($tr['exam_type_name'])) $typeName = $tr['exam_type_name']; $tstmt->close(); }
+    $tstmt = $conn->prepare("SELECT exam_type_name FROM board_exam_types WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL) LIMIT 1");
+    if ($tstmt) { $tstmt->bind_param('i', $boardExamTypeId); $tstmt->execute(); $r=$tstmt->get_result()->fetch_assoc(); if ($r) $typeName=$r['exam_type_name']; $tstmt->close(); }
     if ($examDateId > 0) {
-        $dstmt = $conn->prepare("SELECT exam_date FROM board_exam_dates WHERE id = ? LIMIT 1");
-        if ($dstmt) { $dstmt->bind_param('i', $examDateId); $dstmt->execute(); $dr = $dstmt->get_result()->fetch_assoc(); if ($dr && !empty($dr['exam_date'])) $dateStr = $dr['exam_date']; $dstmt->close(); }
+        $dstmt = $conn->prepare("SELECT exam_date FROM board_exam_dates WHERE id = ? AND (is_deleted = 0 OR is_deleted IS NULL) LIMIT 1");
+        if ($dstmt) { $dstmt->bind_param('i', $examDateId); $dstmt->execute(); $r=$dstmt->get_result()->fetch_assoc(); if ($r) $dateStr=$r['exam_date']; $dstmt->close(); }
     }
-} catch (Throwable $e) { /* ignore lookup errors; fall back to no filters */ }
+} catch (Throwable $e) {}
 
-// If year provided and no exact date, convert to a date range
-$fromYear = '';
-$toYear = '';
-if ($examYearParam > 0 && $dateStr === '') { $fromYear = $examYearParam.'-01-01'; $toYear = $examYearParam.'-12-31'; }
+// Year range fallback
+$fromYear = $toYear = '';
+if ($examYearParam > 0 && $dateStr === '') {
+    $fromYear = $examYearParam.'-01-01';
+    $toYear   = $examYearParam.'-12-31';
+}
 
-// Build base SELECT for people-friendly fields
-$select = "CONCAT_WS(' ', NULLIF(first_name,''), NULLIF(middle_name,''), NULLIF(last_name,'')) AS full_name, ";
-$select .= "COALESCE(NULLIF(CONCAT_WS(' ', NULLIF(first_name,''), NULLIF(middle_name,''), NULLIF(last_name,'')), ''), name) AS full_name_final, ";
-$select .= "sex, course, year_graduated, bp.result AS result, bp.board_exam_date AS exam_date";
-
-// Detect available columns in board_passer_subjects for portable filters
-$hasRes = false; $hasPassedCol = false;
+// Detect legacy columns
+$hasRes = $hasPassedCol = false;
 try {
-    if ($cr = $conn->query("SHOW COLUMNS FROM board_passer_subjects LIKE 'result'")) { $hasRes = ($cr->num_rows > 0); }
-    if ($cp = $conn->query("SHOW COLUMNS FROM board_passer_subjects LIKE 'passed'")) { $hasPassedCol = ($cp->num_rows > 0); }
-} catch (Throwable $e) { /* ignore */ }
-// Build condition snippets based on existing columns
+    $hasRes = ($conn->query("SHOW COLUMNS FROM board_passer_subjects LIKE 'result'")->num_rows > 0);
+    $hasPassedCol = ($conn->query("SHOW COLUMNS FROM board_passer_subjects LIKE 'passed'")->num_rows > 0);
+} catch (Throwable $e) {}
+
+// Determine passed/failed conditions
 $condPassedSQL = $hasRes ? "(bps.result = 'Passed')" : ($hasPassedCol ? "(bps.passed IN ('1',1))" : '0');
 $condFailedSQL = $hasRes ? "(bps.result = 'Failed')" : ($hasPassedCol ? "(bps.passed IN ('0',0))" : '0');
 
-// Join passers and filter by department, exam type name (canonical), and optional date string
+// Base SELECT
+$select = "
+    CONCAT_WS(' ', NULLIF(bp.first_name,''), NULLIF(bp.middle_name,''), NULLIF(bp.last_name,'')) AS full_name,
+    COALESCE(NULLIF(CONCAT_WS(' ', NULLIF(bp.first_name,''), NULLIF(bp.middle_name,''), NULLIF(bp.last_name,'')), ''), bp.name) AS full_name_final,
+    bp.sex, bp.course, bp.year_graduated, bp.result AS result, bp.board_exam_date AS exam_date
+";
+
+// Base SQL
 $sql = "SELECT $select
-    FROM board_passers bp
-    LEFT JOIN board_passer_subjects bps ON bps.board_passer_id = bp.id AND bps.subject_id = ?
-    WHERE bp.department = 'Engineering'";
-$params = [$subjectId];
-$types = 'i';
+        FROM board_passers bp
+        LEFT JOIN board_passer_subjects bps ON bps.board_passer_id = bp.id AND bps.subject_id = ?
+        WHERE bp.department = ? AND (bp.is_deleted = 0 OR bp.is_deleted IS NULL)";
+$params = [$subjectId, $department];
+$types = 'is';
 
-if ($typeName !== '') {
-    $sql .= " AND (bp.exam_type = ? OR bp.board_exam_type = ? OR bp.exam_type LIKE ?)";
-    $params[] = $typeName; $params[] = $typeName; $params[] = "%".$typeName."%"; $types .= 'sss';
-}
-if ($dateStr !== '') {
-    $sql .= " AND bp.board_exam_date = ?";
-    $params[] = $dateStr; $types .= 's';
-}
-if ($fromYear !== '' && $toYear !== '') {
-    $sql .= " AND bp.board_exam_date BETWEEN ? AND ?";
-    $params[] = $fromYear; $params[] = $toYear; $types .= 'ss';
-}
+// Filters
+if ($typeName) { $sql.=" AND (bp.exam_type=? OR bp.board_exam_type=? OR bp.exam_type LIKE ?)"; $params[]=$typeName;$params[]=$typeName;$params[]="%$typeName%"; $types.='sss'; }
+if ($dateStr) { $sql.=" AND bp.board_exam_date=?"; $params[]=$dateStr; $types.='s'; }
+if ($fromYear && $toYear) { $sql.=" AND bp.board_exam_date BETWEEN ? AND ?"; $params[]=$fromYear; $params[]=$toYear; $types.='ss'; }
 
-// Optional filter: only those who got a particular subject result (normalize for legacy 'passed' boolean)
+// Subject result filter
 if ($subjectResult !== '') {
-    if (strcasecmp($subjectResult, 'Passed') === 0) {
-        $sql .= " AND bps.id IS NOT NULL AND $condPassedSQL";
-    } elseif (strcasecmp($subjectResult, 'Failed') === 0) {
-        $sql .= " AND bps.id IS NOT NULL AND $condFailedSQL";
-    } elseif (strcasecmp($subjectResult, 'Unknown') === 0) {
-        // Missing subject record
-        $sql .= " AND bps.id IS NULL";
-    } else if ($hasRes) {
-        $sql .= " AND bps.id IS NOT NULL AND bps.result = ?";
-        $params[] = $subjectResult; $types .= 's';
-    }
-} else {
-    // When no specific subjectResult requested, default to only those with a subject record
-    $sql .= " AND bps.id IS NOT NULL";
-}
+    if (strcasecmp($subjectResult,'Passed')===0) { $sql.=" AND bps.id IS NOT NULL AND $condPassedSQL"; }
+    elseif (strcasecmp($subjectResult,'Failed')===0) { $sql.=" AND bps.id IS NOT NULL AND $condFailedSQL"; }
+    elseif (strcasecmp($subjectResult,'Unknown')===0) { $sql.=" AND bps.id IS NULL"; }
+    elseif ($hasRes) { $sql.=" AND bps.id IS NOT NULL AND bps.result=?"; $params[]=$subjectResult; $types.='s'; }
+} else { $sql.=" AND bps.id IS NOT NULL"; }
 
+// Order and limit
 $sql .= " ORDER BY bp.last_name ASC, bp.first_name ASC LIMIT ?";
-$params[] = $limit; $types .= 'i';
+$params[] = $limit; $types.='i';
 
-// Build count query (same filters, no ORDER BY/LIMIT)
-$countSql = "SELECT COUNT(*) AS total
-             FROM board_passers bp
-             LEFT JOIN board_passer_subjects bps ON bps.board_passer_id = bp.id AND bps.subject_id = ?
-             WHERE bp.department = 'Engineering'";
-$countParams = [$subjectId];
-$countTypes = 'i';
-if ($typeName !== '') { $countSql .= " AND (bp.exam_type = ? OR bp.board_exam_type = ? OR bp.exam_type LIKE ?)"; $countParams[] = $typeName; $countParams[] = $typeName; $countParams[] = "%".$typeName."%"; $countTypes .= 'sss'; }
-if ($dateStr !== '') { $countSql .= " AND bp.board_exam_date = ?"; $countParams[] = $dateStr; $countTypes .= 's'; }
-if ($fromYear !== '' && $toYear !== '') { $countSql .= " AND bp.board_exam_date BETWEEN ? AND ?"; $countParams[] = $fromYear; $countParams[] = $toYear; $countTypes .= 'ss'; }
-if ($subjectResult !== '') {
-    if (strcasecmp($subjectResult, 'Passed') === 0) {
-        $countSql .= " AND bps.id IS NOT NULL AND $condPassedSQL";
-    } elseif (strcasecmp($subjectResult, 'Failed') === 0) {
-        $countSql .= " AND bps.id IS NOT NULL AND $condFailedSQL";
-    } elseif (strcasecmp($subjectResult, 'Unknown') === 0) {
-        $countSql .= " AND bps.id IS NULL";
-    } else if ($hasRes) {
-        $countSql .= " AND bps.id IS NOT NULL AND bps.result = ?"; $countParams[] = $subjectResult; $countTypes .= 's';
-    }
-} else {
-    $countSql .= " AND bps.id IS NOT NULL";
-}
-// note: do not append legacy OR conditions again; the portable conditions above already handle both schemas
+// Count query
+$countSql = preg_replace('/^SELECT\s[\s\S]*?FROM\sboard_passers\s/i','SELECT COUNT(*) AS total FROM board_passers ',$sql);
+$countSql = preg_replace('/ORDER BY[\s\S]*/i','',$countSql);
+$countParams = $params; array_pop($countParams);
 
+// Prepare + execute main query
 $stmt = $conn->prepare($sql);
-if (!$stmt) {
-    echo json_encode(['success' => false, 'error' => 'Prepare failed']);
-    exit;
-}
-// bind with references to satisfy mysqli
-{
-    $bind = [];
-    $bind[] = &$types;
-    for ($i=0; $i<count($params); $i++) { $bind[] = &$params[$i]; }
-    call_user_func_array([$stmt, 'bind_param'], $bind);
-}
-if (!$stmt->execute()) {
-    echo json_encode(['success' => false, 'error' => 'Execute failed: ' . $stmt->error]);
-    exit;
-}
+if (!$stmt) { echo json_encode(['success'=>false,'error'=>'Prepare failed']); exit; }
+$bind = [&$types]; foreach ($params as $p) { $bind[]=&$p; } call_user_func_array([$stmt,'bind_param'],$bind);
+if (!$stmt->execute()) { echo json_encode(['success'=>false,'error'=>'Execute failed: '.$stmt->error]); exit; }
 $res = $stmt->get_result();
 $rows = [];
-while ($r = $res->fetch_assoc()) {
-    $full = $r['full_name_final'] ?? '';
-    $rows[] = [
-        'full_name' => $full,
-        'sex' => $r['sex'] ?? '',
-        'course' => $r['course'] ?? '',
-        'year_graduated' => $r['year_graduated'] ?? '',
-        'result' => $r['result'] ?? '',
-        'exam_date' => $r['exam_date'] ?? ''
+while ($r=$res->fetch_assoc()) {
+    $rows[]= [
+        'full_name'=>$r['full_name_final'] ?? '',
+        'sex'=>$r['sex'] ?? '',
+        'course'=>$r['course'] ?? '',
+        'year_graduated'=>$r['year_graduated'] ?? '',
+        'result'=>$r['result'] ?? '',
+        'exam_date'=>$r['exam_date'] ?? ''
     ];
 }
 
+// Execute count query
 $totalCount = 0;
 $cstmt = $conn->prepare($countSql);
 if ($cstmt) {
-    // bind with references for count query too
-    $bind2 = [];
-    $bind2[] = &$countTypes;
-    for ($i=0;$i<count($countParams);$i++){ $bind2[] = &$countParams[$i]; }
-    call_user_func_array([$cstmt, 'bind_param'], $bind2);
-    if ($cstmt->execute()) {
-        $cres = $cstmt->get_result();
-        $crow = $cres->fetch_assoc();
-        $totalCount = intval($crow['total'] ?? 0);
-    }
+    $bind2=[&$countTypes]; foreach ($countParams as $p) { $bind2[]=&$p; } call_user_func_array([$cstmt,'bind_param'],$bind2);
+    if ($cstmt->execute()) { $cres=$cstmt->get_result(); $crow=$cres->fetch_assoc(); $totalCount=intval($crow['total']??0); }
     $cstmt->close();
 }
 
 $stmt->close();
 $conn->close();
 
-echo json_encode(['success' => true, 'count' => count($rows), 'total_count' => $totalCount, 'data' => $rows]);
+echo json_encode(['success'=>true,'count'=>count($rows),'total_count'=>$totalCount,'data'=>$rows]);

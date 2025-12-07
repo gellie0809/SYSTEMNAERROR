@@ -1,0 +1,35 @@
+====================================================================================================
+TRAINING DATA (33 RECORDS) - SUMMARY STATISTICS
+====================================================================================================
+
+1. DISTRIBUTION BY YEAR:
+   2021: 4 records
+   2022: 8 records
+   2023: 12 records
+   2024: 9 records
+
+2. DISTRIBUTION BY EXAM TYPE:
+   Registered Master Electrician Licensure Exam (RMELE): 10 records
+   Electronics Engineer Licensure Examination (ECELE): 9 records
+   Registered Electrical Engineer Licensure Exam (REELE): 8 records
+   Electronics Technician Licensure Exam (ECTLE): 6 records
+
+3. DISTRIBUTION BY ATTEMPTS:
+   First Timer: 20 records
+   Repeater: 13 records
+
+4. PASSING RATE STATISTICS:
+   Minimum: 0.00%
+   Maximum: 100.00%
+   Mean: 43.39%
+   Median: 40.00%
+   Std Dev: 33.40%
+
+5. TOTAL EXAMINEES STATISTICS:
+   Total examinees across all records: 265
+   Average per record: 8.0
+   Total passed: 127
+   Total failed: 131
+   Total conditional: 7
+
+====================================================================================================

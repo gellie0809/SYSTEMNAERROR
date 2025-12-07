@@ -11,6 +11,6 @@ $_SESSION = array();
 session_destroy();
 
 // 4. Redirect the user back to the main page
-header("Location: mainpage.php");
+header("Location: index.php");
 exit();
 ?>

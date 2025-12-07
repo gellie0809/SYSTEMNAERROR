@@ -4,15 +4,16 @@
   top: 0;
   bottom: 0;
   width: 260px;
-  /* white background with teal accents for text/icons */
+  /* White background with subtle shadow */
   background: #ffffff;
-  box-shadow: 0 2px 8px rgba(6,97,102,0.06);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
   padding-top: 32px;
   z-index: 100;
+  /* display: none; */
   display: flex;
   flex-direction: column;
   gap: 20px;
-  border-right: 1px solid rgba(0,0,0,0.08);
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
   height: 100vh;
 }
 
@@ -21,7 +22,7 @@
   margin-bottom: 40px;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #06b6d4;
+  color: #D4AF37;
   letter-spacing: 1.5px;
 }
 
@@ -38,71 +39,125 @@
   gap: 16px;
   padding: 16px 20px;
   border-radius: 12px;
-  color: #06b6d4;
+  color: #877928;
   text-decoration: none;
   font-size: 0.95rem;
   font-weight: 500;
   transition: all 0.3s ease;
   position: relative;
+  background: transparent;
 }
 
 .sidebar-nav a.active,
 .sidebar-nav a:hover {
-  /* active/hover: teal background, white text */
-  background: linear-gradient(90deg, #06b6d4 0%, #0593b4 100%);
-  color: #fff;
+  /* active/hover: gold background, dark text */
+  background: linear-gradient(90deg, #D4AF37 0%, #C9A84F 100%);
+  color: #1a1614;
   font-weight: 600;
-  transform: translateX(8px);
-  box-shadow: 0 8px 25px rgba(3,105,112,0.18);
+  transform: translateX(0);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
 }
 
 .sidebar-nav i,
 .sidebar-nav ion-icon {
   font-size: 1.4em;
-  color: #06b6d4;
+  color: #D4AF37;
   transition: color 0.3s;
 }
 
-/* Higher-specificity guard rules to ensure pages don't accidentally override the canonical sidebar
-   (uses !important sparingly for visual properties that were being inconsistently overridden) */
+.sidebar-nav a.active i,
+.sidebar-nav a.active ion-icon,
+.sidebar-nav a:hover i,
+.sidebar-nav a:hover ion-icon {
+  color: #1a1614;
+}
+
+/* Higher-specificity guard rules for structural properties only
+   Color overrides are allowed per department */
 html body .sidebar {
-  background: #ffffff !important;
-  width: 260px !important;
-  box-shadow: 0 2px 8px rgba(6,97,102,0.06) !important;
-  padding-top: 32px !important;
-  border-right: 1px solid rgba(0,0,0,0.08) !important;
-  height: 100vh !important;
+  background: #ffffff;
+  width: 260px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+  padding-top: 32px;
+  border-right: 1px solid rgba(0, 0, 0, 0.08);
+  height: 100vh;
 }
 .sidebar .logo {
-  text-align: center !important;
-  margin-bottom: 40px !important;
-  font-size: 1.5rem !important;
-  font-weight: 700 !important;
-  color: #06b6d4 !important;
+  text-align: center;
+  margin-bottom: 40px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #D4AF37;
+}
+.sidebar-nav a {
+  color: #877928;
+  background: transparent;
+}
+.sidebar-nav i,
+.sidebar-nav ion-icon {
+  color: #D4AF37;
 }
 .sidebar-nav a.active,
 .sidebar-nav a:hover {
-  background: linear-gradient(90deg, #06b6d4 0%, #0593b4 100%) !important;
-  color: #fff !important;
-  font-weight: 600 !important;
-  transform: translateX(8px) !important;
-  box-shadow: 0 8px 25px rgba(3,105,112,0.18) !important;
+  background: linear-gradient(90deg, #D4AF37 0%, #C9A84F 100%);
+  color: #1a1614;
+  font-weight: 600;
+  transform: translateX(0);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+.sidebar-nav a.active i,
+.sidebar-nav a.active ion-icon,
+.sidebar-nav a:hover i,
+.sidebar-nav a:hover ion-icon {
+  color: #1a1614;
 }
 
 /* Centralize responsive sidebar behavior so pages don't contain duplicate rules */
 @media (max-width: 900px) {
-  html body .sidebar { width: 80px !important; }
-  html body .main-content, html body .topbar { margin-left: 80px !important; }
-  html body .sidebar-nav a span { display: none !important; }
-  html body .sidebar .logo { font-size: 1.2rem !important; }
-  html body .dashboard-title { font-size: 1.1rem !important; }
-  html body .logout-btn { padding: 10px 16px !important; font-size: 0.9rem !important; }
+  html body .sidebar {
+    width: 80px;
+    display: flex;
+    align-items: center;
+  }
+  .sidebar-nav {
+    padding: 0;
+  }
+  html body .sidebar-nav a span {
+    display: none;
+  }
+  html body .sidebar .logo {
+    font-size: 1.2rem;
+  }
+  html body .dashboard-title {
+    font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+  }
+  html body .logout-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 600px) {
-  html body .sidebar { display: none !important; }
-  html body .topbar, html body .main-content { margin-left: 0 !important; }
-  html body .topbar { padding: 16px 20px !important; }
-  html body .dashboard-title { font-size: 1rem !important; }
-  html body .logout-btn { padding: 8px 12px !important; font-size: 0.85rem !important; }
+  html body .sidebar {
+    display: none;
+  }
+  html body .topbar,
+  html body .main-content,
+  .main {
+    margin-left: 0;
+  }
+  html body .topbar {
+    padding: 16px 20px;
+  }
+  html body .dashboard-title {
+    font-size: 1rem;
+  }
+  html body .logout-btn {
+    padding: 8px 12px;
+    font-size: 0.85rem;
+  }
 }
