@@ -3253,7 +3253,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cte_admin@lspu.edu.ph'
                 pdf.setTextColor(15, 23, 36);
                 pdf.setFontSize(18);
                 pdf.setFont(undefined, 'bold');
-                pdf.text('Anonymous Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
+                pdf.text('Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
                 
                 currentY += 10;
                 pdf.setFontSize(10);

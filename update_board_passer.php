@@ -5,22 +5,24 @@ header('Content-Type: application/json; charset=utf-8');
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
 
-// Listahan ng lahat ng valid admin emails (5 colleges)
+// Listahan ng lahat ng valid admin emails (5 colleges + ICTS)
 $valid_admins = [
     'eng_admin@lspu.edu.ph',   // Engineering
     'cas_admin@lspu.edu.ph',   // Arts and Science
     'cbaa_admin@lspu.edu.ph',  // Business Administration
     'ccje_admin@lspu.edu.ph',  // Criminal Justice
-    'cte_admin@lspu.edu.ph'    // Teacher Education
+    'cte_admin@lspu.edu.ph',   // Teacher Education
+    'icts_admin@lspu.edu.ph'   // ICTS (can access all departments)
 ];
 
 // PALITAN MO LANG ANG MGA VALUE DITO (base sa actual sa DB mo)
 $admin_to_department = [
     'eng_admin@lspu.edu.ph'  => 'Engineering',
-    'cas_admin@lspu.edu.ph'  => 'CAS',                            // ← Common sa LSPU
-    'cbaa_admin@lspu.edu.ph' => 'CBAA',                           // ← Usually CBAA
-    'ccje_admin@lspu.edu.ph' => 'CCJE',                           // ← Usually CCJE
-    'cte_admin@lspu.edu.ph'  => 'CTE'                             // ← Usually CTE
+    'cas_admin@lspu.edu.ph'  => 'Arts and Sciences',
+    'cbaa_admin@lspu.edu.ph' => 'Business Administration and Accountancy',
+    'ccje_admin@lspu.edu.ph' => 'Criminal Justice Education',
+    'cte_admin@lspu.edu.ph'  => 'Teacher Education',
+    'icts_admin@lspu.edu.ph' => 'ALL'  // ICTS can access all departments
 ];
 
 // AUTHENTICATION CHECK
@@ -100,7 +102,7 @@ try {
     $conn->autocommit(false);
     $conn->begin_transaction();
 
-    // 1. Update main record (only records from current admin's department)
+    // 1. Update main record (ICTS can edit all departments, others only their own)
     $update_sql = "UPDATE board_passers SET 
                     first_name = ?, middle_name = ?, last_name = ?, suffix = ?, 
                     sex = ?, course = ?, year_graduated = ?, result = ?, 
@@ -115,10 +117,17 @@ try {
         $types .= 's';
     }
 
-    $update_sql .= " WHERE id = ? AND department = ? LIMIT 1";
-    $params[] = $student_id;
-    $params[] = $current_department;
-    $types .= 'is';
+    // ICTS admin can edit all departments, others only their own
+    if ($current_department !== 'ALL') {
+        $update_sql .= " WHERE id = ? AND department = ? LIMIT 1";
+        $params[] = $student_id;
+        $params[] = $current_department;
+        $types .= 'is';
+    } else {
+        $update_sql .= " WHERE id = ? LIMIT 1";
+        $params[] = $student_id;
+        $types .= 'i';
+    }
 
     $stmt = $conn->prepare($update_sql);
     $stmt->bind_param($types, ...$params);

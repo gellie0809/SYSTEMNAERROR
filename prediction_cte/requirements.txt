@@ -1,0 +1,22 @@
+# CTE Board Exam Prediction - Requirements
+# These packages are needed for the machine learning and API components
+
+# Core ML packages
+numpy>=1.24.0
+pandas>=2.0.0
+scikit-learn>=1.3.0
+joblib>=1.3.0
+
+# Database connection
+mysql-connector-python>=8.0.33
+
+# API framework
+flask>=2.3.0
+flask-cors>=4.0.0
+
+# Visualization
+matplotlib>=3.7.0
+seaborn>=0.12.0
+
+# PDF generation
+reportlab>=4.0.0

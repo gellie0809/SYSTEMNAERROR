@@ -45,6 +45,11 @@
             data-icon-default="fas fa-chart-pie" data-icon-active="fas fa-chart-area">
             <i class="fas fa-chart-pie"></i> <span>View Anonymous Data Statistics</span>
         </a>
+        <a href="prediction_ccje_anonymous.php"
+            class="<?php if(basename($_SERVER['PHP_SELF'])==='prediction_ccje_php.php' || basename($_SERVER['PHP_SELF'])==='prediction_ccje_anonymous.php') echo 'active'; ?>"
+            data-icon-default="fas fa-brain" data-icon-active="fas fa-robot">
+            <i class="fas fa-brain"></i> <span>AI Predictions (Anonymous)</span>
+        </a>
     </div>
     <script>
     (function() {

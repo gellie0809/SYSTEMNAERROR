@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph') {
+// Allow CBAA admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -158,9 +158,9 @@ $conn->close();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #FEE32B;
-            --primary-dark: #877928;
-            --success: #FEE32B;
+            --primary: #F59E0B;
+            --primary-dark: #D97706;
+            --success: #F59E0B;
             --danger: #64748b;
             --warning: #a8c5a5;
         }
@@ -172,50 +172,78 @@ $conn->close();
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #FDFDF9 0%, #FBEF9C 100%);
-            color: #0f1724;
-            min-height: 100vh;
-        }
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+    }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #fff;
-            font-weight: 700;
-        }
+    /* Sidebar styling moved to css/sidebar.css (shared) */
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #FFFFFF;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
 
         .main {
             margin-left: 260px;
@@ -237,7 +265,7 @@ $conn->close();
         }
 
         .add-data-btn {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: #fff;
             border: none;
             border-radius: 12px;
@@ -284,7 +312,7 @@ $conn->close();
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #FEE32B, #877928);
+            background: linear-gradient(90deg, #F59E0B, #D97706);
             opacity: 0;
             transition: opacity 0.3s;
         }
@@ -311,23 +339,23 @@ $conn->close();
         }
 
         .stat-card.total .icon {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: #fff;
         }
 
         .stat-card.passed .icon {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: #fff;
         }
 
         .stat-card.failed .icon {
-            background: linear-gradient(135deg, #7a9d77 0%, #64748b 100%);
+            background: linear-gradient(135deg, #94a3af 0%, #6b7280 100%);
             color: #fff;
         }
 
         .stat-card.conditional .icon {
-            background: linear-gradient(135deg, #a8c5a5 0%, #8b9c88 100%);
-            color: #fff;
+            background: linear-gradient(135deg, #FDE68A 0%, #FCD34D 100%);
+            color: #78350F;
         }
 
         .stat-card .label {
@@ -345,7 +373,7 @@ $conn->close();
 
         .stat-card .percentage {
             font-size: 0.9rem;
-            color: #10b981;
+            color: #D97706;
             font-weight: 600;
             margin-top: 4px;
         }
@@ -383,7 +411,7 @@ $conn->close();
         }
 
         thead {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         }
 
         thead th {
@@ -427,8 +455,8 @@ $conn->close();
         }
 
         .badge.passed {
-            background: linear-gradient(135deg, #d3ecdc 0%, #c5dcc2 100%);
-            color: #2d5a2e;
+            background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+            color: #92400E;
         }
 
         .badge.failed {
@@ -437,8 +465,8 @@ $conn->close();
         }
 
         .badge.conditional {
-            background: linear-gradient(135deg, #e8f5e9 0%, #d1e7dd 100%);
-            color: #877928;
+            background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 100%);
+            color: #D97706;
         }
 
         .action-buttons {
@@ -578,7 +606,7 @@ $conn->close();
         }
 
         .btn-modal-save {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
         }
 
@@ -609,7 +637,7 @@ $conn->close();
 
         .form-group-modal select:focus {
             outline: none;
-            border-color: #FEE32B;
+            border-color: #F59E0B;
             box-shadow: 0 0 0 4px rgba(254, 227, 43, 0.15);
         }
 
@@ -646,7 +674,7 @@ $conn->close();
             background: #f8faf9;
             border-radius: 10px;
             margin-bottom: 8px;
-            border-left: 4px solid #FEE32B;
+            border-left: 4px solid #F59E0B;
         }
 
         .legend-item-date {
@@ -688,7 +716,7 @@ $conn->close();
         }
 
         .legend-count {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
             padding: 4px 12px;
             border-radius: 999px;
@@ -698,7 +726,7 @@ $conn->close();
 
         .legend-total {
             background: linear-gradient(135deg, #e8f5e9 0%, #d1e7dd 100%);
-            border: 2px solid #FEE32B;
+            border: 2px solid #F59E0B;
             padding: 16px;
             border-radius: 12px;
             margin-top: 16px;
@@ -714,7 +742,7 @@ $conn->close();
         }
 
         .legend-total-value {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
             padding: 8px 20px;
             border-radius: 999px;
@@ -809,6 +837,120 @@ $conn->close();
                 gap: 12px;
             }
         }
+
+    /* CBAA-specific sidebar color overrides for golden theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 15px !important;
+        }
+
+        .topbar {
+            left: 0 !important;
+            padding: 12px 15px !important;
+        }
+
+        .dashboard-title {
+            font-size: 16px !important;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 15px !important;
+        }
+
+        .data-table-container {
+            padding: 15px !important;
+        }
+
+        table {
+            font-size: 13px !important;
+        }
+
+        table th,
+        table td {
+            padding: 8px !important;
+        }
+
+        .action-buttons {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .action-buttons button {
+            width: 100% !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .topbar {
+            padding: 10px !important;
+        }
+
+        .dashboard-title {
+            font-size: 14px !important;
+        }
+
+        .stat-card {
+            padding: 12px !important;
+        }
+
+        .stat-number {
+            font-size: 24px !important;
+        }
+
+        .stat-label {
+            font-size: 12px !important;
+        }
+
+        table {
+            font-size: 12px !important;
+        }
+
+        table th,
+        table td {
+            padding: 6px 4px !important;
+        }
+
+        /* Hide less important columns on small screens */
+        .hide-mobile {
+            display: none !important;
+        }
+    }
     </style>
 </head>
 <body>
@@ -821,7 +963,7 @@ $conn->close();
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Anonymous Data Dashboard</h2>
+            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Data Dashboard</h2>
             <a href="testing_anonymous_data_cbaa.php" class="add-data-btn">
                 <i class="fas fa-plus-circle"></i> Add Anonymous Data
             </a>
@@ -884,7 +1026,7 @@ $conn->close();
         <!-- Data Table -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-table"></i> Anonymous Data Records</h3>
+                <h3><i class="fas fa-table"></i> Data Records</h3>
                 <span style="color: #64748b; font-size: 0.9rem;">
                     <?php echo number_format($total_records); ?> total records
                 </span>
@@ -946,8 +1088,8 @@ $conn->close();
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h3>No Anonymous Data Yet</h3>
-                    <p>Start by adding anonymous board examinee data using the form.</p>
+                    <h3>No Data Yet</h3>
+                    <p>Start by adding board examinee data using the form.</p>
                     <br>
                     <a href="testing_anonymous_data_cbaa.php" class="add-data-btn">
                         <i class="fas fa-plus-circle"></i> Add First Record
@@ -961,7 +1103,7 @@ $conn->close();
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Anonymous Record</h3>
+                <h3><i class="fas fa-edit"></i> Edit Record</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -1139,7 +1281,7 @@ $conn->close();
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this anonymous record? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }

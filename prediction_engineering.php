@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph') {
+// Allow Engineering admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'eng_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -660,7 +660,7 @@ $modelInfo = callPredictionAPI('model/info');
                     window.URL.revokeObjectURL(url);
                     document.body.removeChild(a);
                     
-                    alert('✅ Training Report downloaded successfully!\n\nThis report includes:\n• Complete 33 training records\n• Model training process\n• Algorithm comparison\n• Validation results\n• Accuracy metrics\n• Historical validation');
+                    alert('✅ Training Report downloaded successfully!\n\nThis comprehensive report includes:\n• Data Collection Process\n• Data Cleaning and Preparation\n• Dataset Splitting (80% Training, 20% Testing)\n• Feature Selection\n• Model Selection (7 Algorithms)\n• Model Training Details\n• Model Testing and Evaluation\n• Evaluation Metrics (R², MAE, MSE, RMSE)\n• Dataset Summary\n• Prediction Generation Process');
                 } else {
                     const error = await response.json();
                     alert('Error: ' + (error.error || 'Failed to generate training report'));

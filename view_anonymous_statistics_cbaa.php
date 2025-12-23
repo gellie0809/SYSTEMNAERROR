@@ -22,11 +22,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         :root {
-            --primary: #FEE32B;
-            --primary-dark: #877928;
-            --success: #FEE32B;
+            --primary: #F59E0B;
+            --primary-dark: #D97706;
+            --success: #F59E0B;
             --danger: #64748b;
-            --warning: #a8c5a5;
+            --warning: #FDE68A;
             --purple: #8b5cf6;
             --teal: #14b8a6;
         }
@@ -38,69 +38,79 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #FDFDF9 0%, #e8f5e8 50%, #FBEF9C 100%);
-            color: #0f1724;
-            min-height: 100vh;
-            position: relative;
-        }
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+    }
 
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-                radial-gradient(circle at 20% 50%, rgba(254, 227, 43, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 80%, rgba(90, 133, 95, 0.08) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #FEE32B 0%, #7a9d76 50%, #877928 100%);
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 30px rgba(254, 227, 43, 0.3), 0 2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 50;
-            backdrop-filter: blur(10px);
-        }
+    /* Sidebar styling moved to css/sidebar.css (shared) */
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #fff;
-            font-weight: 700;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            text-decoration: none;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        }
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #FFFFFF;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+    }
 
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
 
         .main {
             margin-left: 260px;
@@ -118,9 +128,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             padding: 24px;
             background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
             border-radius: 20px;
-            box-shadow: 0 8px 32px rgba(254, 227, 43, 0.15);
+            box-shadow: 0 8px 32px rgba(245, 158, 11, 0.15);
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(254, 227, 43, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
 
         .page-header h2 {
@@ -133,14 +143,14 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .page-header h2 i {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
         }
 
         .btn-link {
-            background: linear-gradient(135deg, #FEE32B 0%, #7a9d76 50%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #D97706 100%);
             color: #fff;
             border: none;
             border-radius: 12px;
@@ -153,7 +163,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 15px rgba(254, 227, 43, 0.3);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
             position: relative;
             overflow: hidden;
         }
@@ -175,7 +185,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
         .btn-link:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(254, 227, 43, 0.4);
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
         }
 
         .charts-grid {
@@ -190,9 +200,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             border-radius: 24px;
             padding: 32px;
             box-shadow: 
-                0 10px 40px rgba(254, 227, 43, 0.12),
+                0 10px 40px rgba(245, 158, 11, 0.12),
                 0 2px 8px rgba(0, 0, 0, 0.05);
-            border: 2px solid rgba(254, 227, 43, 0.15);
+            border: 2px solid rgba(245, 158, 11, 0.15);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
@@ -205,7 +215,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #FEE32B, #877928, #FEE32B);
+            background: linear-gradient(90deg, #F59E0B, #D97706, #F59E0B);
             background-size: 200% 100%;
             animation: shimmer 3s linear infinite;
         }
@@ -218,9 +228,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         .chart-card:hover {
             transform: translateY(-4px);
             box-shadow: 
-                0 15px 50px rgba(254, 227, 43, 0.2),
+                0 15px 50px rgba(245, 158, 11, 0.2),
                 0 5px 15px rgba(0, 0, 0, 0.1);
-            border-color: rgba(254, 227, 43, 0.3);
+            border-color: rgba(245, 158, 11, 0.3);
         }
 
         .chart-card.full-width {
@@ -236,11 +246,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             align-items: center;
             gap: 12px;
             padding-bottom: 16px;
-            border-bottom: 2px solid rgba(254, 227, 43, 0.15);
+            border-bottom: 2px solid rgba(245, 158, 11, 0.15);
         }
 
         .chart-card h3 i {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -249,7 +259,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
         .info-btn {
             margin-left: auto;
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
             border: none;
             width: 32px;
@@ -260,12 +270,12 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             align-items: center;
             justify-content: center;
             transition: all 0.3s ease;
-            box-shadow: 0 2px 8px rgba(254, 227, 43, 0.3);
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
         }
 
         .info-btn:hover {
             transform: scale(1.1);
-            box-shadow: 0 4px 12px rgba(254, 227, 43, 0.5);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.5);
         }
 
         .info-btn i {
@@ -280,7 +290,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             padding: 24px;
             margin-bottom: 32px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            border: 1px solid rgba(254, 227, 43, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.2);
         }
 
         .filter-header {
@@ -289,7 +299,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             justify-content: space-between;
             margin-bottom: 20px;
             padding-bottom: 16px;
-            border-bottom: 2px solid rgba(254, 227, 43, 0.15);
+            border-bottom: 2px solid rgba(245, 158, 11, 0.15);
         }
 
         .filter-header h3 {
@@ -303,7 +313,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .filter-header h3 i {
-            color: #FEE32B;
+            color: #F59E0B;
             font-size: 1.3rem;
         }
 
@@ -329,7 +339,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .filter-group label i {
-            color: #FEE32B;
+            color: #F59E0B;
             font-size: 1rem;
         }
 
@@ -352,8 +362,8 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
         .filter-select select:focus {
             outline: none;
-            border-color: #FEE32B;
-            box-shadow: 0 0 0 3px rgba(254, 227, 43, 0.1);
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
         }
 
         .multi-select-container {
@@ -376,12 +386,12 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .multi-select-display:hover {
-            border-color: #FEE32B;
+            border-color: #F59E0B;
         }
 
         .multi-select-display.active {
-            border-color: #FEE32B;
-            box-shadow: 0 0 0 3px rgba(254, 227, 43, 0.1);
+            border-color: #F59E0B;
+            box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
         }
 
         .multi-select-placeholder {
@@ -390,7 +400,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .selected-tag {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
             padding: 4px 10px;
             border-radius: 6px;
@@ -417,7 +427,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             right: 0;
             margin-top: 4px;
             background: white;
-            border: 2px solid #FEE32B;
+            border: 2px solid #F59E0B;
             border-radius: 10px;
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
             max-height: 300px;
@@ -457,7 +467,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             width: 18px;
             height: 18px;
             cursor: pointer;
-            accent-color: #FEE32B;
+            accent-color: #F59E0B;
         }
 
         .filter-actions {
@@ -481,14 +491,14 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         }
 
         .filter-btn.primary {
-            background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+            background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
             color: white;
-            box-shadow: 0 4px 12px rgba(254, 227, 43, 0.3);
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         }
 
         .filter-btn.primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(254, 227, 43, 0.4);
+            box-shadow: 0 6px 16px rgba(245, 158, 11, 0.4);
         }
 
         .filter-btn.secondary {
@@ -658,7 +668,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         padding: 48px 44px !important;
         border-radius: 28px !important;
         box-shadow:
-            0 32px 64px -12px rgba(90, 133, 95, 0.25),
+            0 32px 64px -12px rgba(217, 119, 6, 0.25),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         max-width: 480px !important;
         width: 92% !important;
@@ -677,7 +687,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 25%, #a8c5a5 50%, #FEE32B 75%, #877928 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 25%, #FDE68A 50%, #F59E0B 75%, #D97706 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -698,13 +708,13 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
     #logoutModal .modal-header {
         margin-bottom: 32px !important;
-        background: linear-gradient(135deg, #FDFDF9 0%, #FBEF9C 100%) !important;
+        background: linear-gradient(135deg, #FDFDF9 0%, #FDE68A 100%) !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
         border: 2px solid #c5dcc2 !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(254, 227, 43, 0.15) !important;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -714,7 +724,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #877928 0%, #FEE32B 50%, #a8c5a5 100%) !important;
+        background: linear-gradient(90deg, #D97706 0%, #F59E0B 50%, #FDE68A 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -725,7 +735,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(254, 227, 43, 0.1) 0%, rgba(168, 197, 165, 0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(168, 197, 165, 0.05) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -733,7 +743,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #2d5a2e 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #B45309 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
@@ -742,9 +752,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         color: white !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(90, 133, 95, 0.4),
+            0 20px 40px rgba(217, 119, 6, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(254, 227, 43, 0.2) !important;
+            0 0 0 6px rgba(245, 158, 11, 0.2) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -753,16 +763,16 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     @keyframes iconPulse {
         0%, 100% {
             box-shadow:
-                0 20px 40px rgba(90, 133, 95, 0.4),
+                0 20px 40px rgba(217, 119, 6, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(254, 227, 43, 0.2);
+                0 0 0 6px rgba(245, 158, 11, 0.2);
             transform: scale(1);
         }
         50% {
             box-shadow:
-                0 25px 50px rgba(90, 133, 95, 0.6),
+                0 25px 50px rgba(217, 119, 6, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(254, 227, 43, 0.3);
+                0 0 0 8px rgba(245, 158, 11, 0.3);
             transform: scale(1.05);
         }
     }
@@ -774,7 +784,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #a8c5a5, #FEE32B, #877928, #2d5a2e) !important;
+        background: linear-gradient(135deg, #FDE68A, #F59E0B, #D97706, #B45309) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -793,7 +803,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #877928 0%, #2d5a2e 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -805,7 +815,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #2d5a2e !important;
+        color: #D97706 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -827,7 +837,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     }
 
     #logoutModal .modal-text::before {
-        content: '⚠️' !important;
+        content: 'Ã¢Å¡Â Ã¯Â¸Â' !important;
         position: absolute !important;
         top: -12px !important;
         left: 50% !important;
@@ -929,12 +939,12 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #2d5a2e 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
         color: #ffffff !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #2d5a2e 0%, #877928 50%, #FEE32B 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #FCD34D 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
     }
 
@@ -955,9 +965,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
     }
 
     #logoutModal .modal-btn.logout-confirm.success {
-        background: linear-gradient(135deg, #FEE32B 0%, #877928 50%, #3d5a40 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #3d5a40 100%) !important;
         transform: translateY(-2px) scale(1.05) !important;
-        box-shadow: 0 12px 30px rgba(254, 227, 43, 0.4) !important;
+        box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm.success .btn-text {
@@ -995,13 +1005,131 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             width: 100% !important;
         }
     }
+
+    /* CBAA-specific sidebar color overrides for golden theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 15px !important;
+        }
+
+        .topbar {
+            left: 0 !important;
+            padding: 12px 15px !important;
+        }
+
+        .dashboard-title {
+            font-size: 16px !important;
+        }
+
+        .action-buttons {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .action-buttons button {
+            width: 100% !important;
+        }
+
+        .filter-section {
+            padding: 15px !important;
+        }
+
+        .filter-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+        }
+
+        .stats-grid {
+            grid-template-columns: 1fr !important;
+            gap: 15px !important;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .chart-card {
+            padding: 15px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .topbar {
+            padding: 10px !important;
+        }
+
+        .dashboard-title {
+            font-size: 14px !important;
+        }
+
+        .filter-section {
+            padding: 12px !important;
+        }
+
+        .stat-card {
+            padding: 12px !important;
+        }
+
+        .stat-value {
+            font-size: 24px !important;
+        }
+
+        .stat-label {
+            font-size: 12px !important;
+        }
+
+        .chart-card h3 {
+            font-size: 16px !important;
+        }
+
+        /* Prevent zoom on iOS inputs */
+        input[type="text"],
+        select {
+            font-size: 16px !important;
+        }
+    }
     </style>
 </head>
 <body>
     <?php include __DIR__ . '/includes/cbaa_nav.php'; ?>
     
     <div class="topbar">
-        <div class="dashboard-title">Anonymous Data Statistics - Business Administration and Accountancy</div>
+        <div class="dashboard-title">Business Administration and Accountancy Admin Dashboard</div>
         <div><a class="logout-btn" href="#" onclick="confirmLogout(event)">Logout</a></div>
     </div>
 
@@ -1253,11 +1381,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
               top: 50%;
               left: 50%;
               transform: translate(-50%, -50%);
-              background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
+              background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
               color: white;
               padding: 20px 32px;
               border-radius: 16px;
-              box-shadow: 0 16px 40px rgba(254, 227, 43, 0.4);
+              box-shadow: 0 16px 40px rgba(245, 158, 11, 0.4);
               z-index: 10002;
               font-family: 'Inter', sans-serif;
               font-weight: 700;
@@ -1786,7 +1914,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     labels: ['Passed', 'Failed', 'Conditional'],
                     datasets: [{
                         data: [data.passed, data.failed, data.conditional],
-                        backgroundColor: ['#FEE32B', '#64748b', '#a8c5a5'],
+                        backgroundColor: ['#F59E0B', '#64748b', '#FDE68A'],
                         borderWidth: 2,
                         borderColor: '#fff',
                         hoverOffset: 15,
@@ -1840,13 +1968,13 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     datasets: [{
                         data: [data.first_timer, data.repeater],
                         backgroundColor: [
-                            'rgba(254, 227, 43, 0.75)',
-                            'rgba(90, 133, 95, 0.75)'
+                            'rgba(245, 158, 11, 0.75)',
+                            'rgba(217, 119, 6, 0.75)'
                         ],
                         borderWidth: 2,
                         borderColor: '#fff',
                         hoverBorderWidth: 3,
-                        hoverBorderColor: '#FEE32B'
+                        hoverBorderColor: '#F59E0B'
                     }]
                 },
                 options: {
@@ -1876,7 +2004,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                             padding: 14,
                             titleFont: { size: 14, weight: 'bold' },
                             bodyFont: { size: 13 },
-                            borderColor: '#FEE32B',
+                            borderColor: '#F59E0B',
                             borderWidth: 2
                         }
                     },
@@ -1888,7 +2016,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                                 font: { size: 10 }
                             },
                             grid: {
-                                color: 'rgba(254, 227, 43, 0.2)'
+                                color: 'rgba(245, 158, 11, 0.2)'
                             }
                         }
                     },
@@ -1912,7 +2040,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
 
             // Color code based on passing rate
             const gradientColors = passingRates.map((rate) => {
-                if (rate >= 75) return 'rgba(254, 227, 43, 0.85)';  // Engineering green for high
+                if (rate >= 75) return 'rgba(245, 158, 11, 0.85)';  // Engineering green for high
                 if (rate >= 50) return 'rgba(168, 197, 165, 0.85)';  // Light green for medium
                 return 'rgba(100, 116, 139, 0.85)';  // Slate gray for low
             });
@@ -1956,7 +2084,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                                 font: { size: 11, weight: '600' }
                             },
                             grid: {
-                                color: 'rgba(254, 227, 43, 0.15)',
+                                color: 'rgba(245, 158, 11, 0.15)',
                                 drawBorder: false
                             }
                         },
@@ -1991,7 +2119,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                             padding: 14,
                             titleFont: { size: 14, weight: 'bold' },
                             bodyFont: { size: 12 },
-                            borderColor: '#FEE32B',
+                            borderColor: '#F59E0B',
                             borderWidth: 2
                         }
                     },
@@ -2044,14 +2172,14 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         {
                             label: 'Passed',
                             data: passedData,
-                            borderColor: '#FEE32B',
-                            backgroundColor: 'rgba(254, 227, 43, 0.2)',
+                            borderColor: '#F59E0B',
+                            backgroundColor: 'rgba(245, 158, 11, 0.2)',
                             tension: 0.4,
                             fill: true,
                             borderWidth: 3,
                             pointRadius: 6,
                             pointHoverRadius: 9,
-                            pointBackgroundColor: '#FEE32B',
+                            pointBackgroundColor: '#F59E0B',
                             pointBorderColor: '#fff',
                             pointBorderWidth: 2,
                             pointHoverBorderWidth: 3
@@ -2201,19 +2329,19 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             modal.innerHTML = `
                 <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.4);">
                     <h2 style="margin: 0 0 24px 0; font-size: 1.8rem; color: #0f1724; display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-chart-line" style="color: #FEE32B;"></i> Year ${year} Exam Trend
+                        <i class="fas fa-chart-line" style="color: #F59E0B;"></i> Year ${year} Exam Trend
                     </h2>
                     
                     <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #FDFDF9 0%, #e8f5e8 100%); border-radius: 12px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid rgba(254, 227, 43, 0.3);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid rgba(245, 158, 11, 0.3);">
                             <span style="font-weight: 700; font-size: 1.2rem;">Total Examinees:</span>
-                            <span style="font-weight: 800; font-size: 1.3rem; color: #FEE32B;">${yearData.total}</span>
+                            <span style="font-weight: 800; font-size: 1.3rem; color: #F59E0B;">${yearData.total}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 16px;">
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">PASSED</div>
-                                <div style="font-weight: 800; font-size: 1.5rem; color: #FEE32B;">${yearData.passed}</div>
-                                <div style="font-size: 0.9rem; color: #FEE32B; font-weight: 600;">${passingRate}%</div>
+                                <div style="font-weight: 800; font-size: 1.5rem; color: #F59E0B;">${yearData.passed}</div>
+                                <div style="font-size: 0.9rem; color: #F59E0B; font-weight: 600;">${passingRate}%</div>
                             </div>
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">FAILED</div>
@@ -2222,26 +2350,26 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                             </div>
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">CONDITIONAL</div>
-                                <div style="font-weight: 800; font-size: 1.5rem; color: #a8c5a5;">${yearData.conditional}</div>
-                                <div style="font-size: 0.9rem; color: #a8c5a5; font-weight: 600;">${conditionalRate}%</div>
+                                <div style="font-weight: 800; font-size: 1.5rem; color: #FDE68A;">${yearData.conditional}</div>
+                                <div style="font-size: 0.9rem; color: #FDE68A; font-weight: 600;">${conditionalRate}%</div>
                             </div>
                         </div>
                     </div>
                     
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #0f1724; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-calendar-alt" style="color: #FEE32B;"></i> Exam Dates (${examDates.length})
+                            <i class="fas fa-calendar-alt" style="color: #F59E0B;"></i> Exam Dates (${examDates.length})
                         </h3>
                         <div style="display: grid; gap: 8px; max-height: 200px; overflow-y: auto; padding: 12px; background: #f8fafc; border-radius: 10px;">
                             ${examDates.sort().map(date => `
-                                <div style="background: white; padding: 10px 14px; border-radius: 8px; border-left: 3px solid #FEE32B; font-size: 0.95rem; font-weight: 600; color: #0f1724;">
+                                <div style="background: white; padding: 10px 14px; border-radius: 8px; border-left: 3px solid #F59E0B; font-size: 0.95rem; font-weight: 600; color: #0f1724;">
                                     ${formatDate(date)}
                                 </div>
                             `).join('')}
                         </div>
                     </div>
                     
-                    <div style="padding: 20px; background: linear-gradient(135deg, #FEE32B 0%, #877928 100%); border-radius: 12px; color: white; margin-bottom: 20px;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 12px; color: white; margin-bottom: 20px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-weight: 700; font-size: 1.2rem;">Overall Passing Rate</span>
                             <span style="font-weight: 900; font-size: 2rem;">${passingRate}%</span>
@@ -2249,9 +2377,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     </div>
                     
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; padding: 14px; background: #FEE32B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
-                        onmouseover="this.style.background='#877928'; this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.background='#FEE32B'; this.style.transform='translateY(0)'">
+                        style="width: 100%; padding: 14px; background: #F59E0B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
+                        onmouseover="this.style.background='#D97706'; this.style.transform='translateY(-2px)'"
+                        onmouseout="this.style.background='#F59E0B'; this.style.transform='translateY(0)'">
                         <i class="fas fa-times-circle"></i> Close
                     </button>
                 </div>
@@ -2273,11 +2401,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         {
                             label: 'Passed',
                             data: [data.first_timer_passed, data.repeater_passed],
-                            backgroundColor: ['rgba(254, 227, 43, 0.85)', 'rgba(90, 133, 95, 0.85)'],
-                            borderColor: ['#FEE32B', '#877928'],
+                            backgroundColor: ['rgba(245, 158, 11, 0.85)', 'rgba(217, 119, 6, 0.85)'],
+                            borderColor: ['#F59E0B', '#D97706'],
                             borderWidth: 2,
                             borderRadius: 8,
-                            hoverBackgroundColor: ['#FEE32B', '#877928'],
+                            hoverBackgroundColor: ['#F59E0B', '#D97706'],
                             hoverBorderWidth: 3,
                             hoverBorderColor: '#fff'
                         },
@@ -2325,7 +2453,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                             titleFont: { size: 14, weight: 'bold' },
                             bodyFont: { size: 13 },
                             footerFont: { size: 12 },
-                            borderColor: '#FEE32B',
+                            borderColor: '#F59E0B',
                             borderWidth: 2
                         }
                     },
@@ -2376,11 +2504,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         data: totals,
                         backgroundColor: totals.map((val, i) => {
                             const rate = parseFloat(passingRates[i]);
-                            if (rate >= 70) return '#FEE32B';  // Engineering green for high passing rate
-                            if (rate >= 50) return '#a8c5a5';  // Light green for medium passing rate
+                            if (rate >= 70) return '#F59E0B';  // Engineering green for high passing rate
+                            if (rate >= 50) return '#FDE68A';  // Light green for medium passing rate
                             return '#64748b';  // Slate gray for low passing rate
                         }),
-                        borderColor: '#877928',
+                        borderColor: '#D97706',
                         borderWidth: 2,
                         borderRadius: 8,
                         hoverBorderWidth: 3
@@ -2462,7 +2590,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     <div style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Total Examinees:</span>
-                            <span style="font-weight: 700; color: #FEE32B;">${typeData.total}</span>
+                            <span style="font-weight: 700; color: #F59E0B;">${typeData.total}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Passed:</span>
@@ -2478,11 +2606,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 2px solid #e5e7eb;">
                             <span style="font-weight: 700; font-size: 1.1rem;">Passing Rate:</span>
-                            <span style="font-weight: 800; font-size: 1.2rem; color: #FEE32B;">${passingRate}%</span>
+                            <span style="font-weight: 800; font-size: 1.2rem; color: #F59E0B;">${passingRate}%</span>
                         </div>
                     </div>
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; padding: 12px; background: #FEE32B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
+                        style="width: 100%; padding: 12px; background: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
                         Close
                     </button>
                 </div>
@@ -2505,11 +2633,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     <div style="margin-bottom: 16px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Total Examinees:</span>
-                            <span style="font-weight: 700; color: #FEE32B;">${dateData.total}</span>
+                            <span style="font-weight: 700; color: #F59E0B;">${dateData.total}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Passed:</span>
-                            <span style="font-weight: 700; color: #FEE32B;">${dateData.passed}</span>
+                            <span style="font-weight: 700; color: #F59E0B;">${dateData.passed}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Failed:</span>
@@ -2517,15 +2645,15 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                             <span style="font-weight: 600;">Conditional:</span>
-                            <span style="font-weight: 700; color: #a8c5a5;">${dateData.conditional}</span>
+                            <span style="font-weight: 700; color: #FDE68A;">${dateData.conditional}</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 2px solid #e5e7eb;">
                             <span style="font-weight: 700; font-size: 1.1rem;">Passing Rate:</span>
-                            <span style="font-weight: 800; font-size: 1.2rem; color: #FEE32B;">${passingRate}%</span>
+                            <span style="font-weight: 800; font-size: 1.2rem; color: #F59E0B;">${passingRate}%</span>
                         </div>
                     </div>
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; padding: 12px; background: #FEE32B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
+                        style="width: 100%; padding: 12px; background: #F59E0B; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 1rem;">
                         Close
                     </button>
                 </div>
@@ -2557,7 +2685,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         {
                             label: 'Passed',
                             data: passedData,
-                            backgroundColor: '#FEE32B',
+                            backgroundColor: '#F59E0B',
                             borderRadius: 6,
                             yAxisID: 'y',
                             order: 2
@@ -2573,7 +2701,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         {
                             label: 'Conditional',
                             data: conditionalData,
-                            backgroundColor: '#a8c5a5',
+                            backgroundColor: '#FDE68A',
                             borderRadius: 6,
                             yAxisID: 'y',
                             order: 2
@@ -2793,7 +2921,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                             padding: 14,
                             titleFont: { size: 14, weight: 'bold' },
                             bodyFont: { size: 12 },
-                            borderColor: '#FEE32B',
+                            borderColor: '#F59E0B',
                             borderWidth: 2
                         }
                     },
@@ -2810,11 +2938,11 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                                 }
                             },
                             grid: {
-                                color: 'rgba(254, 227, 43, 0.2)',
+                                color: 'rgba(245, 158, 11, 0.2)',
                                 circular: true
                             },
                             angleLines: {
-                                color: 'rgba(254, 227, 43, 0.3)'
+                                color: 'rgba(245, 158, 11, 0.3)'
                             },
                             pointLabels: {
                                 font: { size: 11, weight: '700' },
@@ -2880,7 +3008,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     description: 'This horizontal bar chart displays passing rates for each board exam type, with color-coding to quickly identify high, medium, and low-performing exam categories.',
                     features: [
                         'Horizontal layout for better readability of exam names',
-                        'Color-coded by performance (Green ≥75%, Orange ≥50%, Red <50%)',
+                        'Color-coded by performance (Green Ã¢â€°Â¥75%, Orange Ã¢â€°Â¥50%, Red <50%)',
                         'Click bars to see detailed breakdowns',
                         'Percentage scale from 0-100%'
                     ],
@@ -2940,7 +3068,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     description: 'This bar chart shows the total number of examinees for each exam date, with bars color-coded based on the passing rate to quickly identify successful vs challenging exam administrations.',
                     features: [
                         'Dynamic color coding by passing rate',
-                        'Green (≥70%), Orange (≥50%), Red (<50%)',
+                        'Green (Ã¢â€°Â¥70%), Orange (Ã¢â€°Â¥50%), Red (<50%)',
                         'Click dates for detailed breakdowns',
                         'Rounded corners for modern appearance'
                     ],
@@ -3008,8 +3136,8 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             
             modal.innerHTML = `
                 <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.4); animation: slideUp 0.3s ease;">
-                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 3px solid #FEE32B;">
-                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #FEE32B 0%, #877928 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(254, 227, 43, 0.4);">
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 3px solid #F59E0B;">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);">
                             <i class="fas ${info.icon}" style="font-size: 28px; color: white;"></i>
                         </div>
                         <div style="flex: 1;">
@@ -3024,27 +3152,27 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         </button>
                     </div>
                     
-                    <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #FDFDF9 0%, #e8f5e8 100%); border-radius: 12px; border-left: 4px solid #FEE32B;">
+                    <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #FDFDF9 0%, #e8f5e8 100%); border-radius: 12px; border-left: 4px solid #F59E0B;">
                         <h3 style="margin: 0 0 12px 0; color: #0f1724; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-bullseye" style="color: #FEE32B;"></i> Purpose
+                            <i class="fas fa-bullseye" style="color: #F59E0B;"></i> Purpose
                         </h3>
                         <p style="margin: 0; color: #334155; font-size: 1.05rem; font-weight: 600; line-height: 1.6;">${info.purpose}</p>
                     </div>
 
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 12px 0; color: #0f1724; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-align-left" style="color: #FEE32B;"></i> Description
+                            <i class="fas fa-align-left" style="color: #F59E0B;"></i> Description
                         </h3>
                         <p style="margin: 0; color: #475569; line-height: 1.8; font-size: 0.95rem;">${info.description}</p>
                     </div>
 
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 16px 0; color: #0f1724; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-star" style="color: #FEE32B;"></i> Key Features
+                            <i class="fas fa-star" style="color: #F59E0B;"></i> Key Features
                         </h3>
                         <ul style="margin: 0; padding-left: 0; list-style: none;">
                             ${info.features.map(feature => `
-                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #FEE32B; color: #334155; font-size: 0.95rem;">
+                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #F59E0B; color: #334155; font-size: 0.95rem;">
                                     <i class="fas fa-check-circle" style="color: #10b981; margin-right: 8px;"></i>${feature}
                                 </li>
                             `).join('')}
@@ -3064,7 +3192,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         </ul>
                     </div>
 
-                    <div style="padding: 20px; background: linear-gradient(135deg, #FEE32B 0%, #877928 100%); border-radius: 12px; color: white;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 12px; color: white;">
                         <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-chart-line"></i> How to Use This Chart
                         </h3>
@@ -3072,9 +3200,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     </div>
 
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; margin-top: 24px; padding: 14px; background: #FEE32B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
-                        onmouseover="this.style.background='#877928'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(145,179,142,0.4)'"
-                        onmouseout="this.style.background='#FEE32B'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        style="width: 100%; margin-top: 24px; padding: 14px; background: #F59E0B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
+                        onmouseover="this.style.background='#D97706'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(145,179,142,0.4)'"
+                        onmouseout="this.style.background='#F59E0B'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         <i class="fas fa-times-circle"></i> Close
                     </button>
                 </div>
@@ -3114,18 +3242,18 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
             modal.innerHTML = `
                 <div style="background: white; border-radius: 20px; padding: 40px; max-width: 600px; box-shadow: 0 25px 80px rgba(0,0,0,0.4);">
                     <h2 style="margin: 0 0 24px 0; font-size: 1.8rem; color: #0f1724; display: flex; align-items: center; gap: 12px;">
-                        <i class="fas fa-calendar-year" style="color: #FEE32B;"></i> Year ${year} Performance Summary
+                        <i class="fas fa-calendar-year" style="color: #F59E0B;"></i> Year ${year} Performance Summary
                     </h2>
                     <div style="margin-bottom: 20px; padding: 20px; background: linear-gradient(135deg, #FDFDF9 0%, #e8f5e8 100%); border-radius: 12px;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid rgba(254, 227, 43, 0.3);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid rgba(245, 158, 11, 0.3);">
                             <span style="font-weight: 700; font-size: 1.2rem;">Total Examinees:</span>
-                            <span style="font-weight: 800; font-size: 1.3rem; color: #FEE32B;">${yearData.total}</span>
+                            <span style="font-weight: 800; font-size: 1.3rem; color: #F59E0B;">${yearData.total}</span>
                         </div>
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 16px;">
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">PASSED</div>
-                                <div style="font-weight: 800; font-size: 1.5rem; color: #FEE32B;">${yearData.passed}</div>
-                                <div style="font-size: 0.9rem; color: #FEE32B; font-weight: 600;">${passingRate}%</div>
+                                <div style="font-weight: 800; font-size: 1.5rem; color: #F59E0B;">${yearData.passed}</div>
+                                <div style="font-size: 0.9rem; color: #F59E0B; font-weight: 600;">${passingRate}%</div>
                             </div>
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">FAILED</div>
@@ -3136,8 +3264,8 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         ${yearData.conditional > 0 ? `
                         <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-top: 16px;">
                             <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">CONDITIONAL</div>
-                            <div style="font-weight: 800; font-size: 1.5rem; color: #a8c5a5;">${yearData.conditional}</div>
-                            <div style="font-size: 0.9rem; color: #a8c5a5; font-weight: 600;">${conditionalRate}%</div>
+                            <div style="font-weight: 800; font-size: 1.5rem; color: #FDE68A;">${yearData.conditional}</div>
+                            <div style="font-size: 0.9rem; color: #FDE68A; font-weight: 600;">${conditionalRate}%</div>
                         </div>
                         ` : ''}
                     </div>
@@ -3149,12 +3277,12 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                         <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">FIRST TIMER</div>
-                                <div style="font-weight: 800; font-size: 1.5rem; color: #FEE32B;">${yearData.first_timer || 0}</div>
+                                <div style="font-weight: 800; font-size: 1.5rem; color: #F59E0B;">${yearData.first_timer || 0}</div>
                                 <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">${yearData.total > 0 ? ((yearData.first_timer / yearData.total) * 100).toFixed(1) : 0}%</div>
                             </div>
                             <div style="background: white; padding: 16px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
                                 <div style="color: #64748b; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px;">REPEATER</div>
-                                <div style="font-weight: 800; font-size: 1.5rem; color: #877928;">${yearData.repeater || 0}</div>
+                                <div style="font-weight: 800; font-size: 1.5rem; color: #D97706;">${yearData.repeater || 0}</div>
                                 <div style="font-size: 0.9rem; color: #64748b; font-weight: 600;">${yearData.total > 0 ? ((yearData.repeater / yearData.total) * 100).toFixed(1) : 0}%</div>
                             </div>
                         </div>
@@ -3163,7 +3291,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     ${yearData.board_exams && Object.keys(yearData.board_exams).length > 0 ? `
                     <div style="margin-top: 24px;">
                         <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; color: #0f1724; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-graduation-cap" style="color: #FEE32B;"></i> Board Exams Taken
+                            <i class="fas fa-graduation-cap" style="color: #F59E0B;"></i> Board Exams Taken
                         </h3>
                         <div style="display: grid; gap: 12px;">
                             ${Object.keys(yearData.board_exams).map(examType => {
@@ -3171,16 +3299,16 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                                 if (examData.total === 0) return '';
                                 const examPassingRate = ((examData.passed / examData.total) * 100).toFixed(1);
                                 return `
-                                <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 14px; border-radius: 10px; border-left: 4px solid #FEE32B;">
+                                <div style="background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 14px; border-radius: 10px; border-left: 4px solid #F59E0B;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                                         <span style="font-weight: 700; color: #0f1724; font-size: 0.95rem;">${examType}</span>
-                                        <span style="font-weight: 800; color: #FEE32B; font-size: 1rem;">${examPassingRate}%</span>
+                                        <span style="font-weight: 800; color: #F59E0B; font-size: 1rem;">${examPassingRate}%</span>
                                     </div>
                                     <div style="display: flex; gap: 12px; font-size: 0.85rem;">
                                         <span style="color: #64748b;">Total: <strong>${examData.total}</strong></span>
-                                        <span style="color: #FEE32B;">Passed: <strong>${examData.passed}</strong></span>
+                                        <span style="color: #F59E0B;">Passed: <strong>${examData.passed}</strong></span>
                                         <span style="color: #64748b;">Failed: <strong>${examData.failed}</strong></span>
-                                        ${examData.conditional > 0 ? `<span style="color: #a8c5a5;">Conditional: <strong>${examData.conditional}</strong></span>` : ''}
+                                        ${examData.conditional > 0 ? `<span style="color: #FDE68A;">Conditional: <strong>${examData.conditional}</strong></span>` : ''}
                                     </div>
                                 </div>
                                 `;
@@ -3189,16 +3317,16 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                     </div>
                     ` : ''}
                     
-                    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #FEE32B 0%, #877928 100%); border-radius: 12px; color: white;">
+                    <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); border-radius: 12px; color: white;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="font-weight: 700; font-size: 1.2rem;">Overall Passing Rate</span>
                             <span style="font-weight: 900; font-size: 2rem;">${passingRate}%</span>
                         </div>
                     </div>
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; padding: 14px; background: #FEE32B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; margin-top: 24px; transition: all 0.3s;"
-                        onmouseover="this.style.background='#877928'; this.style.transform='translateY(-2px)'"
-                        onmouseout="this.style.background='#FEE32B'; this.style.transform='translateY(0)'">
+                        style="width: 100%; padding: 14px; background: #F59E0B; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; margin-top: 24px; transition: all 0.3s;"
+                        onmouseover="this.style.background='#D97706'; this.style.transform='translateY(-2px)'"
+                        onmouseout="this.style.background='#F59E0B'; this.style.transform='translateY(0)'">
                         <i class="fas fa-times-circle"></i> Close
                     </button>
                 </div>
@@ -3217,7 +3345,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                 flex-direction: column; gap: 20px;
             `;
             loadingOverlay.innerHTML = `
-                <div style="width: 80px; height: 80px; border: 5px solid rgba(254, 227, 43, 0.3); border-top-color: #FEE32B; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div style="width: 80px; height: 80px; border: 5px solid rgba(245, 158, 11, 0.3); border-top-color: #F59E0B; border-radius: 50%; animation: spin 1s linear infinite;"></div>
                 <div style="color: white; font-size: 1.2rem; font-weight: 600;">Generating PDF Report...</div>
                 <div style="color: rgba(255,255,255,0.7); font-size: 0.95rem;">This may take a few moments</div>
                 <style>
@@ -3259,7 +3387,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph
                 pdf.setTextColor(15, 23, 36);
                 pdf.setFontSize(18);
                 pdf.setFont(undefined, 'bold');
-                pdf.text('Anonymous Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
+                pdf.text('Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
                 
                 currentY += 10;
                 pdf.setFontSize(10);

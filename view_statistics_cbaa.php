@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph') {
+// Allow CBAA admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -52,12 +52,12 @@ $bedStmt->close();
     <style>
     /* Modern cyan/teal theme with animations */
     :root {
-        --primary: #06b6d4;
-        --primary-dark: #0891b2;
-        --primary-darker: #0e7490;
+        --primary: #F59E0B;
+        --primary-dark: #D97706;
+        --primary-darker: #B45309;
         --magenta: #f472b6;
         --muted: #64748b;
-        --success: #10b981;
+        --success: #F59E0B;
         --danger: #ef4444;
         --indigo: #6366f1;
         --slate: #94a3b8;
@@ -125,12 +125,11 @@ $bedStmt->close();
     }
 
     body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
         margin: 0;
-        color: #0f1724;
-        position: relative;
+        font-family: 'Inter', sans-serif;
         min-height: 100vh;
+        position: relative;
     }
 
     body::before {
@@ -140,77 +139,65 @@ $bedStmt->close();
         left: 0;
         right: 0;
         bottom: 0;
-        background: radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
+
+    /* Sidebar styling moved to css/sidebar.css (shared) */
 
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 25px rgba(6, 182, 212, 0.25);
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        overflow: hidden;
-    }
-
-    .topbar::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        animation: shimmer 4s infinite;
-        z-index: 1;
     }
 
     .dashboard-title {
         font-size: 1.4rem;
-        color: #fff;
+        color: #FFFFFF;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         margin: 0;
-        position: relative;
-        z-index: 2;
     }
 
     .logout-btn {
-        background: rgba(255, 255, 255, 0.15);
-        color: #fff;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 12px;
         padding: 12px 24px;
         font-size: 0.95rem;
         font-weight: 600;
         font-family: 'Inter', sans-serif;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         text-decoration: none;
         display: flex;
         align-items: center;
         gap: 8px;
         backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 2;
     }
 
     .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
-        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
+
 
     .main {
         margin-left: 260px;
@@ -233,8 +220,8 @@ $bedStmt->close();
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 254, 255, 0.9) 100%);
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 10px 35px rgba(6, 182, 212, 0.15);
-        border: 2px solid rgba(6, 182, 212, 0.2);
+        box-shadow: 0 10px 35px rgba(245, 158, 11, 0.15);
+        border: 2px solid rgba(245, 158, 11, 0.2);
         position: relative;
         overflow: hidden;
         backdrop-filter: blur(12px);
@@ -246,8 +233,8 @@ $bedStmt->close();
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(236, 254, 255, 0.85) 100%);
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 14px 40px rgba(6, 182, 212, 0.2);
-        border: 2px solid rgba(6, 182, 212, 0.15);
+        box-shadow: 0 14px 40px rgba(245, 158, 11, 0.2);
+        border: 2px solid rgba(245, 158, 11, 0.15);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         animation: fadeIn 0.8s ease 0.2s both;
@@ -276,7 +263,7 @@ $bedStmt->close();
     }
 
     .step h4 i {
-        color: #06b6d4;
+        color: #F59E0B;
         font-size: 1.1rem;
     }
 
@@ -285,13 +272,13 @@ $bedStmt->close();
         padding: 14px 16px;
         font-size: 0.98rem;
         border-radius: 14px;
-        border: 2px solid #e0f2fe;
+        border: 2px solid #FFFBEA;
         background: #fff;
         font-family: 'Inter', sans-serif;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #06b6d4 50%),
-            linear-gradient(135deg, #06b6d4 50%, transparent 50%);
+        background-image: linear-gradient(45deg, transparent 50%, #F59E0B 50%),
+            linear-gradient(135deg, #F59E0B 50%, transparent 50%);
         background-position: calc(100% - 20px) calc(1em + 4px),
             calc(100% - 14px) calc(1em + 4px);
         background-size: 6px 6px, 6px 6px;
@@ -300,14 +287,14 @@ $bedStmt->close();
     }
 
     select:hover {
-        border-color: #06b6d4;
+        border-color: #F59E0B;
         background-color: #f0fdff;
     }
 
     select:focus {
         outline: none;
-        border-color: #06b6d4;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        border-color: #F59E0B;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
         background-color: #fff;
     }
 
@@ -322,12 +309,12 @@ $bedStmt->close();
 
     option:hover,
     option:focus {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
     }
 
     option:checked {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         font-weight: 700;
     }
@@ -358,7 +345,7 @@ $bedStmt->close();
     }
 
     .hint i {
-        color: #06b6d4;
+        color: #F59E0B;
     }
 
     .filter-header {
@@ -367,7 +354,7 @@ $bedStmt->close();
         justify-content: space-between;
         padding-bottom: 16px;
         margin-bottom: 20px;
-        border-bottom: 2px solid rgba(6, 182, 212, 0.15);
+        border-bottom: 2px solid rgba(245, 158, 11, 0.15);
     }
 
     .filter-title {
@@ -382,7 +369,7 @@ $bedStmt->close();
     }
 
     .filter-title i {
-        color: #06b6d4;
+        color: #F59E0B;
         font-size: 1.4rem;
         animation: pulse 2s ease-in-out infinite;
     }
@@ -392,7 +379,7 @@ $bedStmt->close();
         border-radius: 12px;
         font-size: 0.95rem;
         width: auto;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         border: none;
         display: flex;
@@ -400,13 +387,13 @@ $bedStmt->close();
         gap: 8px;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
     .filter-header .print-btn:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.4);
     }
 
     .filter-actions {
@@ -450,8 +437,8 @@ $bedStmt->close();
         border-radius: 999px;
         background: linear-gradient(145deg, #fff 0%, #f0fdff 100%);
         color: #0f1724;
-        border: 2px solid #06b6d4;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+        border: 2px solid #F59E0B;
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
         animation: fadeIn 0.5s ease;
     }
 
@@ -470,9 +457,9 @@ $bedStmt->close();
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
         animation: float 3s ease-in-out infinite;
     }
 
@@ -483,16 +470,16 @@ $bedStmt->close();
         gap: 10px;
         padding: 12px 16px;
         border-radius: 14px;
-        background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%);
-        color: #0e7490;
-        border: 2px solid #67e8f9;
+        background: linear-gradient(145deg, #FFFBEA 0%, #FEF3C7 100%);
+        color: #B45309;
+        border: 2px solid #FDE68A;
         font-size: 0.92rem;
         font-weight: 600;
         animation: fadeIn 0.6s ease;
     }
 
     .tip-pill i {
-        color: #06b6d4;
+        color: #F59E0B;
         font-size: 1.1rem;
     }
 
@@ -506,8 +493,8 @@ $bedStmt->close();
     .chip {
         padding: 8px 16px;
         border-radius: 999px;
-        border: 2px solid #06b6d4;
-        color: #06b6d4;
+        border: 2px solid #F59E0B;
+        color: #F59E0B;
         background: #fff;
         cursor: pointer;
         font-weight: 700;
@@ -516,42 +503,42 @@ $bedStmt->close();
     }
 
     .chip:hover {
-        background: #06b6d4;
+        background: #F59E0B;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
     }
 
     .chip.active {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         border-color: transparent;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
     }
 
     .btn-secondary {
         background: #fff;
-        color: #06b6d4;
-        border: 2px solid #06b6d4;
+        color: #F59E0B;
+        border: 2px solid #F59E0B;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-secondary:hover {
-        background: #06b6d4;
+        background: #F59E0B;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         border: none;
         padding: 12px 24px;
         border-radius: 14px;
         cursor: pointer;
         font-weight: 700;
-        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -559,9 +546,9 @@ $bedStmt->close();
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
         transform: translateY(-2px);
-        box-shadow: 0 12px 30px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 12px 30px rgba(245, 158, 11, 0.4);
     }
 
     .btn-primary i {
@@ -569,7 +556,7 @@ $bedStmt->close();
     }
 
     .print-btn {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         border: none;
         padding: 12px 20px;
@@ -581,7 +568,7 @@ $bedStmt->close();
     }
 
     .print-btn:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
     }
@@ -624,8 +611,8 @@ $bedStmt->close();
         background: linear-gradient(145deg, #fff 0%, #f0fdff 100%);
         padding: 20px;
         border-radius: 18px;
-        border: 2px solid rgba(6, 182, 212, 0.15);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.12);
+        border: 2px solid rgba(245, 158, 11, 0.15);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.12);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -641,15 +628,15 @@ $bedStmt->close();
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #06b6d4 0%, #0891b2 50%, #22d3ee 100%);
+        background: linear-gradient(90deg, #F59E0B 0%, #D97706 50%, #22d3ee 100%);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
 
     .chart-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 16px 40px rgba(6, 182, 212, 0.25);
-        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 16px 40px rgba(245, 158, 11, 0.25);
+        border-color: rgba(245, 158, 11, 0.3);
     }
 
     .chart-card:hover::before {
@@ -668,7 +655,7 @@ $bedStmt->close();
     }
 
     .chart-card h4 i {
-        color: #06b6d4;
+        color: #F59E0B;
     }
 
     .group-divider {
@@ -679,22 +666,22 @@ $bedStmt->close();
         padding: 16px 24px;
         border-radius: 16px;
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 254, 255, 0.9) 100%);
-        border: 2px solid rgba(6, 182, 212, 0.2);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
+        border: 2px solid rgba(245, 158, 11, 0.2);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         animation: fadeIn 0.6s ease;
     }
 
     .group-badge {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         font-weight: 800;
         padding: 8px 16px;
         border-radius: 999px;
         letter-spacing: 0.5px;
         font-size: 0.95rem;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
     .group-title {
@@ -760,12 +747,12 @@ $bedStmt->close();
     }
 
     .highlight {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #fff;
         padding: 8px 16px;
         border-radius: 10px;
         font-weight: 700;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
     }
 
     .chart-legend {
@@ -1120,7 +1107,7 @@ $bedStmt->close();
         /* group headers readable on paper */
         .group-divider {
             background: #f3fafc !important;
-            border-color: #dbeafe !important;
+            border-color: #FEF3C7 !important;
             box-shadow: none !important;
         }
 
@@ -1129,13 +1116,152 @@ $bedStmt->close();
             margin: 12mm 10mm;
         }
     }
+
+    /* CBAA-specific sidebar color overrides for golden theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 15px !important;
+        }
+
+        .topbar {
+            left: 0 !important;
+            padding: 12px 15px !important;
+        }
+
+        .dashboard-title {
+            font-size: 16px !important;
+        }
+
+        .filter-section {
+            padding: 15px !important;
+        }
+
+        .filter-group {
+            margin-bottom: 12px !important;
+        }
+
+        .filter-group label {
+            font-size: 13px !important;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            font-size: 14px !important;
+            padding: 8px !important;
+        }
+
+        .filter-actions {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .filter-actions button {
+            width: 100% !important;
+        }
+
+        .stats-container {
+            grid-template-columns: 1fr !important;
+            gap: 15px !important;
+        }
+
+        .chart-section {
+            padding: 15px !important;
+        }
+
+        .chart-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .year-chips {
+            justify-content: flex-start !important;
+            overflow-x: auto !important;
+            padding-bottom: 10px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .topbar {
+            padding: 10px !important;
+        }
+
+        .dashboard-title {
+            font-size: 14px !important;
+        }
+
+        .filter-section {
+            padding: 12px !important;
+        }
+
+        .stat-card {
+            padding: 12px !important;
+        }
+
+        .stat-value {
+            font-size: 24px !important;
+        }
+
+        .stat-label {
+            font-size: 12px !important;
+        }
+
+        .chart-section h3 {
+            font-size: 16px !important;
+        }
+
+        .year-chip {
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+        }
+
+        /* Prevent zoom on iOS inputs */
+        input[type="text"],
+        input[type="date"],
+        select {
+            font-size: 16px !important;
+        }
+    }
     </style>
 </head>
 
 <body>
     <?php include __DIR__ . '/includes/cbaa_nav.php'; ?>
     <div class="topbar">
-        <div class="dashboard-title">CBAA Admin Dashboard</div>
+        <div class="dashboard-title">Business Administration and Accountancy Admin Dashboard</div>
         <div><a class="logout-btn" href="#" onclick="confirmLogout(event)">Logout</a></div>
     </div>
 
@@ -1247,13 +1373,13 @@ $bedStmt->close();
                             </div>
                             <div class="chart-card small-kpi span-3">
                                 <div class="kpi-top">
-                                    <div id="femaleTopPercent" class="kpi-percent">—</div>
+                                    <div id="femaleTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                                 </div>
                                 <div class="donut-wrapper">
                                     <canvas id="chartFemaleDonut" height="160"></canvas>
                                     <div id="femaleOverlay" class="donut-overlay">
-                                        <div class="percent">—</div>
-                                        <div class="count">— / —</div>
+                                        <div class="percent">Ã¢â‚¬â€</div>
+                                        <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                     </div>
                                 </div>
                                 <div class="print-caption">Female passed rate (Passed / Total)</div>
@@ -1261,13 +1387,13 @@ $bedStmt->close();
                             </div>
                             <div class="chart-card small-kpi span-3">
                                 <div class="kpi-top">
-                                    <div id="maleTopPercent" class="kpi-percent">—</div>
+                                    <div id="maleTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                                 </div>
                                 <div class="donut-wrapper">
                                     <canvas id="chartMaleDonut" height="160"></canvas>
                                     <div id="maleOverlay" class="donut-overlay">
-                                        <div class="percent">—</div>
-                                        <div class="count">— / —</div>
+                                        <div class="percent">Ã¢â‚¬â€</div>
+                                        <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                     </div>
                                 </div>
                                 <div class="print-caption">Male passed rate (Passed / Total)</div>
@@ -1296,14 +1422,14 @@ $bedStmt->close();
                             </div>
                             <div class="chart-card small-kpi span-2">
                                 <div class="kpi-top">
-                                    <fiv id="passTopPercent" class="kpi-percent">—
+                                    <fiv id="passTopPercent" class="kpi-percent">Ã¢â‚¬â€
                                 </div>
                             </div>
                             <div class="donut-wrapper">
                                 <canvas id="chartPassDonut" height="160"></canvas>
                                 <div id="passOverlay" class="donut-overlay">
-                                    <div class="percent">—</div>
-                                    <div class="count">— / —</div>
+                                    <div class="percent">Ã¢â‚¬â€</div>
+                                    <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                 </div>
                             </div>
                             <div class="print-caption">Passing rate (Passed / Total)</div>
@@ -1311,13 +1437,13 @@ $bedStmt->close();
                         </div>
                         <div class="chart-card small-kpi span-2">
                             <div class="kpi-top">
-                                <div id="failTopPercent" class="kpi-percent">—</div>
+                                <div id="failTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                             </div>
                             <div class="donut-wrapper">
                                 <canvas id="chartFailDonut" height="160"></canvas>
                                 <div id="failOverlay" class="donut-overlay">
-                                    <div class="percent">—</div>
-                                    <div class="count">— / —</div>
+                                    <div class="percent">Ã¢â‚¬â€</div>
+                                    <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                 </div>
                             </div>
                             <div class="print-caption">Failed rate (Failed / Total)</div>
@@ -1325,13 +1451,13 @@ $bedStmt->close();
                         </div>
                         <div class="chart-card small-kpi span-2">
                             <div class="kpi-top">
-                                <div id="condTopPercent" class="kpi-percent">—</div>
+                                <div id="condTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                             </div>
                             <div class="donut-wrapper">
                                 <canvas id="chartCondDonut" height="160"></canvas>
                                 <div id="condOverlay" class="donut-overlay">
-                                    <div class="percent">—</div>
-                                    <div class="count">— / —</div>
+                                    <div class="percent">Ã¢â‚¬â€</div>
+                                    <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                 </div>
                             </div>
                             <div class="print-caption">Conditional rate (Conditional / Total)</div>
@@ -1352,26 +1478,26 @@ $bedStmt->close();
                         </div>
                         <div class="chart-card small-kpi span-6">
                             <div class="kpi-top">
-                                <div id="firstTopPercent" class="kpi-percent">—</div>
+                                <div id="firstTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                             </div>
                             <div class="donut-wrapper">
                                 <canvas id="chartFirstTimerDonut" height="160"></canvas>
                                 <div id="firstOverlay" class="donut-overlay">
-                                    <div class="percent">—</div>
-                                    <div class="count">— / —</div>
+                                    <div class="percent">Ã¢â‚¬â€</div>
+                                    <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                 </div>
                             </div>
                             <h4 class="kpi-title">First Timer Passing Rate</h4>
                         </div>
                         <div class="chart-card small-kpi span-6">
                             <div class="kpi-top">
-                                <div id="repeaterTopPercent" class="kpi-percent">—</div>
+                                <div id="repeaterTopPercent" class="kpi-percent">Ã¢â‚¬â€</div>
                             </div>
                             <div class="donut-wrapper">
                                 <canvas id="chartRepeaterDonut" height="160"></canvas>
                                 <div id="repeaterOverlay" class="donut-overlay">
-                                    <div class="percent">—</div>
-                                    <div class="count">— / —</div>
+                                    <div class="percent">Ã¢â‚¬â€</div>
+                                    <div class="count">Ã¢â‚¬â€ / Ã¢â‚¬â€</div>
                                 </div>
                             </div>
                             <h4 class="kpi-title">Repeater Passing Rate</h4>
@@ -1382,22 +1508,22 @@ $bedStmt->close();
                     <div id="deptPassingCard" class="chart-card" style="grid-column: 1 / -1;">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                            <h4 style="margin: 0;">Board Passing Rate in CBAA (2019–2024)</h4>
+                            <h4 style="margin: 0;">Board Passing Rate in CBAA (2019Ã¢â‚¬â€œ2024)</h4>
                             <button id="openDeptDetails" class="btn-secondary"
                                 style="padding: 8px 16px; border-radius: 10px; font-size: 0.9rem;">
                                 <i class="fas fa-info-circle"></i> View Details
                             </button>
                         </div>
                         <div id="deptDescription" class="muted"
-                            style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%); border-radius: 12px; border-left: 4px solid #06b6d4;">
-                            <i class="fas fa-chart-line" style="color: #06b6d4; margin-right: 6px;"></i>
+                            style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #ecfeff 0%, #FEF3C7 100%); border-radius: 12px; border-left: 4px solid #F59E0B;">
+                            <i class="fas fa-chart-line" style="color: #F59E0B; margin-right: 6px;"></i>
                             This visualization shows the overall board exam passing rate trend for the College of
                             Business Administration and Accountancy from 2019 to 2024.
                             The data reflects the percentage of students who successfully passed the CPA Licensure
                             Examination.
                         </div>
                         <canvas id="chartDeptPassingRate" height="220"></canvas>
-                        <div class="print-caption">Board passing rate in CBAA, 2019–2024</div>
+                        <div class="print-caption">Board passing rate in CBAA, 2019Ã¢â‚¬â€œ2024</div>
                     </div>
 
                     <!-- Forecast (Next 2 Years) -->
@@ -1432,8 +1558,8 @@ $bedStmt->close();
                     <div style="display:flex;gap:12px;flex-wrap:wrap;">
                         <div class="chart-card" style="flex:1;min-width:220px;">
                             <h4>KPIs</h4>
-                            <div id="kpiTotal" style="font-size:1.4rem;font-weight:700;">—</div>
-                            <div id="kpiPassed" class="muted">—</div>
+                            <div id="kpiTotal" style="font-size:1.4rem;font-weight:700;">Ã¢â‚¬â€</div>
+                            <div id="kpiPassed" class="muted">Ã¢â‚¬â€</div>
                         </div>
                         <div class="chart-card" style="flex:1;min-width:220px;">
                             <h4>Notes</h4>
@@ -1449,9 +1575,9 @@ $bedStmt->close();
                     <div
                         style="width:90%; max-width:1100px; background:#fff; border-radius:12px; padding:16px; box-shadow:0 14px 40px rgba(2,6,23,0.12); position:relative;">
                         <button id="closeRecordsModal"
-                            style="position:absolute; right:12px; top:12px; background:transparent;border:none;font-size:20px;cursor:pointer;color:#374151">×</button>
+                            style="position:absolute; right:12px; top:12px; background:transparent;border:none;font-size:20px;cursor:pointer;color:#374151">Ãƒâ€”</button>
                         <h3 id="recordsModalTitle" style="margin:0 0 12px 0; font-size:1.1rem;">Records</h3>
-                        <div id="recordsCount" class="muted" style="margin-bottom:8px">—</div>
+                        <div id="recordsCount" class="muted" style="margin-bottom:8px">Ã¢â‚¬â€</div>
                         <div style="max-height:520px; overflow:auto;">
                             <table id="recordsTable" style="width:100%; border-collapse:collapse; font-size:0.95rem;">
                                 <thead>
@@ -1717,7 +1843,7 @@ $bedStmt->close();
             if (String(d.exam_type_id) === String(selectedTypeId)) {
                 const opt = document.createElement('option');
                 opt.value = d.id;
-                opt.textContent = d.exam_date + (d.exam_description ? ' — ' + d.exam_description : '');
+                opt.textContent = d.exam_date + (d.exam_description ? ' Ã¢â‚¬â€ ' + d.exam_description : '');
                 examDateSelect.appendChild(opt);
                 has = true;
                 // collect unique years
@@ -1732,12 +1858,12 @@ $bedStmt->close();
             const sep = document.createElement('option');
             sep.value = '';
             sep.disabled = true;
-            sep.textContent = '— By Year —';
+            sep.textContent = 'Ã¢â‚¬â€ By Year Ã¢â‚¬â€';
             examDateSelect.appendChild(sep);
             Array.from(yearsSet).sort((a, b) => Number(b) - Number(a)).forEach(y => {
                 const o = document.createElement('option');
                 o.value = 'Y:' + y;
-                o.textContent = `Year ${y} — All dates`;
+                o.textContent = `Year ${y} Ã¢â‚¬â€ All dates`;
                 examDateSelect.appendChild(o);
             });
             has = true;
@@ -1776,7 +1902,7 @@ $bedStmt->close();
                         selectedYear);
                     const t = boardExamTypes.find(x => String(x.id) === String(
                         selectedTypeId));
-                    selectedTypeEl.textContent = t ? t.exam_type_name : '—';
+                    selectedTypeEl.textContent = t ? t.exam_type_name : 'Ã¢â‚¬â€';
                     selectedDateEl.textContent = 'Year ' + selectedYear;
                     updateSubjectsHeader();
                 });
@@ -1819,9 +1945,9 @@ $bedStmt->close();
         // update selected labels
         const t = boardExamTypes.find(x => String(x.id) === String(selectedTypeId));
         const d = boardExamDates.find(x => String(x.id) === String(selectedDateId));
-        selectedTypeEl.textContent = t ? t.exam_type_name : '—';
+        selectedTypeEl.textContent = t ? t.exam_type_name : 'Ã¢â‚¬â€';
         selectedDateEl.textContent = selectedYear ? ('Year ' + selectedYear) : (d ? d.exam_date + (d
-            .exam_description ? ' — ' + d.exam_description : '') : '—');
+            .exam_description ? ' Ã¢â‚¬â€ ' + d.exam_description : '') : 'Ã¢â‚¬â€');
         updateSubjectsHeader();
         // deselect chips when date chosen
         if (selectedDateId) {
@@ -1975,14 +2101,14 @@ $bedStmt->close();
             return;
         }
         if (selectedTypeId && !selectedDateId && !selectedYear) {
-            hdr.textContent = `Subjects — ${t ? t.exam_type_name : 'Selected Type'}`;
+            hdr.textContent = `Subjects Ã¢â‚¬â€ ${t ? t.exam_type_name : 'Selected Type'}`;
             return;
         }
         // type + date or year selected
         if (selectedYear) {
-            hdr.textContent = `Subjects — ${t ? t.exam_type_name : 'Selected Type'} (Year ${selectedYear})`;
+            hdr.textContent = `Subjects Ã¢â‚¬â€ ${t ? t.exam_type_name : 'Selected Type'} (Year ${selectedYear})`;
         } else {
-            hdr.textContent = `Subjects — ${t ? t.exam_type_name : 'Selected Type'} (${d ? d.exam_date : ''})`;
+            hdr.textContent = `Subjects Ã¢â‚¬â€ ${t ? t.exam_type_name : 'Selected Type'} (${d ? d.exam_date : ''})`;
         }
     }
 
@@ -2239,13 +2365,13 @@ $bedStmt->close();
             if (!points.length) return;
             const i = points[0].index;
             const label = femaleDonut.data.labels[i];
-            // label is 'Passed' or 'Not Passed' — map 'Not Passed' to a notPassed filter on server
+            // label is 'Passed' or 'Not Passed' Ã¢â‚¬â€ map 'Not Passed' to a notPassed filter on server
             if (String(label).toLowerCase() === 'passed') {
-                fetchRecords('gender', 'Female', `Female — ${label}`, {
+                fetchRecords('gender', 'Female', `Female Ã¢â‚¬â€ ${label}`, {
                     result: 'Passed'
                 }, evt);
             } else {
-                fetchRecords('gender', 'Female', `Female — ${label}`, {
+                fetchRecords('gender', 'Female', `Female Ã¢â‚¬â€ ${label}`, {
                     notPassed: 1
                 }, evt);
             }
@@ -2259,11 +2385,11 @@ $bedStmt->close();
             const i = points[0].index;
             const label = maleDonut.data.labels[i];
             if (String(label).toLowerCase() === 'passed') {
-                fetchRecords('gender', 'Male', `Male — ${label}`, {
+                fetchRecords('gender', 'Male', `Male Ã¢â‚¬â€ ${label}`, {
                     result: 'Passed'
                 }, evt);
             } else {
-                fetchRecords('gender', 'Male', `Male — ${label}`, {
+                fetchRecords('gender', 'Male', `Male Ã¢â‚¬â€ ${label}`, {
                     notPassed: 1
                 }, evt);
             }
@@ -2306,7 +2432,7 @@ $bedStmt->close();
                     const pct = tot ? Math.round((val / tot) * 100) : 0;
                     const meta = chart.getDatasetMeta(0).data[i];
                     return {
-                        text: `${l} — ${pct}%`,
+                        text: `${l} Ã¢â‚¬â€ ${pct}%`,
                         fillStyle: (ds.backgroundColor && ds.backgroundColor[i]) || '#e5e7eb',
                         strokeStyle: '#fff',
                         lineWidth: 0,
@@ -2652,12 +2778,12 @@ $bedStmt->close();
             const label = (firstTimerDonut.data.labels && firstTimerDonut.data.labels[idx]) ? firstTimerDonut.data
                 .labels[idx] : '';
             if (String(label).toLowerCase() === 'passed') {
-                fetchRecords('exam_type', 'First Timer', 'First Timer — Passed', {
+                fetchRecords('exam_type', 'First Timer', 'First Timer Ã¢â‚¬â€ Passed', {
                     result: 'Passed'
                 }, evt);
             } else {
                 // other slice -> not passed
-                fetchRecords('exam_type', 'First Timer', 'First Timer — Not Passed', {
+                fetchRecords('exam_type', 'First Timer', 'First Timer Ã¢â‚¬â€ Not Passed', {
                     notPassed: 1
                 }, evt);
             }
@@ -2672,11 +2798,11 @@ $bedStmt->close();
             const label = (repeaterDonut.data.labels && repeaterDonut.data.labels[idx]) ? repeaterDonut.data.labels[
                 idx] : '';
             if (String(label).toLowerCase() === 'passed') {
-                fetchRecords('exam_type', 'Repeater', 'Repeater — Passed', {
+                fetchRecords('exam_type', 'Repeater', 'Repeater Ã¢â‚¬â€ Passed', {
                     result: 'Passed'
                 }, evt);
             } else {
-                fetchRecords('exam_type', 'Repeater', 'Repeater — Not Passed', {
+                fetchRecords('exam_type', 'Repeater', 'Repeater Ã¢â‚¬â€ Not Passed', {
                     notPassed: 1
                 }, evt);
             }
@@ -2685,12 +2811,12 @@ $bedStmt->close();
 
     // Initialize empty charts to avoid DOM blanking when first filtering
     // color palette for charts
-    // Palette chosen to harmonize with primary teal (#06b6d4) and magenta (#f472b6)
+    // Palette chosen to harmonize with primary teal (#F59E0B) and magenta (#f472b6)
     // Pastel color palette
     const PALETTE = [
         '#2dd4bf', // teal (Male / primary accent)
         '#f472b6', // pink/magenta (Female)
-        '#60a5fa', // blue (charts accent)
+        '#FBBF24', // blue (charts accent)
         '#4ade80', // green (Passed)
         '#fbbf24', // amber (Conditional)
         '#fb7185', // red (Failed)
@@ -2769,10 +2895,10 @@ $bedStmt->close();
         function refresh() {
             const isPercent = (window.__subjectsMode === 'percent');
             // simple active styles
-            btnCounts.style.background = isPercent ? '#fff' : '#06b6d4';
-            btnCounts.style.color = isPercent ? '#06b6d4' : '#fff';
-            btnPercent.style.background = isPercent ? '#06b6d4' : '#fff';
-            btnPercent.style.color = isPercent ? '#fff' : '#06b6d4';
+            btnCounts.style.background = isPercent ? '#fff' : '#F59E0B';
+            btnCounts.style.color = isPercent ? '#F59E0B' : '#fff';
+            btnPercent.style.background = isPercent ? '#F59E0B' : '#fff';
+            btnPercent.style.color = isPercent ? '#fff' : '#F59E0B';
         }
         btnCounts.addEventListener('click', () => {
             window.__subjectsMode = 'count';
@@ -2791,9 +2917,9 @@ $bedStmt->close();
     function setDonutOverlay(id, percent, countText, color) {
         const el = document.getElementById(id);
         if (!el) return;
-        const pct = (percent === null || percent === undefined) ? '—' : (String(percent) + '%');
+        const pct = (percent === null || percent === undefined) ? 'Ã¢â‚¬â€' : (String(percent) + '%');
         el.querySelector('.percent').textContent = pct;
-        el.querySelector('.count').textContent = countText || '— / —';
+        el.querySelector('.count').textContent = countText || 'Ã¢â‚¬â€ / Ã¢â‚¬â€';
         el.querySelector('.percent').style.color = color || 'inherit';
         // center overlay within its wrapper
         const wrap = el.parentElement;
@@ -2808,7 +2934,7 @@ $bedStmt->close();
     function setTopPercent(id, percent, color) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.textContent = (percent === null || percent === undefined) ? '—' : (String(percent) + '%');
+        el.textContent = (percent === null || percent === undefined) ? 'Ã¢â‚¬â€' : (String(percent) + '%');
         el.style.color = color || 'inherit';
     }
 
@@ -2835,8 +2961,8 @@ $bedStmt->close();
                     'No subject data found for the selected exam type (all dates).';
                 else infoEl.textContent = 'Select a board exam type to load subjects.';
             }
-            // show an empty chart with a muted placeholder bar so the card doesn’t collapse
-            labels.push('—');
+            // show an empty chart with a muted placeholder bar so the card doesnÃ¢â‚¬â„¢t collapse
+            labels.push('Ã¢â‚¬â€');
             passed.push(0);
             failed.push(0);
             unknown.push(0);
@@ -2850,7 +2976,7 @@ $bedStmt->close();
                 infoEl.textContent = baseMsg + ' Unknown = no recorded subject result for that subject.';
             }
             rows.forEach(r => {
-                labels.push(String(r.subject_name || '—'));
+                labels.push(String(r.subject_name || 'Ã¢â‚¬â€'));
                 const p = parseInt(r.passed || 0);
                 const f = parseInt(r.failed || 0);
                 const u = parseInt(r.unknown || 0);
@@ -3053,7 +3179,7 @@ $bedStmt->close();
         const title = document.getElementById('studentsSubjectsTitle');
         const body = document.getElementById('studentsSubjectsBody');
         if (!body) return;
-        const t = (legendLabel && legendLabel.length) ? `Student Subject Grades — ${legendLabel}` :
+        const t = (legendLabel && legendLabel.length) ? `Student Subject Grades Ã¢â‚¬â€ ${legendLabel}` :
             'Student Subject Grades';
         if (title) title.textContent = t;
 
@@ -3082,14 +3208,14 @@ $bedStmt->close();
                     const su = subsMap[String(s.id)] || null;
                     if (!su) {
                         cells +=
-                            `<td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center;color:#64748b">—</td>`;
+                            `<td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center;color:#64748b">Ã¢â‚¬â€</td>`;
                     } else {
                         const tagColor = (String(su.result || '').toLowerCase() === 'passed') ?
-                            '#16a34a' : (String(su.result || '').toLowerCase() === 'failed' ?
+                            '#F59E0B' : (String(su.result || '').toLowerCase() === 'failed' ?
                                 '#dc2626' : '#64748b');
-                        const pct = (su.percent === null || su.percent === undefined) ? '—' :
+                        const pct = (su.percent === null || su.percent === undefined) ? 'Ã¢â‚¬â€' :
                             `${su.percent}%`;
-                        const score = (su.grade === null || su.grade === undefined) ? '—' :
+                        const score = (su.grade === null || su.grade === undefined) ? 'Ã¢â‚¬â€' :
                             `${su.grade}/${su.total_items}`;
                         cells +=
                             `<td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center"><span style="display:inline-block;padding:2px 6px;border-radius:999px;background:${tagColor}20;color:${tagColor};font-weight:600;margin-right:6px">${escapeHtml(su.result||'')}</span><span class="muted">${pct} (${score})</span></td>`;
@@ -3101,7 +3227,7 @@ $bedStmt->close();
                     unknown: Math.max(0, mappedCount - (st.subjects || []).length),
                     avg_percent: null
                 };
-                const avgTxt = (summ.avg_percent === null || summ.avg_percent === undefined) ? '—' :
+                const avgTxt = (summ.avg_percent === null || summ.avg_percent === undefined) ? 'Ã¢â‚¬â€' :
                     `${summ.avg_percent}%`;
                 html +=
                     `<tr><td style="padding:6px;border-bottom:1px solid #eef2f7">${escapeHtml(st.full_name||'')}</td><td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center">${escapeHtml(st.sex||'')}</td><td style="padding:6px;border-bottom:1px solid #eef2f7">${escapeHtml(st.course||'')}</td><td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center">${escapeHtml(st.year_graduated||'')}</td><td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center">${escapeHtml(st.exam_date||'')}</td>${cells}<td style="padding:6px;border-bottom:1px solid #eef2f7;text-align:center"><div style="font-size:0.85rem" class="muted">P:${summ.passed} F:${summ.failed} U:${summ.unknown}<br/>Avg: ${avgTxt}</div></td></tr>`;
@@ -3179,7 +3305,7 @@ $bedStmt->close();
                     alert('Failed to load subject records');
                     return;
                 }
-                const title = subjectResult ? `${subjectName} — ${subjectResult}` : `${subjectName}`;
+                const title = subjectResult ? `${subjectName} Ã¢â‚¬â€ ${subjectResult}` : `${subjectName}`;
                 showRecordsModal(title, resp.data, resp.count, resp.total_count);
             })
             .catch(err => {
@@ -3216,7 +3342,7 @@ $bedStmt->close();
                     alert('Failed to load subject records');
                     return;
                 }
-                const title = subjectResult ? `${subjectName} — ${subjectResult}` : `${subjectName}`;
+                const title = subjectResult ? `${subjectName} Ã¢â‚¬â€ ${subjectResult}` : `${subjectName}`;
                 // Always show centered modal
                 showRecordsModal(title, resp.data, resp.count, resp.total_count);
             })
@@ -3329,9 +3455,9 @@ $bedStmt->close();
         pop.style.position = 'fixed';
         pop.style.zIndex = '22000';
         pop.style.background = 'linear-gradient(145deg, #ffffff 0%, #f0fdff 100%)';
-        pop.style.border = '2px solid rgba(6, 182, 212, 0.2)';
+        pop.style.border = '2px solid rgba(245, 158, 11, 0.2)';
         pop.style.borderRadius = '20px';
-        pop.style.boxShadow = '0 20px 60px rgba(6, 182, 212, 0.25)';
+        pop.style.boxShadow = '0 20px 60px rgba(245, 158, 11, 0.25)';
         pop.style.maxWidth = '900px';
         pop.style.maxHeight = '75vh';
         pop.style.overflow = 'hidden';
@@ -3345,7 +3471,7 @@ $bedStmt->close();
         header.style.justifyContent = 'space-between';
         header.style.gap = '16px';
         header.style.padding = '24px 32px';
-        header.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+        header.style.background = 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)';
         header.style.color = 'white';
         header.style.borderBottom = 'none';
         header.style.borderRadius = '20px 20px 0 0';
@@ -3389,9 +3515,9 @@ $bedStmt->close();
         info.style.padding = '16px 32px';
         info.style.fontSize = '0.95rem';
         info.style.fontWeight = '600';
-        info.style.color = '#0e7490';
-        info.style.background = 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)';
-        info.style.borderBottom = '2px solid rgba(6, 182, 212, 0.1)';
+        info.style.color = '#B45309';
+        info.style.background = 'linear-gradient(135deg, #ecfeff 0%, #FEF3C7 100%)';
+        info.style.borderBottom = '2px solid rgba(245, 158, 11, 0.1)';
         info.innerHTML =
             `<i class="fas fa-list" style="margin-right: 8px;"></i>${(typeof totalCount==='number' && totalCount>rows.length) ? `Showing ${rows.length} of ${totalCount} record(s)` : `${rows.length} record(s)`}`;
         pop.appendChild(info);
@@ -3406,26 +3532,26 @@ $bedStmt->close();
         table.style.borderSpacing = '0';
         table.style.fontSize = '0.95rem';
         table.innerHTML =
-            `<thead><tr style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); position:sticky; top:0; color: white; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);"><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Name</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Sex</th><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Course</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Year Graduated</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Exam Date</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Result</th></tr></thead><tbody></tbody>`;
+            `<thead><tr style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); position:sticky; top:0; color: white; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);"><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Name</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Sex</th><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Course</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Year Graduated</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Exam Date</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Result</th></tr></thead><tbody></tbody>`;
         const tb = table.querySelector('tbody');
         rows.forEach((r, idx) => {
             const examDate = (r.exam_date || r.board_exam_date || '') ? (r.exam_date || r.board_exam_date) : '';
             const tr = document.createElement('tr');
-            tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(6, 182, 212, 0.03)';
+            tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(245, 158, 11, 0.03)';
             tr.style.transition = 'all 0.3s ease';
             tr.onmouseover = () => {
-                tr.style.background = 'rgba(6, 182, 212, 0.08)';
+                tr.style.background = 'rgba(245, 158, 11, 0.08)';
                 tr.style.transform = 'translateX(4px)';
             };
             tr.onmouseout = () => {
-                tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(6, 182, 212, 0.03)';
+                tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(245, 158, 11, 0.03)';
                 tr.style.transform = 'translateX(0)';
             };
-            const resultColor = r.result === 'Passed' ? '#10b981' : '#ef4444';
-            const resultBg = r.result === 'Passed' ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' :
+            const resultColor = r.result === 'Passed' ? '#F59E0B' : '#ef4444';
+            const resultBg = r.result === 'Passed' ? 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)' :
                 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
             tr.innerHTML =
-                `<td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); font-weight: 600; color: #0f1724;">${escapeHtml(r.full_name)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; color: #64748b;">${escapeHtml(r.sex)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); color: #475569; font-size: 0.9rem;">${escapeHtml(r.course)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; font-weight: 600; color: #0891b2;">${escapeHtml(r.year_graduated)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; color: #475569;">${escapeHtml(examDate)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center;"><span style="padding: 6px 14px; border-radius: 999px; background: ${resultBg}; color: ${resultColor}; font-weight: 700; font-size: 0.85rem; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">${escapeHtml(r.result)}</span></td>`;
+                `<td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); font-weight: 600; color: #0f1724;">${escapeHtml(r.full_name)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); text-align:center; color: #64748b;">${escapeHtml(r.sex)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); color: #475569; font-size: 0.9rem;">${escapeHtml(r.course)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); text-align:center; font-weight: 600; color: #D97706;">${escapeHtml(r.year_graduated)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); text-align:center; color: #475569;">${escapeHtml(examDate)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(245, 158, 11, 0.1); text-align:center;"><span style="padding: 6px 14px; border-radius: 999px; background: ${resultBg}; color: ${resultColor}; font-weight: 700; font-size: 0.85rem; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">${escapeHtml(r.result)}</span></td>`;
             tb.appendChild(tr);
         });
         body.appendChild(table);
@@ -3501,8 +3627,8 @@ $bedStmt->close();
         const modal = document.createElement('div');
         modal.style.background = 'linear-gradient(145deg, #ffffff 0%, #f0fdff 100%)';
         modal.style.borderRadius = '20px';
-        modal.style.border = '2px solid rgba(6, 182, 212, 0.2)';
-        modal.style.boxShadow = '0 20px 60px rgba(6, 182, 212, 0.3)';
+        modal.style.border = '2px solid rgba(245, 158, 11, 0.2)';
+        modal.style.boxShadow = '0 20px 60px rgba(245, 158, 11, 0.3)';
         modal.style.maxWidth = '450px';
         modal.style.width = '90%';
         modal.style.overflow = 'hidden';
@@ -3510,7 +3636,7 @@ $bedStmt->close();
 
         // Modal header
         const header = document.createElement('div');
-        header.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+        header.style.background = 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)';
         header.style.padding = '24px 32px';
         header.style.color = 'white';
         header.innerHTML =
@@ -3520,7 +3646,7 @@ $bedStmt->close();
         const body = document.createElement('div');
         body.style.padding = '32px';
         body.innerHTML =
-            '<p style="margin: 0; font-size: 1.05rem; color: #334155; line-height: 1.6;"><i class="fas fa-question-circle" style="color: #06b6d4; margin-right: 8px;"></i>Are you sure you want to log out?</p>';
+            '<p style="margin: 0; font-size: 1.05rem; color: #334155; line-height: 1.6;"><i class="fas fa-question-circle" style="color: #F59E0B; margin-right: 8px;"></i>Are you sure you want to log out?</p>';
 
         // Modal footer
         const footer = document.createElement('div');
@@ -3557,19 +3683,21 @@ $bedStmt->close();
         logoutBtn.style.padding = '10px 24px';
         logoutBtn.style.borderRadius = '12px';
         logoutBtn.style.border = 'none';
-        logoutBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+        logoutBtn.style.background = 'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)';
         logoutBtn.style.color = 'white';
         logoutBtn.style.fontWeight = '600';
         logoutBtn.style.cursor = 'pointer';
         logoutBtn.style.transition = 'all 0.3s ease';
-        logoutBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
+        logoutBtn.style.boxShadow = '0 4px 15px rgba(217, 119, 6, 0.3)';
         logoutBtn.onmouseover = () => {
             logoutBtn.style.transform = 'translateY(-2px)';
-            logoutBtn.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
+            logoutBtn.style.boxShadow = '0 6px 20px rgba(217, 119, 6, 0.4)';
+            logoutBtn.style.background = 'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)';
         };
         logoutBtn.onmouseout = () => {
             logoutBtn.style.transform = 'translateY(0)';
-            logoutBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
+            logoutBtn.style.boxShadow = '0 4px 15px rgba(217, 119, 6, 0.3)';
+            logoutBtn.style.background = 'linear-gradient(135deg, #D97706 0%, #F59E0B 100%)';
         };
         logoutBtn.onclick = () => window.location.href = 'logout.php';
 
@@ -3683,7 +3811,7 @@ $bedStmt->close();
         const overallCtl = document.getElementById('overallSubjectsModeControls');
         if (overallCtl) overallCtl.style.display = 'flex';
         const info = document.getElementById('subjectsInfo');
-        if (info) info.textContent = 'Overall view — subjects per board exam type (Passed vs Failed across all dates)';
+        if (info) info.textContent = 'Overall view Ã¢â‚¬â€ subjects per board exam type (Passed vs Failed across all dates)';
 
         // set container layout: one board exam type per line
         container.style.display = 'grid';
@@ -3713,14 +3841,14 @@ $bedStmt->close();
             body.style.padding = '4px 2px 8px 2px';
             card.appendChild(body);
             // append placeholder while loading
-            body.innerHTML = '<div class="muted" style="padding:6px 0;">Loading subjects…</div>';
+            body.innerHTML = '<div class="muted" style="padding:6px 0;">Loading subjectsÃ¢â‚¬Â¦</div>';
             container.appendChild(card);
 
             return fetchSubjectsTotalsForType(g.exam_type_id).then(rows => {
                 // Clear placeholder
                 body.innerHTML = '';
                 if (!rows || !rows.length) {
-                    body.innerHTML = '<div class="muted">— No subject data —</div>';
+                    body.innerHTML = '<div class="muted">Ã¢â‚¬â€ No subject data Ã¢â‚¬â€</div>';
                 } else {
                     // compute max total for counts mode
                     let maxTotal = 0;
@@ -3783,14 +3911,14 @@ $bedStmt->close();
                         segPass.style.background = '#4ade80';
                         segPass.style.display = 'inline-block';
                         segPass.style.cursor = 'pointer';
-                        segPass.title = `${p} Passed — click to view records`;
+                        segPass.title = `${p} Passed Ã¢â‚¬â€ click to view records`;
                         segFail.style.height = '100%';
                         segFail.style.width = fw + '%';
                         // cheerful red to match updated palette
                         segFail.style.background = '#fb7185';
                         segFail.style.display = 'inline-block';
                         segFail.style.cursor = 'pointer';
-                        segFail.title = `${f} Failed — click to view records`;
+                        segFail.title = `${f} Failed Ã¢â‚¬â€ click to view records`;
                         track.appendChild(segPass);
                         track.appendChild(segFail);
 
@@ -3869,10 +3997,10 @@ $bedStmt->close();
 
         function applyButtons() {
             const isCounts = (window.__overallSubjectsMode === 'counts');
-            btnC.style.background = isCounts ? '#06b6d4' : '#fff';
-            btnC.style.color = isCounts ? '#fff' : '#06b6d4';
-            btnP.style.background = isCounts ? '#fff' : '#06b6d4';
-            btnP.style.color = isCounts ? '#06b6d4' : '#fff';
+            btnC.style.background = isCounts ? '#F59E0B' : '#fff';
+            btnC.style.color = isCounts ? '#fff' : '#F59E0B';
+            btnP.style.background = isCounts ? '#fff' : '#F59E0B';
+            btnP.style.color = isCounts ? '#F59E0B' : '#fff';
         }
 
         function applyMode() {
@@ -4004,7 +4132,7 @@ $bedStmt->close();
             const year = years[p.index];
             const from = `${year}-01-01`;
             const to = `${year}-12-31`;
-            fetchRecords('year', String(year), `Department — ${year}`, {
+            fetchRecords('year', String(year), `Department Ã¢â‚¬â€ ${year}`, {
                 fromDate: from,
                 toDate: to
             });
@@ -4097,7 +4225,7 @@ $bedStmt->close();
             if (!s) return;
             const from = `${year}-01-01`;
             const to = `${year}-12-31`;
-            fetchRecords('year', String(year), `${s.label} — ${year}`, {
+            fetchRecords('year', String(year), `${s.label} Ã¢â‚¬â€ ${year}`, {
                 fromDate: from,
                 toDate: to,
                 boardExamTypeId: s.exam_type_id
@@ -4222,7 +4350,7 @@ $bedStmt->close();
                                 .label) ? context.dataset.label : '';
                             const year = years[context.dataIndex];
                             const val = context.raw;
-                            const valText = (val === null || typeof val === 'undefined') ? '—' :
+                            const valText = (val === null || typeof val === 'undefined') ? 'Ã¢â‚¬â€' :
                                 (Math.round(val) + '%');
                             return `${dsLabel}: ${valText} (forecast for ${year})`;
                         };
@@ -4242,11 +4370,11 @@ $bedStmt->close();
                         // Short, mobile-friendly summary
                         const parts = [
                             `H: ${horizon}`,
-                            `${years[0]}–${years[years.length-1]}`,
+                            `${years[0]}Ã¢â‚¬â€œ${years[years.length-1]}`,
                             `${datasets.length} types`
                         ];
-                        if (r2Avg !== null) parts.push(`Avg R²: ${r2Avg}`);
-                        cont.textContent = parts.join(' • ');
+                        if (r2Avg !== null) parts.push(`Avg RÃ‚Â²: ${r2Avg}`);
+                        cont.textContent = parts.join(' Ã¢â‚¬Â¢ ');
                     }
                 }
             });
@@ -4361,7 +4489,7 @@ $bedStmt->close();
             const s = series[p.datasetIndex];
             const from = `${year}-01-01`;
             const to = `${year}-12-31`;
-            fetchRecords('year', String(year), `${s.label} — Passed in ${year}`, {
+            fetchRecords('year', String(year), `${s.label} Ã¢â‚¬â€ Passed in ${year}`, {
                 fromDate: from,
                 toDate: to,
                 boardExamTypeId: s.exam_type_id,
@@ -4483,7 +4611,7 @@ $bedStmt->close();
             const s = series[p.datasetIndex];
             const from = `${year}-01-01`;
             const to = `${year}-12-31`;
-            fetchRecords('year', String(year), `${s.label} — ${year}`, {
+            fetchRecords('year', String(year), `${s.label} Ã¢â‚¬â€ ${year}`, {
                 fromDate: from,
                 toDate: to,
                 boardExamTypeId: s.exam_type_id
@@ -4525,10 +4653,10 @@ $bedStmt->close();
 
         function applyButtons() {
             const isPercent = (window.__compositionMode !== 'counts');
-            btnP.style.background = isPercent ? '#06b6d4' : '#fff';
-            btnP.style.color = isPercent ? '#fff' : '#06b6d4';
-            btnC.style.background = isPercent ? '#fff' : '#06b6d4';
-            btnC.style.color = isPercent ? '#06b6d4' : '#fff';
+            btnP.style.background = isPercent ? '#F59E0B' : '#fff';
+            btnP.style.color = isPercent ? '#fff' : '#F59E0B';
+            btnC.style.background = isPercent ? '#fff' : '#F59E0B';
+            btnC.style.color = isPercent ? '#F59E0B' : '#fff';
         }
         btnP.addEventListener('click', () => {
             window.__compositionMode = 'percent';

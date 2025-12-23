@@ -1,0 +1,106 @@
+{
+  "department": "Arts and Sciences",
+  "trained_date": "2025-12-06T03:34:47.119733",
+  "best_model": "Lasso Regression",
+  "features": [
+    "year_normalized",
+    "total_examinees",
+    "first_timer_ratio",
+    "repeater_ratio",
+    "fail_rate",
+    "conditional_rate",
+    "passing_rate_ma3",
+    "exam_Psychometricians Licensure Examination"
+  ],
+  "exam_types": [
+    "exam_Psychometricians Licensure Examination"
+  ],
+  "training_records": 5,
+  "testing_records": 1,
+  "all_models": [
+    {
+      "model": "Linear Regression",
+      "train_r2": 1.0,
+      "test_r2": NaN,
+      "train_mse": 1.0097419586828951e-28,
+      "test_mse": 0.1899493095808095,
+      "train_mae": 8.526512829121202e-15,
+      "test_mae": 0.43583174457674545,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "Ridge Regression",
+      "train_r2": 0.9654637030386323,
+      "test_r2": NaN,
+      "train_mse": 6.866469262658413,
+      "test_mse": 795.669752825299,
+      "train_mae": 2.5031620968724098,
+      "test_mae": 28.207618701785144,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "Lasso Regression",
+      "train_r2": 0.9999497029759542,
+      "test_r2": NaN,
+      "train_mse": 0.009999999999999619,
+      "test_mse": 0.13402267751982022,
+      "train_mae": 0.08944480197503993,
+      "test_mae": 0.3660910781756641,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "Random Forest",
+      "train_r2": 0.9389331410310442,
+      "test_r2": NaN,
+      "train_mse": 12.14124694800011,
+      "test_mse": 2539.1218660899967,
+      "train_mae": 2.8892800000000207,
+      "test_mae": 50.38969999999997,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "Gradient Boosting",
+      "train_r2": 0.9999999992944921,
+      "test_r2": NaN,
+      "train_mse": 1.4026832089233393e-07,
+      "test_mse": 2472.5829872979784,
+      "train_mae": 0.00033499236277236835,
+      "test_mae": 49.725074030090475,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "XGBoost",
+      "train_r2": 0.9999999976258989,
+      "test_r2": NaN,
+      "train_mse": 4.7201621811768036e-07,
+      "test_mse": 1805.351941184199,
+      "train_mae": 0.00045803833007767024,
+      "test_mae": 42.48943328857422,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    },
+    {
+      "model": "Support Vector Regression",
+      "train_r2": 0.1402973598284183,
+      "test_r2": NaN,
+      "train_mse": 170.92515044006248,
+      "test_mse": 2569.9020710136506,
+      "train_mae": 11.333571912778826,
+      "test_mae": 50.69420155218593,
+      "cv_mean": NaN,
+      "cv_std": NaN
+    }
+  ],
+  "best_model_metrics": {
+    "r2_score": 0.0,
+    "mae": 0.3660910781756641,
+    "mse": 0.13402267751982022,
+    "cv_mean": 0.0,
+    "cv_std": 0.0
+  }
+}

@@ -2,7 +2,7 @@
 session_start();
 
 /* -------------------------------------------------
-   1. SECURITY – only CBAA admin can access
+   1. SECURITY Ã¢â‚¬â€œ only CBAA admin can access
    ------------------------------------------------- */
 if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph') {
     header("Location: index.php");
@@ -106,7 +106,7 @@ function processCSVImport($filePath, $conn) {
 
                 // Validate sex
                 if (!in_array($sex, ['MALE', 'FEMALE'])) {
-                    $errors[] = "Row $rowNumber: Invalid sex '$sex' – use MALE or FEMALE";
+                    $errors[] = "Row $rowNumber: Invalid sex '$sex' Ã¢â‚¬â€œ use MALE or FEMALE";
                     $stats['errors']++;
                     continue;
                 }
@@ -127,7 +127,7 @@ function processCSVImport($filePath, $conn) {
                 $year = (int)$dateObj->format('Y');
 
                 if ($year < 2019 || $year > 2025) {
-                    $errors[] = "Row $rowNumber: Year must be 2019–2025 (got $year)";
+                    $errors[] = "Row $rowNumber: Year must be 2019Ã¢â‚¬â€œ2025 (got $year)";
                     $stats['errors']++;
                     continue;
                 }
@@ -138,7 +138,7 @@ function processCSVImport($filePath, $conn) {
 
                 // Prevent duplicates in CSV
                 if (isset($processedRecords[$recordKey])) {
-                    $errors[] = "Row $rowNumber: Duplicate in CSV – $fullName";
+                    $errors[] = "Row $rowNumber: Duplicate in CSV Ã¢â‚¬â€œ $fullName";
                     $stats['duplicates']++;
                     continue;
                 }
@@ -151,7 +151,7 @@ function processCSVImport($filePath, $conn) {
                 $checkStmt->execute();
                 $res = $checkStmt->get_result();
                 if ($res->num_rows > 0) {
-                    $errors[] = "Row $rowNumber: Already in DB – $fullName";
+                    $errors[] = "Row $rowNumber: Already in DB Ã¢â‚¬â€œ $fullName";
                     $stats['duplicates']++;
                     $checkStmt->close();
                     continue;
@@ -178,7 +178,7 @@ function processCSVImport($filePath, $conn) {
                 if ($insertStmt->execute()) {
                     $stats['imported']++;
                 } else {
-                    $errors[] = "Row $rowNumber: DB insert failed – " . $insertStmt->error;
+                    $errors[] = "Row $rowNumber: DB insert failed Ã¢â‚¬â€œ " . $insertStmt->error;
                     $stats['errors']++;
                 }
                 $insertStmt->close();
@@ -208,7 +208,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     if ($file['error'] === UPLOAD_ERR_OK) {
         $ext = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
         if ($ext !== 'csv') {
-            $error = "Invalid file type – only CSV allowed.";
+            $error = "Invalid file type Ã¢â‚¬â€œ only CSV allowed.";
         } elseif ($file['size'] > 10_485_760) { // 10 MB
             $error = "File too large (max 10 MB).";
         } else {
@@ -262,13 +262,46 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         box-sizing: border-box;
     }
 
+    /* Button Styles - CBAA Golden Theme */
+    .btn {
+        width: 100%;
+        height: 45px;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        border: none;
+        outline: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 1em;
+        color: #fff;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.25);
+    }
+
+    .btn:hover {
+        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.35);
+        transform: translateY(-2px);
+    }
+
+    .btn:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.25);
+    }
+
+    .btn:disabled {
+        background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+        cursor: not-allowed;
+        box-shadow: none;
+        opacity: 0.6;
+    }
+
     body {
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
         position: relative;
-        overflow-x: hidden;
     }
 
     body::before {
@@ -279,9 +312,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         right: 0;
         bottom: 0;
         background:
-            radial-gradient(circle at 20% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 60%, rgba(8, 145, 178, 0.08) 0%, transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(165, 243, 252, 0.1) 0%, transparent 50%);
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
@@ -293,29 +326,29 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .dashboard-title {
         font-size: 1.4rem;
-        color: #fff;
+        color: #FFFFFF;
         font-weight: 700;
         letter-spacing: 1px;
         margin: 0;
     }
 
     .logout-btn {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 12px;
         padding: 12px 24px;
         font-size: 0.95rem;
@@ -331,8 +364,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
@@ -372,7 +405,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     .page-title {
         font-size: 2.5rem;
         font-weight: 800;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -401,10 +434,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         border-radius: 28px;
         padding: 0;
         box-shadow:
-            0 32px 64px rgba(44, 90, 160, 0.15),
+            0 32px 64px rgba(217, 119, 6, 0.15),
             0 0 0 1px rgba(255, 255, 255, 0.2),
             inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        border: 2px solid rgba(44, 90, 160, 0.1);
+        border: 2px solid rgba(217, 119, 6, 0.1);
         overflow: hidden;
         position: relative;
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -430,7 +463,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.02) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.02) 0%, rgba(245, 158, 11, 0.03) 100%);
         pointer-events: none;
         z-index: 1;
     }
@@ -438,14 +471,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     .import-card:hover {
         transform: translateY(-8px) scale(1.02);
         box-shadow:
-            0 40px 80px rgba(44, 90, 160, 0.2),
+            0 40px 80px rgba(217, 119, 6, 0.2),
             0 0 0 1px rgba(255, 255, 255, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
     .card-header {
         padding: 40px 50px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: white;
         position: relative;
         overflow: hidden;
@@ -488,7 +521,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         animation: iconFloat 3s ease-in-out infinite;
         box-shadow:
-            0 15px 35px rgba(6, 182, 212, 0.35),
+            0 15px 35px rgba(245, 158, 11, 0.35),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
         border: 2px solid rgba(255, 255, 255, 0.25);
     }
@@ -540,7 +573,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
         animation: iconFloat 3s ease-in-out infinite;
         box-shadow:
-            0 15px 35px rgba(6, 182, 212, 0.35),
+            0 15px 35px rgba(245, 158, 11, 0.35),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
         border: 2px solid rgba(255, 255, 255, 0.25);
     }
@@ -560,7 +593,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     .card-icon:hover {
         transform: scale(1.1) rotate(5deg);
         box-shadow:
-            0 20px 40px rgba(44, 90, 160, 0.4),
+            0 20px 40px rgba(217, 119, 6, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
@@ -582,7 +615,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
 
     /* File Upload Styles */
     .upload-area {
-        border: 3px dashed rgba(6, 182, 212, 0.4);
+        border: 3px dashed rgba(245, 158, 11, 0.4);
         border-radius: 20px;
         padding: 50px;
         text-align: center;
@@ -591,7 +624,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         cursor: pointer;
         position: relative;
         overflow: hidden;
-        box-shadow: 0 8px 30px rgba(6, 182, 212, 0.1);
+        box-shadow: 0 8px 30px rgba(245, 158, 11, 0.1);
     }
 
     .upload-area::before {
@@ -601,16 +634,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.05) 0%, rgba(14, 116, 144, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.05) 0%, rgba(217, 119, 6, 0.03) 100%);
         opacity: 0;
         transition: all 0.4s ease;
     }
 
     .upload-area:hover {
-        border-color: #06b6d4;
-        background: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(236, 254, 255, 0.95) 100%);
+        border-color: #F59E0B;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 1) 0%, rgba(255, 251, 235, 0.95) 100%);
         transform: translateY(-4px) scale(1.01);
-        box-shadow: 0 15px 45px rgba(6, 182, 212, 0.2);
+        box-shadow: 0 15px 45px rgba(245, 158, 11, 0.2);
     }
 
     .upload-area:hover::before {
@@ -618,18 +651,18 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     .upload-area.dragover {
-        border-color: #0891b2;
-        background: linear-gradient(145deg, rgba(236, 254, 255, 0.98) 0%, rgba(207, 250, 254, 0.95) 100%);
+        border-color: #D97706;
+        background: linear-gradient(145deg, rgba(255, 251, 235, 0.98) 0%, rgba(254, 243, 199, 0.95) 100%);
         transform: scale(1.03);
-        box-shadow: 0 20px 60px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 20px 60px rgba(245, 158, 11, 0.3);
     }
 
     .upload-icon {
         font-size: 4rem;
-        color: #06b6d4;
+        color: #F59E0B;
         margin-bottom: 24px;
         animation: uploadFloat 3s ease-in-out infinite;
-        filter: drop-shadow(0 4px 12px rgba(6, 182, 212, 0.3));
+        filter: drop-shadow(0 4px 12px rgba(245, 158, 11, 0.3));
     }
 
     @keyframes uploadFloat {
@@ -646,7 +679,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
 
     .upload-text {
         font-size: 1.3rem;
-        color: #0e7490;
+        color: #B45309;
         font-weight: 700;
         margin-bottom: 10px;
         letter-spacing: 0.3px;
@@ -664,7 +697,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     .upload-btn {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: white;
         border: none;
         border-radius: 14px;
@@ -673,14 +706,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         font-weight: 700;
         cursor: pointer;
         transition: all 0.3s ease;
-        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+        box-shadow: 0 6px 20px rgba(245, 158, 11, 0.35);
         letter-spacing: 0.3px;
     }
 
     .upload-btn:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        background: linear-gradient(135deg, #D97706 0%, #B45309 100%);
         transform: translateY(-3px);
-        box-shadow: 0 12px 30px rgba(6, 182, 212, 0.45);
+        box-shadow: 0 12px 30px rgba(245, 158, 11, 0.45);
     }
 
     .upload-btn:active {
@@ -750,12 +783,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
 
     /* Import Stats */
     .import-stats {
-        background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(236, 254, 255, 0.8) 100%);
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 251, 235, 0.8) 100%);
         border-radius: 20px;
         padding: 30px;
         margin-top: 30px;
-        border: 2px solid rgba(6, 182, 212, 0.2);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
+        border: 2px solid rgba(245, 158, 11, 0.2);
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.15);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
     }
@@ -778,7 +811,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     .stat-value {
         font-size: 2rem;
         font-weight: 800;
-        color: #0891b2;
+        color: #D97706;
         margin-bottom: 8px;
     }
 
@@ -952,10 +985,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         font-weight: 700;
         margin-bottom: 40px;
         color: #fff;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         padding: 24px 40px;
         border-radius: 16px;
-        box-shadow: 0 12px 40px rgba(44, 90, 160, 0.3);
+        box-shadow: 0 12px 40px rgba(217, 119, 6, 0.3);
         text-align: center;
         letter-spacing: 1.2px;
         text-transform: uppercase;
@@ -996,7 +1029,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         top: 0 !important;
         width: 100% !important;
         height: 100% !important;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.95) 0%, rgba(49, 130, 206, 0.9) 100%) !important;
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.95) 0%, rgba(49, 130, 206, 0.9) 100%) !important;
         backdrop-filter: blur(15px) !important;
         -webkit-backdrop-filter: blur(15px) !important;
         transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
@@ -1020,14 +1053,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         width: 90% !important;
         max-width: 520px !important;
         box-shadow:
-            0 25px 50px rgba(6, 182, 212, 0.4),
+            0 25px 50px rgba(245, 158, 11, 0.4),
             0 15px 35px rgba(0, 0, 0, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important;
         transform: scale(0.7) translateY(50px) !important;
         animation: slideInImport 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        border: 3px solid rgba(6, 182, 212, 0.2) !important;
+        border: 3px solid rgba(245, 158, 11, 0.2) !important;
         position: relative !important;
         overflow: hidden !important;
     }
@@ -1039,7 +1072,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 25%, #0e7490 50%, #0891b2 75%, #06b6d4 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 25%, #B45309 50%, #D97706 75%, #F59E0B 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -1075,16 +1108,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
         padding: 32px 28px !important;
         border-radius: 24px !important;
-        border: 2px solid rgba(44, 90, 160, 0.15) !important;
+        border: 2px solid rgba(217, 119, 6, 0.15) !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.1) !important;
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.1) !important;
     }
 
     #importConfirmModal .modal-icon {
         width: 75px !important;
         height: 75px !important;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         border-radius: 20px !important;
         display: flex !important;
         align-items: center !important;
@@ -1095,7 +1128,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         position: relative !important;
         overflow: hidden !important;
         box-shadow:
-            0 15px 35px rgba(44, 90, 160, 0.4),
+            0 15px 35px rgba(217, 119, 6, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
         animation: iconPulse 2s ease-in-out infinite !important;
     }
@@ -1105,12 +1138,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         0%,
         100% {
             transform: scale(1);
-            box-shadow: 0 15px 35px rgba(44, 90, 160, 0.4);
+            box-shadow: 0 15px 35px rgba(217, 119, 6, 0.4);
         }
 
         50% {
             transform: scale(1.05);
-            box-shadow: 0 20px 40px rgba(44, 90, 160, 0.5);
+            box-shadow: 0 20px 40px rgba(217, 119, 6, 0.5);
         }
     }
 
@@ -1155,17 +1188,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     .import-confirm {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%) !important;
-        border: 2px solid rgba(6, 182, 212, 0.3) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+        border: 2px solid rgba(245, 158, 11, 0.3) !important;
         color: white !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
 
     .import-confirm:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%) !important;
-        border-color: rgba(8, 145, 178, 0.5) !important;
+        background: linear-gradient(135deg, #D97706 0%, #B45309 100%) !important;
+        border-color: rgba(217, 119, 6, 0.5) !important;
         transform: translateY(-2px) scale(1.02) !important;
-        box-shadow: 0 12px 30px rgba(6, 182, 212, 0.45) !important;
+        box-shadow: 0 12px 30px rgba(245, 158, 11, 0.45) !important;
     }
 
     .import-cancel {
@@ -1292,7 +1325,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         padding: 48px 44px !important;
         border-radius: 28px !important;
         box-shadow:
-            0 32px 64px -12px rgba(6, 182, 212, 0.3),
+            0 32px 64px -12px rgba(245, 158, 11, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         max-width: 480px !important;
         width: 92% !important;
@@ -1311,7 +1344,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 25%, #60a5fa 50%, #3182ce 75%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #1e40af 0%, #F59E0B 25%, #60a5fa 50%, #F59E0B 75%, #1e40af 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -1340,7 +1373,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         border: 2px solid #a5f3fc !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.2) !important;
+        box-shadow: 0 8px 25px rgba(245, 158, 11, 0.2) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -1350,7 +1383,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #1e40af 0%, #3182ce 50%, #60a5fa 100%) !important;
+        background: linear-gradient(90deg, #1e40af 0%, #F59E0B 50%, #60a5fa 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -1361,7 +1394,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(34, 211, 238, 0.08) 100%) !important;
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(34, 211, 238, 0.08) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -1369,7 +1402,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 50%, #0e7490 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
@@ -1378,9 +1411,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         color: white !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(6, 182, 212, 0.45),
+            0 20px 40px rgba(245, 158, 11, 0.45),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(6, 182, 212, 0.25) !important;
+            0 0 0 6px rgba(245, 158, 11, 0.25) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -1391,17 +1424,17 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         0%,
         100% {
             box-shadow:
-                0 20px 40px rgba(6, 182, 212, 0.45),
+                0 20px 40px rgba(245, 158, 11, 0.45),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(6, 182, 212, 0.25);
+                0 0 0 6px rgba(245, 158, 11, 0.25);
             transform: scale(1);
         }
 
         50% {
             box-shadow:
-                0 25px 50px rgba(6, 182, 212, 0.65),
+                0 25px 50px rgba(245, 158, 11, 0.65),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(6, 182, 212, 0.35);
+                0 0 0 8px rgba(245, 158, 11, 0.35);
             transform: scale(1.05);
         }
     }
@@ -1413,7 +1446,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #60a5fa, #3182ce, #1e40af, #2563eb) !important;
+        background: linear-gradient(135deg, #60a5fa, #F59E0B, #1e40af, #2563eb) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -1433,7 +1466,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -1445,7 +1478,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #2563eb !important;
+        color: #D97706 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -1467,7 +1500,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     #logoutModal .modal-text::before {
-        content: '⚠️' !important;
+        content: 'Ã¢Å¡Â Ã¯Â¸Â' !important;
         position: absolute !important;
         top: -12px !important;
         left: 50% !important;
@@ -1632,7 +1665,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
         color: #ffffff !important;
         border: none !important;
         outline: none !important;
@@ -1657,7 +1690,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 50%, #155e75 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #B45309 50%, #92400E 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -1670,7 +1703,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #0e7490 0%, #155e75 50%, #0891b2 100%) !important;
+        background: linear-gradient(135deg, #B45309 0%, #92400E 50%, #D97706 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -1856,6 +1889,150 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
             transform: translateY(0) scale(1);
         }
     }
+
+    /* CBAA-specific sidebar color overrides for yellow theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .topbar {
+            left: 0;
+            padding: 0 20px;
+        }
+
+        .dashboard-title {
+            font-size: 1.1rem;
+        }
+
+        .main {
+            margin-left: 0;
+            padding: 90px 15px 30px;
+        }
+
+        .import-header {
+            padding: 30px 20px;
+        }
+
+        .import-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .import-header p {
+            font-size: 0.9rem;
+        }
+
+        .upload-section {
+            padding: 30px 20px;
+        }
+
+        .btn-download {
+            padding: 12px 20px;
+            font-size: 0.9rem;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+
+        .progress-section {
+            padding: 20px;
+        }
+
+        .result-summary {
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .errors-section {
+            padding: 20px;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+        }
+
+        .modal-buttons {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-title {
+            font-size: 1rem;
+        }
+
+        .main {
+            padding: 85px 10px 20px;
+        }
+
+        .import-header {
+            padding: 25px 15px;
+        }
+
+        .import-header h1 {
+            font-size: 1.1rem;
+        }
+
+        .upload-section {
+            padding: 25px 15px;
+        }
+
+        .btn-download {
+            padding: 10px 16px;
+            font-size: 0.85rem;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+
+        .result-summary .stat-card {
+            padding: 15px;
+        }
+    }
     </style>
 </head>
 
@@ -1863,7 +2040,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
     <?php include './includes/cbaa_nav.php'; ?>
 
     <div class="topbar">
-        <h1 class="dashboard-title">College of Business Administration and Accountancy Admin Dashboard</h1>
+        <h1 class="dashboard-title">Business Administration and Accountancy Admin Dashboard</h1>
         <a href="logout.php" class="logout-btn" onclick="return confirmLogout(event)">
             <i class="fas fa-sign-out-alt"></i> Logout
         </a>
@@ -1875,7 +2052,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
                 <div class="header-content">
                     <i class="fas fa-file-import header-icon"></i>
                     <div>
-                        <h1 class="header-title">Import Board Passers – College of Business Administration and
+                        <h1 class="header-title">Import Board Passers - College of Business Administration and
                             Accountancy</h1>
                         <p class="header-subtitle">Upload CSV files (2019-2024) for College of Business Administration
                             and Accountancy</p>
@@ -1981,7 +2158,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_FILES['csvFile'])) {
                 </div>
             </div>
             <p class="modal-text">
-                <i class="fas fa-info-circle" style="color:#0891b2;margin-right:8px;"></i>
+                <i class="fas fa-info-circle" style="color:#D97706;margin-right:8px;"></i>
                 This action will import board passer data from your CSV file. Make sure the file follows the correct
                 format and contains valid data for years 2019-2024.
             </p>

@@ -157,9 +157,9 @@ $conn->close();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #FEE32B;
-            --primary-dark: #877928;
-            --success: #FEE32B;
+            --primary: #F59E0B;
+            --primary-dark: #D97706;
+            --success: #F59E0B;
             --danger: #ef4444;
             --warning: #f59e0b;
         }
@@ -171,51 +171,79 @@ $conn->close();
         }
 
         body {
-            font-family: 'Inter', sans-serif;
-            background: #FDFDF9;
-            color: #201D18;
-            position: relative;
-            min-height: 100vh;
-        }
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+    }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: #FEE32B;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #201D18;
-            font-weight: 700;
-        }
+    /* Sidebar styling moved to css/sidebar.css (shared) */
 
-        .logout-btn {
-            background: rgba(135, 121, 40, 0.15);
-            color: #201D18;
-            border: 2px solid rgba(135, 121, 40, 0.3);
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .logout-btn:hover {
-            background: rgba(135, 121, 40, 0.25);
-            transform: translateY(-2px);
-        }
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #FFFFFF;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+    }
+
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
 
         .main {
             margin-left: 260px;
@@ -233,12 +261,12 @@ $conn->close();
         .page-header h2 {
             font-size: 1.8rem;
             font-weight: 800;
-            color: #201D18;
+            color: #78350F;
         }
 
         .view-dashboard-btn {
-            background: #FEE32B;
-            color: #201D18;
+            background: #F59E0B;
+            color: #78350F;
             border: none;
             border-radius: 12px;
             padding: 12px 24px;
@@ -293,7 +321,7 @@ $conn->close();
             font-weight: 600;
             font-size: 0.95rem;
             margin-bottom: 8px;
-            color: #201D18;
+            color: #78350F;
         }
 
         label .required {
@@ -309,7 +337,7 @@ $conn->close();
             padding: 15px 18px;
             font-size: 1rem;
             border-radius: 12px;
-            border: 2px solid #FBEF9C;
+            border: 2px solid #FDE68A;
             background: #ffffff;
             font-family: 'Inter', sans-serif;
             transition: all 0.3s ease;
@@ -318,13 +346,13 @@ $conn->close();
 
         input:hover,
         select:hover {
-            border-color: #FEE32B;
+            border-color: #F59E0B;
         }
 
         input:focus,
         select:focus {
             outline: none;
-            border-color: #877928;
+            border-color: #D97706;
             box-shadow: 0 0 0 4px rgba(254, 227, 43, 0.15);
             background: #fafffe;
         }
@@ -359,8 +387,8 @@ $conn->close();
         }
 
         .btn-primary {
-            background: #FEE32B;
-            color: #201D18;
+            background: #F59E0B;
+            color: #78350F;
             box-shadow: 0 4px 15px rgba(254, 227, 43, 0.3);
         }
 
@@ -371,8 +399,8 @@ $conn->close();
 
         .btn-secondary {
             background: #fff;
-            color: #877928;
-            border: 2px solid #877928;
+            color: #D97706;
+            border: 2px solid #D97706;
         }
 
         .btn-secondary:hover {
@@ -390,9 +418,9 @@ $conn->close();
         }
 
         .alert-success {
-            background: #FBEF9C;
-            color: #877928;
-            border: 2px solid #FEE32B;
+            background: #FDE68A;
+            color: #D97706;
+            border: 2px solid #F59E0B;
         }
 
         .alert-error {
@@ -407,11 +435,11 @@ $conn->close();
             border-radius: 16px;
             padding: 24px;
             margin-bottom: 28px;
-            border-left: 5px solid #FEE32B;
+            border-left: 5px solid #F59E0B;
         }
 
         .info-box h3 {
-            color: #877928;
+            color: #D97706;
             font-size: 1.15rem;
             margin-bottom: 14px;
             display: flex;
@@ -434,9 +462,9 @@ $conn->close();
         .btn-adjust,
         .btn-quick {
             padding: 10px 14px;
-            border: 2px solid #877928;
+            border: 2px solid #D97706;
             background: white;
-            color: #877928;
+            color: #D97706;
             border-radius: 10px;
             font-size: 0.9rem;
             font-weight: 600;
@@ -450,8 +478,8 @@ $conn->close();
 
         .btn-adjust:hover,
         .btn-quick:hover {
-            background: #FEE32B;
-            color: #201D18;
+            background: #F59E0B;
+            color: #78350F;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(254, 227, 43, 0.3);
         }
@@ -591,7 +619,7 @@ $conn->close();
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 25%, #FBEF9C 50%, #FEE32B 75%, #877928 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 25%, #FDE68A 50%, #F59E0B 75%, #D97706 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -615,7 +643,7 @@ $conn->close();
         background: #FDFDF9 !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
-        border: 2px solid #FEE32B !important;
+        border: 2px solid #F59E0B !important;
         position: relative !important;
         overflow: hidden !important;
         box-shadow: 0 8px 25px rgba(254, 227, 43, 0.15) !important;
@@ -628,7 +656,7 @@ $conn->close();
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(90deg, #D97706 0%, #F59E0B 50%, #FDE68A 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -647,13 +675,13 @@ $conn->close();
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FDE68A 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 0 auto 24px !important;
-        color: #201D18 !important;
+        color: #78350F !important;
         font-size: 2.2rem !important;
         box-shadow:
             0 20px 40px rgba(254, 227, 43, 0.4),
@@ -688,7 +716,7 @@ $conn->close();
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #FBEF9C, #FEE32B, #877928) !important;
+        background: linear-gradient(135deg, #FDE68A, #F59E0B, #D97706) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -707,7 +735,7 @@ $conn->close();
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #877928 0%, #201D18 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -719,7 +747,7 @@ $conn->close();
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #877928 !important;
+        color: #D97706 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -741,7 +769,7 @@ $conn->close();
     }
 
     #logoutModal .modal-text::before {
-        content: '⚠️' !important;
+        content: 'âš ï¸' !important;
         position: absolute !important;
         top: -12px !important;
         left: 50% !important;
@@ -834,7 +862,7 @@ $conn->close();
         transform: translate(-50%, -50%) translateX(20px) scale(0.8) !important;
         opacity: 0 !important;
         transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-        color: #201D18 !important;
+        color: #78350F !important;
     }
 
     @keyframes spin {
@@ -843,12 +871,12 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
-        color: #201D18 !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
+        color: #ffffff !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #FBEF9C 0%, #FEE32B 50%, #877928 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 50%, #FCD34D 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
     }
 
@@ -869,7 +897,7 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm.success {
-        background: linear-gradient(135deg, #FEE32B 0%, #877928 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #FDE68A 100%) !important;
         transform: translateY(-2px) scale(1.05) !important;
         box-shadow: 0 12px 30px rgba(254, 227, 43, 0.4) !important;
     }
@@ -907,6 +935,135 @@ $conn->close();
         }
         #logoutModal .modal-btn {
             width: 100% !important;
+        }
+    }
+
+    /* CBAA-specific sidebar color overrides for golden theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+            padding: 15px !important;
+        }
+
+        .topbar {
+            left: 0 !important;
+            padding: 12px 15px !important;
+        }
+
+        .dashboard-title {
+            font-size: 16px !important;
+        }
+
+        .form-container {
+            padding: 15px !important;
+        }
+
+        .form-group {
+            margin-bottom: 12px !important;
+        }
+
+        .form-group label {
+            font-size: 13px !important;
+        }
+
+        .form-group select,
+        .form-group input {
+            font-size: 14px !important;
+            padding: 8px !important;
+        }
+
+        .quick-fill-buttons {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .quick-fill-buttons button {
+            width: 100% !important;
+        }
+
+        .form-actions {
+            flex-direction: column !important;
+            gap: 10px !important;
+        }
+
+        .form-actions button {
+            width: 100% !important;
+        }
+
+        .info-box {
+            padding: 12px !important;
+        }
+
+        .info-box h3 {
+            font-size: 14px !important;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .topbar {
+            padding: 10px !important;
+        }
+
+        .dashboard-title {
+            font-size: 14px !important;
+        }
+
+        .form-container {
+            padding: 12px !important;
+        }
+
+        .form-container h2 {
+            font-size: 18px !important;
+        }
+
+        .form-group label {
+            font-size: 12px !important;
+        }
+
+        .quick-fill-buttons button {
+            padding: 8px 12px !important;
+            font-size: 12px !important;
+        }
+
+        /* Prevent zoom on iOS inputs */
+        input[type="text"],
+        input[type="number"],
+        select {
+            font-size: 16px !important;
         }
     }
     </style>
@@ -1036,7 +1193,7 @@ $conn->close();
                         <i class="fas fa-eraser"></i> Clear Form
                     </button>
                     <button type="submit" name="add_anonymous" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Anonymous Data
+                        <i class="fas fa-plus-circle"></i> Add Data
                     </button>
                 </div>
             </form>
@@ -1176,8 +1333,8 @@ $conn->close();
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #FEE32B 0%, #877928 100%);
-          color: #201D18;
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+          color: #78350F;
           padding: 20px 32px;
           border-radius: 16px;
           box-shadow: 0 16px 40px rgba(254, 227, 43, 0.4);

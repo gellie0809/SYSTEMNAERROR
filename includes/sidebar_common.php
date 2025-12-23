@@ -37,17 +37,17 @@
         <a href="testing_anonymous_data.php"
             class="<?php if(basename($_SERVER['PHP_SELF'])==='testing_anonymous_data.php' || basename($_SERVER['PHP_SELF'])==='anonymous_dashboard_engineering.php') echo 'active'; ?>"
             data-icon-default="fas fa-flask" data-icon-active="fas fa-vial">
-            <i class="fas fa-flask"></i> <span>Testing Anonymous Data</span>
+            <i class="fas fa-flask"></i> <span>Testing Data</span>
         </a>
         <a href="view_anonymous_statistics_engineering.php"
             class="<?php if(basename($_SERVER['PHP_SELF'])==='view_anonymous_statistics_engineering.php') echo 'active'; ?>"
             data-icon-default="fas fa-chart-pie" data-icon-active="fas fa-chart-area">
-            <i class="fas fa-chart-pie"></i> <span>View Anonymous Data Statistics</span>
+            <i class="fas fa-chart-pie"></i> <span>View Data Statistics</span>
         </a>
         <a href="prediction_engineering.php"
             class="<?php if(basename($_SERVER['PHP_SELF'])==='prediction_engineering.php') echo 'active'; ?>"
             data-icon-default="fas fa-brain" data-icon-active="fas fa-robot">
-            <i class="fas fa-brain"></i> <span>AI Board Exam Predictions</span>
+            <i class="fas fa-brain"></i> <span>Board Exam Predictions</span>
         </a>
     </div>
     <script>

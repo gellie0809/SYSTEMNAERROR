@@ -170,52 +170,80 @@ $conn->close();
             padding: 0;
         }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: #e1f1fd;
-            color: #1a1a1a;
-            position: relative;
-            min-height: 100vh;
-        }
+         /* CTE-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a {
+        color: #c1d8f0 !important;
+    }
+    .sidebar-nav i,
+    .sidebar-nav ion-icon {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a.active,
+    .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #4663ac 0%, #c1d8f0 100%) !important;
+        color: #fff !important;
+    }
+    
+    .sidebar-nav a.active i,
+    .sidebar-nav a.active ion-icon,
+    .sidebar-nav a:hover i,
+    .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: #4663ac;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #4663ac 0%, #c1d8f0 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #1a1a1a;
-            font-weight: 700;
-        }
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+    }
 
-        .logout-btn {
-            background: rgba(135, 121, 40, 0.15);
-            color: #1a1a1a;
-            border: 2px solid rgba(135, 121, 40, 0.3);
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
 
-        .logout-btn:hover {
-            background: rgba(135, 121, 40, 0.25);
-            transform: translateY(-2px);
-        }
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+
 
         .main {
             margin-left: 260px;
@@ -1036,7 +1064,7 @@ $conn->close();
                         <i class="fas fa-eraser"></i> Clear Form
                     </button>
                     <button type="submit" name="add_anonymous" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Anonymous Data
+                        <i class="fas fa-plus-circle"></i> Add Data
                     </button>
                 </div>
             </form>

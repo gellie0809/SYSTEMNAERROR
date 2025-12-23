@@ -1,0 +1,104 @@
+{
+  "department": "Teacher Education",
+  "training_date": "2025-12-08T02:22:18.420902",
+  "training_records": 15,
+  "best_model": "Linear Regression",
+  "metrics": {
+    "Linear Regression": {
+      "name": "Linear Regression",
+      "train_r2": 0.9999999999992002,
+      "test_r2": 0.9999999999993955,
+      "train_mae": 2.0793821539299984e-05,
+      "test_mae": 1.1385569360792639e-05,
+      "train_rmse": 2.2008035530575007e-05,
+      "test_rmse": 1.5514387044299948e-05,
+      "cv_mean": 0.9999999994696533,
+      "cv_std": 4.674003218660826e-10,
+      "accuracy": 99.99998861443063
+    },
+    "Ridge Regression": {
+      "name": "Ridge Regression",
+      "train_r2": 0.9901021295406944,
+      "test_r2": 0.8990897234071134,
+      "train_mae": 1.840129941874751,
+      "test_mae": 5.1595439692681095,
+      "train_rmse": 2.448340489890413,
+      "test_rmse": 6.3388326620240925,
+      "cv_mean": -0.5739043598672366,
+      "cv_std": 1.1847706617586942,
+      "accuracy": 94.84045603073189
+    },
+    "Lasso Regression": {
+      "name": "Lasso Regression",
+      "train_r2": 0.9999834880576441,
+      "test_r2": 0.9999834883103829,
+      "train_mae": 0.06446454175789107,
+      "test_mae": 0.07651544374889123,
+      "train_rmse": 0.10000000321724874,
+      "test_rmse": 0.08108440737077738,
+      "cv_mean": 0.9998739311705588,
+      "cv_std": 0.00016699008860838614,
+      "accuracy": 99.92348455625111
+    },
+    "Random Forest": {
+      "name": "Random Forest",
+      "train_r2": 0.9157667145877465,
+      "test_r2": 0.7462865709918507,
+      "train_mae": 3.4588852500000264,
+      "test_mae": 7.847728666666657,
+      "train_rmse": 7.142377527393056,
+      "test_rmse": 10.051093574566732,
+      "cv_mean": -1.0883646188470903,
+      "cv_std": 1.9454162641455168,
+      "accuracy": 92.15227133333335
+    },
+    "Gradient Boosting": {
+      "name": "Gradient Boosting",
+      "train_r2": 0.9999999990034946,
+      "test_r2": 0.9550265315991675,
+      "train_mae": 0.0005988807532362876,
+      "test_mae": 4.199652901869638,
+      "train_rmse": 0.0007768564222123076,
+      "test_rmse": 4.231747826452068,
+      "cv_mean": -0.38010566678842994,
+      "cv_std": 0.41626014642332443,
+      "accuracy": 95.80034709813036
+    },
+    "Support Vector Machine": {
+      "name": "Support Vector Machine",
+      "train_r2": -0.034648824957905555,
+      "test_r2": -0.13941564236021575,
+      "train_mae": 13.864318862724645,
+      "test_mae": 21.188216192580025,
+      "train_rmse": 25.032107574292272,
+      "test_rmse": 21.300150764399874,
+      "cv_mean": -1.83705022364962,
+      "cv_std": 1.3928823934164631,
+      "accuracy": 78.81178380741997
+    },
+    "Decision Tree": {
+      "name": "Decision Tree",
+      "train_r2": 1.0,
+      "test_r2": 0.8903048073703812,
+      "train_mae": 0.0,
+      "test_mae": 4.850700000000001,
+      "train_rmse": 0.0,
+      "test_rmse": 6.608994437128846,
+      "cv_mean": -3.604672580967442,
+      "cv_std": 6.351816337855708,
+      "accuracy": 95.1493
+    }
+  },
+  "num_features": 9,
+  "feature_names": [
+    "year_numeric",
+    "takers_scaled",
+    "passers_ratio",
+    "exam_month_num",
+    "is_Licensure_Exam_for_Teachers_LET_-__Secondary_Level",
+    "is_Licensure_Exam_for_Teachers_LET_-__Elementary_Level",
+    "passing_rate_lag1",
+    "passing_rate_lag2",
+    "passing_rate_ma3"
+  ]
+}

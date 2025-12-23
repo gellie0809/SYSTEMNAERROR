@@ -5,11 +5,12 @@ session_start();
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
 ini_set('display_errors', 0);
 
-// Only allow College of Engineering admin
+// Only allow ICTS admin
 if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'icts_admin@lspu.edu.ph') {
     header("Location: index.php");
     exit();
 }
+
 // Database connection
 $servername = "localhost";
 $username = "root";
@@ -17,11 +18,28 @@ $password = "";
 $dbname = "project_db";
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
-// Fetch board passers sorted alphabetically by name
-$passers = $conn->query("SELECT *, CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name) as full_name FROM board_passers WHERE department='Engineering' ORDER BY first_name ASC");
-$total_records = $passers->num_rows;
+
+// Get selected department from URL - 'all' means all departments overview
+$selected_department = isset($_GET['dept']) ? $_GET['dept'] : 'all';
+$is_all_departments = ($selected_department === 'all');
+
+// Department mapping
+$department_map = [
+    'Engineering' => 'Engineering',
+    'CAS' => 'Arts and Sciences',
+    'CBAA' => 'Business Administration and Accountancy',
+    'CCJE' => 'Criminal Justice Education',
+    'CTE' => 'Teacher Education'
+];
+
+// Get the full department name (only used when specific department selected)
+$current_department = isset($department_map[$selected_department]) ? $department_map[$selected_department] : '';
+
+// Fetch board passers sorted alphabetically by name for selected department
+$passers = $conn->query("SELECT *, CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name) as full_name FROM board_passers WHERE department='$current_department' ORDER BY first_name ASC");
+$total_records = $passers ? $passers->num_rows : 0;
 // Reset the result set for table display
-$passers->data_seek(0);
+if ($passers) $passers->data_seek(0);
 
 // Check for success/error messages from update
 $update_message = '';
@@ -49,8 +67,8 @@ if (isset($_GET['success']) && $_GET['success'] === 'updated') {
     }
 }
 
-// Fetch courses for dropdown
-$courses_result = $conn->query("SELECT course_name FROM courses WHERE department='Engineering' ORDER BY course_name ASC");
+// Fetch courses for dropdown (for selected department)
+$courses_result = $conn->query("SELECT course_name FROM courses WHERE department='$current_department' ORDER BY course_name ASC");
 $courses = [];
 if ($courses_result && $courses_result->num_rows > 0) {
     while ($row = $courses_result->fetch_assoc()) {
@@ -58,19 +76,8 @@ if ($courses_result && $courses_result->num_rows > 0) {
     }
 }
 
-// Add default courses if none exist in database
-if (empty($courses)) {
-    $courses = [
-        'Bachelor of Science in Electronics Engineering (BSECE)',
-        'Bachelor of Science in Electrical Engineering (BSEE)', 
-        'Bachelor of Science in Computer Engineering (BSCpE)',
-        'Bachelor of Science in Civil Engineering (BSCE)',
-        'Bachelor of Science in Mechanical Engineering (BSME)'
-    ];
-}
-
 // Fetch board exam types for dropdown (include id for client-side filtering)
-$board_exam_types_result = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='Engineering' ORDER BY exam_type_name ASC");
+$board_exam_types_result = $conn->query("SELECT id, exam_type_name FROM board_exam_types WHERE department='$current_department' ORDER BY exam_type_name ASC");
 $board_exam_types = [];
 if ($board_exam_types_result && $board_exam_types_result->num_rows > 0) {
   while ($row = $board_exam_types_result->fetch_assoc()) {
@@ -78,23 +85,11 @@ if ($board_exam_types_result && $board_exam_types_result->num_rows > 0) {
   }
 }
 
-// Add default board exam types if none exist in database
-if (empty($board_exam_types)) {
-    $board_exam_types = [
-        'Registered Electrical Engineer Licensure Exam (REELE)',
-        'Registered Master Electrician (RME)',
-        'Electronics Engineer Licensure Exam (EELE)',
-        'Computer Engineer Licensure Exam (CELE)',
-        'Civil Engineer Licensure Exam (CELE)',
-        'Mechanical Engineer Licensure Exam (MELE)'
-    ];
-}
-
 // Fetch board exam dates for dropdown (include associated board exam type name for client-side filtering)
 $board_exam_dates_result = $conn->query(
-  "SELECT bed.id, bed.exam_date, bed.exam_description, bed.exam_type_id, IFNULL(bet.exam_type_name, '') AS exam_type_name \n"
-  . "FROM board_exam_dates bed LEFT JOIN board_exam_types bet ON bed.exam_type_id = bet.id \n"
-  . "WHERE bed.department='Engineering' ORDER BY bed.exam_date DESC"
+  "SELECT bed.id, bed.exam_date, bed.exam_description, bed.exam_type_id, IFNULL(bet.exam_type_name, '') AS exam_type_name 
+  FROM board_exam_dates bed LEFT JOIN board_exam_types bet ON bed.exam_type_id = bet.id 
+  WHERE bed.department='$current_department' ORDER BY bed.exam_date DESC"
 );
 $board_exam_dates = [];
 if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
@@ -116,10 +111,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Engineering Dashboard - BOARD PASSING RATE SYSTEM</title>
+    <title>ICTS Admin Dashboard - All Departments - BOARD PASSING RATE SYSTEM</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="stylesheet" href="css/sidebar.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
     * {
@@ -129,7 +125,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     body {
-        background: linear-gradient(135deg, #e0e7ef 0%, #b3c6e0 100%);
+        background: #0f172a;
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
@@ -142,13 +138,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -189,42 +185,44 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .main-content {
         margin-left: 260px;
         margin-top: 70px;
-        padding: 40px;
+        padding: 20px;
         min-height: calc(100vh - 70px);
         background: transparent;
+        max-width: 1600px;
+        width: calc(100% - 260px);
+        display: block;
     }
 
     .card {
-        background: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(22, 41, 56, 0.1);
-        padding: 48px;
+        background: #1e293b;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        padding: 24px;
         margin: 0;
-        border: 1px solid #e2e8f0;
-        text-align: center;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: left;
     }
 
     .card h2 {
-        font-size: 2.2rem;
-        font-weight: 700;
-        margin-bottom: 40px;
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 20px;
         color: #fff;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
-        padding: 24px 40px;
-        border-radius: 16px;
-        box-shadow: 0 12px 40px rgba(3, 105, 112, 0.22);
-        text-align: center;
-        letter-spacing: 1.2px;
-        text-transform: uppercase;
+        background: transparent;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+        text-align: left;
+        letter-spacing: 0;
+        text-transform: none;
         font-family: 'Inter', sans-serif;
-        margin: 0 0 40px 0;
+        margin: 0 0 20px 0;
     }
 
     .shortcuts-btn {
-        background: rgba(6, 182, 212, 0.08);
-        color: #066;
-        /* deep teal text */
-        border: 2px solid rgba(6, 182, 212, 0.35);
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 12px;
         padding: 10px 16px;
         font-size: 0.9rem;
@@ -241,10 +239,10 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .shortcuts-btn:hover {
-        background: rgba(6, 182, 212, 0.15);
-        border-color: rgba(6, 182, 212, 0.55);
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(3, 105, 112, 0.2);
+        box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
     }
 
     .shortcuts-btn:active {
@@ -307,19 +305,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .main-content {
         margin-left: 260px;
         margin-top: 70px;
-        padding: 40px;
+        padding: 24px;
         min-height: calc(100vh - 70px);
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(10px);
+        background: transparent;
     }
 
     .card {
-        background: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 20px 60px rgba(22, 41, 56, 0.1);
-        padding: 48px;
+        background: #1e293b;
+        border-radius: 16px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        padding: 24px;
         margin: 0;
-        border: 1px solid #e2e8f0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
         overflow: visible;
     }
 
@@ -4711,13 +4708,481 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         transform: scale(0.95) rotate(90deg);
         transition: all 0.1s ease;
     }
+
+    /* Hero Section */
+    .hero-section {
+        text-align: center !important;
+        padding: 20px !important;
+        margin-bottom: 24px !important;
+        background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.8) 100%) !important;
+        border-radius: 16px !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        display: block !important;
+        visibility: visible !important;
+    }
+
+    .hero-title {
+        font-size: 1.8rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin: 0 0 8px 0 !important;
+        display: block !important;
+        line-height: 1.3 !important;
+        font-family: 'Inter', sans-serif !important;
+    }
+
+    .hero-subtitle {
+        font-size: 0.95rem !important;
+        color: #94a3b8 !important;
+        font-weight: 400 !important;
+        margin: 0 !important;
+        display: block !important;
+    }
+
+    /* Department Cards Grid */
+    .department-cards-grid {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
+        gap: 16px !important;
+        margin-bottom: 24px !important;
+        width: 100% !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .dept-card {
+        background: #1e293b !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        text-decoration: none !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .dept-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #e2e8f0, #cbd5e1);
+        transition: all 0.4s ease;
+    }
+
+    .dept-card.engineering::before {
+        background: linear-gradient(90deg, #16a34a, #22c55e);
+    }
+
+    .dept-card.cas::before {
+        background: linear-gradient(90deg, #ec4899, #f472b6);
+    }
+
+    .dept-card.cbaa::before {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .dept-card.ccje::before {
+        background: linear-gradient(90deg, #dc2626, #ef4444);
+    }
+
+    .dept-card.cte::before {
+        background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    }
+
+    .dept-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        background: #334155 !important;
+    }
+
+    .dept-card.active {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3) !important;
+        background: #334155 !important;
+    }
+
+    .dept-card.active::before {
+        height: 4px;
+    }
+
+    .dept-card-header {
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-bottom: 12px !important;
+        visibility: visible !important;
+    }
+
+    .dept-card-icon {
+        width: 40px !important;
+        height: 40px !important;
+        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .dept-card-icon i {
+        font-size: 1.2rem !important;
+        color: #ffffff !important;
+    }
+
+    .dept-card.engineering .dept-card-icon {
+        background: linear-gradient(135deg, #16a34a, #22c55e);
+    }
+
+    .dept-card.cas .dept-card-icon {
+        background: linear-gradient(135deg, #ec4899, #f472b6);
+    }
+
+    .dept-card.cbaa .dept-card-icon {
+        background: linear-gradient(135deg, #f59e0b, #fbbf24);
+    }
+
+    .dept-card.ccje .dept-card-icon {
+        background: linear-gradient(135deg, #dc2626, #ef4444);
+    }
+
+    .dept-card.cte .dept-card-icon {
+        background: linear-gradient(135deg, #3b82f6, #60a5fa);
+    }
+
+    .dept-card.engineering .dept-card-icon i,
+    .dept-card.cas .dept-card-icon i,
+    .dept-card.cbaa .dept-card-icon i,
+    .dept-card.ccje .dept-card-icon i,
+    .dept-card.cte .dept-card-icon i {
+        color: #ffffff;
+    }
+
+    .dept-card-header h3 {
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin: 0 !important;
+    }
+
+    .dept-card-stats {
+        display: flex !important;
+        gap: 16px !important;
+        padding-top: 12px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+        visibility: visible !important;
+    }
+
+    .dept-stat {
+        flex: 1 !important;
+        text-align: center !important;
+    }
+
+    .stat-value {
+        display: block !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: #ffffff !important;
+        margin-bottom: 2px !important;
+    }
+
+    .stat-label {
+        display: block !important;
+        font-size: 0.7rem !important;
+        color: #94a3b8 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+        font-weight: 500 !important;
+    }
+
+    /* ICTS specific color overrides */
+    body .sidebar,
+    html body .sidebar {
+        background: #1e293b;
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    body .sidebar .logo,
+    html body .sidebar .logo {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    body .sidebar-nav a,
+    html body .sidebar-nav a {
+        color: #cbd5e1;
+    }
+
+    body .sidebar-nav i,
+    body .sidebar-nav ion-icon,
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #94a3b8;
+    }
+
+    body .sidebar-nav a.active,
+    body .sidebar-nav a:hover,
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        color: #fff;
+        border-left: 4px solid #ffffff;
+    }
+
+    body .sidebar-nav a.active i,
+    body .sidebar-nav a.active ion-icon,
+    body .sidebar-nav a:hover i,
+    body .sidebar-nav a:hover ion-icon,
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #fff;
+    }
+
+    /* Selected Department Section */
+    .selected-department-section {
+        margin-top: 24px !important;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .section-title {
+        font-size: 1.25rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        text-align: left !important;
+        margin-bottom: 16px !important;
+        position: relative !important;
+        padding-bottom: 0 !important;
+    }
+
+    .section-title::after {
+        display: none;
+    }
+
+    /* Quick Access Grid */
+    .quick-access-grid {
+        display: grid !important;
+        grid-template-columns: repeat(4, 1fr) !important;
+        gap: 16px !important;
+        width: 100% !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .access-card {
+        background: #1e293b !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+        text-decoration: none !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        text-align: center !important;
+        position: relative !important;
+        overflow: hidden !important;
+        cursor: pointer !important;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2) !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+    }
+
+    .access-card::before {
+        display: none;
+    }
+
+    .access-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3) !important;
+        border-color: rgba(255, 255, 255, 0.2) !important;
+        background: #334155 !important;
+    }
+
+    .access-card.primary {
+        border-color: #3b82f6 !important;
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%) !important;
+    }
+
+    .access-card.primary .access-icon {
+        background: rgba(255, 255, 255, 0.2);
+    }
+
+    .access-card.primary .access-icon i {
+        color: #ffffff;
+    }
+
+    .access-card.primary h3 {
+        color: #ffffff;
+    }
+
+    .access-card.primary p {
+        color: rgba(255, 255, 255, 0.8);
+    }
+
+    .access-card.primary:hover {
+        box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4) !important;
+        transform: translateY(-4px) !important;
+    }
+
+    .access-icon {
+        width: 48px !important;
+        height: 48px !important;
+        border-radius: 12px !important;
+        background: rgba(255, 255, 255, 0.1) !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        margin-bottom: 12px !important;
+        transition: all 0.3s ease !important;
+    }
+
+    .access-icon i {
+        font-size: 1.25rem !important;
+        color: #ffffff !important;
+    }
+
+    .access-card:hover .access-icon {
+        transform: scale(1.05);
+    }
+
+    .access-card h3 {
+        font-size: 0.95rem !important;
+        font-weight: 600 !important;
+        color: #ffffff !important;
+        margin: 0 0 4px 0 !important;
+    }
+
+    .access-card p {
+        font-size: 0.8rem !important;
+        color: #94a3b8 !important;
+        margin: 0 !important;
+        line-height: 1.4 !important;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1400px) {
+        .department-cards-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 1200px) {
+        .department-cards-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        .quick-access-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .sidebar {
+            transform: translateX(-100%);
+        }
+
+        .main-content {
+            margin-left: 0 !important;
+            padding: 16px !important;
+            width: 100% !important;
+        }
+
+        .topbar {
+            left: 0;
+        }
+
+        .hero-title {
+            font-size: 1.4rem !important;
+        }
+
+        .hero-subtitle {
+            font-size: 0.85rem !important;
+        }
+
+        .department-cards-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        .quick-access-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+        }
+
+        .dept-card {
+            padding: 16px !important;
+        }
+
+        .dashboard-title {
+            font-size: 1rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .hero-title {
+            font-size: 1.2rem !important;
+        }
+
+        .department-cards-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .quick-access-grid {
+            grid-template-columns: 1fr !important;
+        }
+
+        .dept-card-header h3 {
+            font-size: 0.9rem !important;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+        }
+    }
     </style>
 </head>
 
 <body>
-    <?php include __DIR__ . '/includes/sidebar_common.php'; ?>
+    <!-- ICTS Admin Sidebar -->
+    <div class="sidebar">
+        <div class="logo">LSPU<br><span style="font-size:9px;font-weight:400;">ICTS Admin</span></div>
+        <div class="sidebar-nav">
+            <a href="dashboard_icts.php?dept=all" class="<?= $is_all_departments ? 'active' : '' ?>">
+                <i class="fas fa-chart-pie"></i> <span>All Departments</span>
+            </a>
+            <a href="dashboard_icts.php?dept=Engineering" class="<?= $selected_department === 'Engineering' ? 'active' : '' ?>">
+                <i class="fas fa-cogs"></i> <span>Engineering</span>
+            </a>
+            <a href="dashboard_icts.php?dept=CAS" class="<?= $selected_department === 'CAS' ? 'active' : '' ?>">
+                <i class="fas fa-flask"></i> <span>Arts & Sciences</span>
+            </a>
+            <a href="dashboard_icts.php?dept=CBAA" class="<?= $selected_department === 'CBAA' ? 'active' : '' ?>">
+                <i class="fas fa-briefcase"></i> <span>Business & Accountancy</span>
+            </a>
+            <a href="dashboard_icts.php?dept=CCJE" class="<?= $selected_department === 'CCJE' ? 'active' : '' ?>">
+                <i class="fas fa-gavel"></i> <span>Criminal Justice</span>
+            </a>
+            <a href="dashboard_icts.php?dept=CTE" class="<?= $selected_department === 'CTE' ? 'active' : '' ?>">
+                <i class="fas fa-chalkboard-teacher"></i> <span>Teacher Education</span>
+            </a>
+            <a href="manage_system_settings.php">
+                <i class="fas fa-cog"></i> <span>System Settings</span>
+            </a>
+        </div>
+    </div>
+    
     <div class="topbar">
-        <h1 class="dashboard-title">Engineering Admin Dashboard</h1>
+        <h1 class="dashboard-title">ICTS Admin - Board Performance System</h1>
         <div style="display: flex; align-items: center; gap: 12px;">
             <button onclick="showKeyboardShortcutsHelp()" class="shortcuts-btn" title="Ctrl + H">
                 <i class="fas fa-keyboard"></i>
@@ -4729,113 +5194,761 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             </a>
         </div>
     </div>
+    
     <div class="main-content">
-        <!-- Dashboard Statistics Overview -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%);">
-                    <i class="fas fa-users"></i>
-                </div>
-                <div class="stat-content">
-                    <h3><?= $total_records ?></h3>
-                    <p>Total Board Passers</p>
-                    <?php
-          // Get records added this month
-          $current_month = date('Y-m');
-          $this_month_query = $conn->query("SELECT COUNT(*) as month_count FROM board_passers 
-            WHERE department='Engineering' AND DATE_FORMAT(board_exam_date, '%Y-%m') = '$current_month'");
-          $this_month_data = $this_month_query->fetch_assoc();
-          $this_month_count = $this_month_data ? $this_month_data['month_count'] : 0;
-          ?>
-                    <span class="stat-change <?= $total_records > 0 ? 'positive' : 'neutral' ?>">
-                        <i class="fas fa-<?= $total_records > 0 ? 'arrow-up' : 'info-circle' ?>"></i>
-                        <?= $total_records > 0 ? '+' . $this_month_count . ' this month' : 'No records yet' ?>
-                    </span>
-                </div>
-            </div>
+        <!-- Department Selection Bar -->
+        <div style="display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+            <a href="dashboard_icts.php?dept=all" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'all' ? '#6366f1' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'all' ? '#818cf8' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-chart-pie" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">All Departments</div>
+            </a>
+            <a href="dashboard_icts.php?dept=Engineering" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'Engineering' ? '#16a34a' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'Engineering' ? '#22c55e' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-cogs" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">Engineering</div>
+            </a>
+            <a href="dashboard_icts.php?dept=CAS" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'CAS' ? '#ec4899' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'CAS' ? '#f472b6' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-flask" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">Arts & Sciences</div>
+            </a>
+            <a href="dashboard_icts.php?dept=CBAA" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'CBAA' ? '#f59e0b' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'CBAA' ? '#fbbf24' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-briefcase" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">Business</div>
+            </a>
+            <a href="dashboard_icts.php?dept=CCJE" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'CCJE' ? '#dc2626' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'CCJE' ? '#ef4444' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-gavel" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">Criminal Justice</div>
+            </a>
+            <a href="dashboard_icts.php?dept=CTE" style="flex: 1; min-width: 150px; padding: 16px; background: <?= $selected_department === 'CTE' ? '#3b82f6' : '#1e293b' ?>; border-radius: 10px; text-decoration: none; text-align: center; border: 1px solid <?= $selected_department === 'CTE' ? '#60a5fa' : 'rgba(255,255,255,0.1)' ?>;">
+                <i class="fas fa-chalkboard-teacher" style="color: #fff; font-size: 1.2rem;"></i>
+                <div style="color: #fff; font-weight: 600; font-size: 0.85rem; margin-top: 6px;">Teacher Ed</div>
+            </a>
+        </div>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="stat-content">
-                    <?php
-          $passing_rate_query = $conn->query("SELECT 
-            COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
-            COUNT(*) as total_count
-            FROM board_passers WHERE department='Engineering'");
-          $rate_data = $passing_rate_query->fetch_assoc();
-          
-          $passing_rate = 0;
-          if ($rate_data && $rate_data['total_count'] > 0) {
-            $passing_rate = ($rate_data['passed_count'] * 100.0) / $rate_data['total_count'];
-          }
-          ?>
-                    <h3><?= number_format($passing_rate, 1) ?>%</h3>
-                    <p>Passing Rate</p>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> +2.3% vs last year
-                    </span>
-                </div>
-            </div>
+        <?php if ($is_all_departments): ?>
+        <!-- ============ ALL DEPARTMENTS OVERVIEW ============ -->
+        <?php
+        // Get stats for ALL departments
+        $all_depts = ['Engineering', 'Arts and Sciences', 'Business Administration and Accountancy', 'Criminal Justice Education', 'Teacher Education'];
+        $dept_stats = [];
+        $overall_stats = ['total' => 0, 'passed' => 0, 'failed' => 0, 'conditional' => 0];
+        
+        foreach ($all_depts as $dept) {
+            $dept_query = $conn->query("SELECT 
+                COUNT(*) as total,
+                SUM(CASE WHEN result = 'Passed' THEN 1 ELSE 0 END) as passed,
+                SUM(CASE WHEN result = 'Failed' THEN 1 ELSE 0 END) as failed,
+                SUM(CASE WHEN result = 'Conditional' THEN 1 ELSE 0 END) as conditional
+                FROM anonymous_board_passers 
+                WHERE department='$dept' AND (is_deleted IS NULL OR is_deleted = 0)");
+            $stats = $dept_query->fetch_assoc();
+            $dept_stats[$dept] = $stats;
+            $overall_stats['total'] += $stats['total'];
+            $overall_stats['passed'] += $stats['passed'];
+            $overall_stats['failed'] += $stats['failed'];
+            $overall_stats['conditional'] += $stats['conditional'];
+        }
+        $overall_pass_rate = $overall_stats['total'] > 0 ? number_format(($overall_stats['passed'] / $overall_stats['total']) * 100, 1) : '0.0';
+        ?>
 
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                    <i class="fas fa-graduation-cap"></i>
-                </div>
-                <div class="stat-content">
-                    <?php
-          $current_year = date('Y');
-          $recent_passers = $conn->query("SELECT COUNT(*) as recent_count FROM board_passers 
-            WHERE department='Engineering' AND year_graduated >= $current_year - 1");
-          $recent_data = $recent_passers->fetch_assoc();
-          $recent_count = $recent_data ? $recent_data['recent_count'] : 0;
-          ?>
-                    <h3><?= $recent_count ?></h3>
-                    <p>Recent Graduates</p>
-                    <span class="stat-change neutral">
-                        <i class="fas fa-calendar"></i> Last 2 years
-                    </span>
-                </div>
+        <!-- Overall Stats Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #6366f1, #818cf8); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Total Records</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $overall_stats['total'] ?></div>
             </div>
-
-            <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                    <i class="fas fa-medal"></i>
-                </div>
-                <div class="stat-content">
-                    <?php
-          $top_course_query = $conn->query("SELECT course, COUNT(*) as count FROM board_passers 
-            WHERE department='Engineering' AND result='Passed' 
-            GROUP BY course ORDER BY count DESC LIMIT 1");
-          $top_course = $top_course_query->fetch_assoc();
-          
-          // Handle case when no data is available
-          $course_count = 0;
-          $course_name = 'N/A';
-          
-          if ($top_course && isset($top_course['count'])) {
-            $course_count = $top_course['count'];
-          }
-          
-          if ($top_course && isset($top_course['course']) && !empty($top_course['course'])) {
-            $course_name = $top_course['course'];
-          }
-          ?>
-                    <h3><?= $course_count ?></h3>
-                    <p>Top Course</p>
-                    <span class="stat-change neutral">
-                        <i class="fas fa-star"></i>
-                        <?= htmlspecialchars(substr($course_name ?? '', 0, 15)) ?><?= strlen($course_name ?? '') > 15 ? '...' : '' ?>
-                    </span>
-                </div>
+            <div style="background: linear-gradient(135deg, #16a34a, #22c55e); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Passed</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $overall_stats['passed'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ef4444, #f87171); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Failed</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $overall_stats['failed'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Overall Pass Rate</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $overall_pass_rate ?>%</div>
             </div>
         </div>
 
-        <div class="card">
-            <div style="margin-bottom: 20px;">
-                <h2>Board Passers Database</h2>
+        <!-- Department Performance Cards -->
+        <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 16px; font-weight: 600;">
+            <i class="fas fa-building" style="margin-right: 8px; color: #60a5fa;"></i>Performance by Department
+        </h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <?php 
+            $dept_colors = [
+                'Engineering' => ['#16a34a', '#22c55e', 'fa-cogs'],
+                'Arts and Sciences' => ['#ec4899', '#f472b6', 'fa-flask'],
+                'Business Administration and Accountancy' => ['#f59e0b', '#fbbf24', 'fa-briefcase'],
+                'Criminal Justice Education' => ['#dc2626', '#ef4444', 'fa-gavel'],
+                'Teacher Education' => ['#3b82f6', '#60a5fa', 'fa-chalkboard-teacher']
+            ];
+            $dept_short = [
+                'Engineering' => 'Engineering',
+                'Arts and Sciences' => 'CAS',
+                'Business Administration and Accountancy' => 'CBAA',
+                'Criminal Justice Education' => 'CCJE',
+                'Teacher Education' => 'CTE'
+            ];
+            foreach ($all_depts as $dept): 
+                $stats = $dept_stats[$dept];
+                $pass_rate = $stats['total'] > 0 ? number_format(($stats['passed'] / $stats['total']) * 100, 1) : '0.0';
+                $colors = $dept_colors[$dept];
+                $short = $dept_short[$dept];
+            ?>
+            <a href="dashboard_icts.php?dept=<?= $short ?>" style="background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); text-decoration: none; display: block; transition: all 0.3s;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 16px;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg, <?= $colors[0] ?>, <?= $colors[1] ?>); display: flex; align-items: center; justify-content: center;">
+                        <i class="fas <?= $colors[2] ?>" style="color: #fff; font-size: 1rem;"></i>
+                    </div>
+                    <div style="color: #fff; font-weight: 600; font-size: 0.95rem;"><?= $dept ?></div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; text-align: center;">
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase;">Records</div>
+                        <div style="color: #fff; font-size: 1.25rem; font-weight: 700;"><?= $stats['total'] ?></div>
+                    </div>
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase;">Passed</div>
+                        <div style="color: #22c55e; font-size: 1.25rem; font-weight: 700;"><?= $stats['passed'] ?></div>
+                    </div>
+                    <div>
+                        <div style="color: #94a3b8; font-size: 0.7rem; text-transform: uppercase;">Pass Rate</div>
+                        <div style="color: #60a5fa; font-size: 1.25rem; font-weight: 700;"><?= $pass_rate ?>%</div>
+                    </div>
+                </div>
+            </a>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- All Departments Anonymous Data Records -->
+        <div style="background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1); margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); flex-wrap: wrap; gap: 12px;">
+                <h3 style="color: #fff; font-size: 1.1rem; font-weight: 600; margin: 0;">
+                    <i class="fas fa-database" style="margin-right: 8px; color: #60a5fa;"></i>
+                    All Departments - Data Records
+                </h3>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <span style="color: #94a3b8; font-size: 0.85rem;"><?= $overall_stats['total'] ?> total records</span>
+                    <button onclick="exportAllDeptData()" style="background: linear-gradient(135deg, #16a34a, #22c55e); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button onclick="exportAllDeptPDF()" style="background: linear-gradient(135deg, #dc2626, #ef4444); color: #fff; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-file-pdf"></i> Export PDF
+                    </button>
+                </div>
             </div>
+
+            <!-- Filters -->
+            <div style="display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 4px;">Department</label>
+                    <select id="filterDeptAll" onchange="filterAllDeptTable()" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                        <option value="">All Departments</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Arts and Sciences">Arts and Sciences</option>
+                        <option value="Business Administration and Accountancy">Business Administration</option>
+                        <option value="Criminal Justice Education">Criminal Justice</option>
+                        <option value="Teacher Education">Teacher Education</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 4px;">Result</label>
+                    <select id="filterResultAll" onchange="filterAllDeptTable()" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                        <option value="">All Results</option>
+                        <option value="Passed">Passed</option>
+                        <option value="Failed">Failed</option>
+                        <option value="Conditional">Conditional</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 4px;">Exam Type</label>
+                    <select id="filterExamTypeAll" onchange="filterAllDeptTable()" style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                        <option value="">All Types</option>
+                        <option value="First Timer">First Timer</option>
+                        <option value="Repeater">Repeater</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="color: #94a3b8; font-size: 0.75rem; text-transform: uppercase; display: block; margin-bottom: 4px;">Search</label>
+                    <input type="text" id="searchAllDept" onkeyup="filterAllDeptTable()" placeholder="Search..." style="width: 100%; padding: 10px 12px; background: #0f172a; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: #fff; font-size: 0.85rem;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <button onclick="clearAllDeptFilters()" style="background: #475569; color: #fff; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600;">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <?php
+            // Fetch ALL anonymous data from all departments
+            $all_anon_query = "SELECT * FROM anonymous_board_passers WHERE (is_deleted IS NULL OR is_deleted = 0) ORDER BY id DESC";
+            $all_anon_data = $conn->query($all_anon_query);
+            ?>
+
+            <?php if ($all_anon_data && $all_anon_data->num_rows > 0): ?>
+            <div style="overflow-x: auto; max-height: 500px; overflow-y: auto;">
+                <table id="allDeptTable" style="width: 100%; border-collapse: collapse;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="background: linear-gradient(135deg, #334155, #1e293b);">
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; border-radius: 8px 0 0 0;">ID</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Department</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Board Exam Type</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Exam Date</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Take Attempts</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; border-radius: 0 8px 0 0;">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php while ($row = $all_anon_data->fetch_assoc()): ?>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);" class="all-dept-row">
+                            <td style="padding: 12px 16px; color: #94a3b8; font-size: 0.9rem;"><?= htmlspecialchars($row['id']) ?></td>
+                            <td style="padding: 12px 16px; color: #fff; font-size: 0.85rem;" data-dept="<?= htmlspecialchars($row['department']) ?>">
+                                <?php 
+                                $dept_short_names = [
+                                    'Engineering' => 'Engineering',
+                                    'Arts and Sciences' => 'CAS',
+                                    'Business Administration and Accountancy' => 'CBAA',
+                                    'Criminal Justice Education' => 'CCJE',
+                                    'Teacher Education' => 'CTE'
+                                ];
+                                echo $dept_short_names[$row['department']] ?? $row['department'];
+                                ?>
+                            </td>
+                            <td style="padding: 12px 16px; color: #fff; font-size: 0.85rem;"><?= htmlspecialchars($row['board_exam_type']) ?></td>
+                            <td style="padding: 12px 16px; color: #94a3b8; font-size: 0.85rem;">
+                                <?php 
+                                $date = new DateTime($row['board_exam_date']);
+                                echo $date->format('F Y');
+                                ?>
+                            </td>
+                            <td style="padding: 12px 16px;" data-examtype="<?= htmlspecialchars($row['exam_type']) ?>">
+                                <span style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: <?= $row['exam_type'] === 'First Timer' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(249, 115, 22, 0.2)' ?>; color: <?= $row['exam_type'] === 'First Timer' ? '#60a5fa' : '#fb923c' ?>;">
+                                    <?= htmlspecialchars($row['exam_type']) ?>
+                                </span>
+                            </td>
+                            <td style="padding: 12px 16px;" data-result="<?= htmlspecialchars($row['result']) ?>">
+                                <span style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: <?= $row['result'] === 'Passed' ? 'rgba(34, 197, 94, 0.2)' : ($row['result'] === 'Failed' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)') ?>; color: <?= $row['result'] === 'Passed' ? '#22c55e' : ($row['result'] === 'Failed' ? '#ef4444' : '#a855f7') ?>;">
+                                    <?= htmlspecialchars($row['result']) ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+            <div id="allDeptNoResults" style="display: none; text-align: center; padding: 40px 20px; color: #64748b;">
+                <i class="fas fa-search" style="font-size: 2rem; color: #475569; margin-bottom: 12px; display: block;"></i>
+                <p style="color: #94a3b8; font-size: 0.9rem;">No records match your filters.</p>
+            </div>
+            <?php else: ?>
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: #475569; margin-bottom: 16px; display: block;"></i>
+                <h4 style="color: #94a3b8; margin-bottom: 8px;">No Data</h4>
+                <p style="font-size: 0.9rem;">No records found across all departments.</p>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <script>
+        function filterAllDeptTable() {
+            const deptFilter = document.getElementById('filterDeptAll').value.toLowerCase();
+            const resultFilter = document.getElementById('filterResultAll').value;
+            const examTypeFilter = document.getElementById('filterExamTypeAll').value;
+            const searchFilter = document.getElementById('searchAllDept').value.toLowerCase();
+            
+            const rows = document.querySelectorAll('#allDeptTable tbody .all-dept-row');
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const dept = row.querySelector('td[data-dept]')?.getAttribute('data-dept')?.toLowerCase() || '';
+                const result = row.querySelector('td[data-result]')?.getAttribute('data-result') || '';
+                const examType = row.querySelector('td[data-examtype]')?.getAttribute('data-examtype') || '';
+                const rowText = row.textContent.toLowerCase();
+                
+                const matchDept = !deptFilter || dept.includes(deptFilter);
+                const matchResult = !resultFilter || result === resultFilter;
+                const matchExamType = !examTypeFilter || examType === examTypeFilter;
+                const matchSearch = !searchFilter || rowText.includes(searchFilter);
+                
+                if (matchDept && matchResult && matchExamType && matchSearch) {
+                    row.style.display = '';
+                    visibleCount++;
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+            
+            document.getElementById('allDeptNoResults').style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+        
+        function clearAllDeptFilters() {
+            document.getElementById('filterDeptAll').value = '';
+            document.getElementById('filterResultAll').value = '';
+            document.getElementById('filterExamTypeAll').value = '';
+            document.getElementById('searchAllDept').value = '';
+            filterAllDeptTable();
+        }
+        
+        function exportAllDeptData() {
+            const table = document.getElementById('allDeptTable');
+            if (!table) return;
+            
+            let csv = [];
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            // Report Header
+            csv.push('LAGUNA STATE POLYTECHNIC UNIVERSITY');
+            csv.push('ICTS ADMIN - BOARD PERFORMANCE SYSTEM');
+            csv.push('ALL DEPARTMENTS DATA REPORT');
+            csv.push('');
+            csv.push('Generated on: ' + dateStr + ' at ' + timeStr);
+            csv.push('');
+            csv.push('=' .repeat(80));
+            csv.push('');
+            
+            // Count statistics from visible rows
+            let totalRecords = 0;
+            let passedCount = 0;
+            let failedCount = 0;
+            let conditionalCount = 0;
+            let firstTimerCount = 0;
+            let repeaterCount = 0;
+            
+            const rows = table.querySelectorAll('tbody .all-dept-row');
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    totalRecords++;
+                    const result = row.querySelector('td[data-result]')?.getAttribute('data-result') || '';
+                    const examType = row.querySelector('td[data-examtype]')?.getAttribute('data-examtype') || '';
+                    
+                    if (result === 'Passed') passedCount++;
+                    else if (result === 'Failed') failedCount++;
+                    else if (result === 'Conditional') conditionalCount++;
+                    
+                    if (examType === 'First Timer') firstTimerCount++;
+                    else if (examType === 'Repeater') repeaterCount++;
+                }
+            });
+            
+            const passRate = totalRecords > 0 ? ((passedCount / totalRecords) * 100).toFixed(1) : '0.0';
+            
+            // Summary Statistics
+            csv.push('SUMMARY STATISTICS');
+            csv.push('-'.repeat(40));
+            csv.push('Total Records:,' + totalRecords);
+            csv.push('Passed:,' + passedCount);
+            csv.push('Failed:,' + failedCount);
+            csv.push('Conditional:,' + conditionalCount);
+            csv.push('Overall Pass Rate:,' + passRate + '%');
+            csv.push('');
+            csv.push('First Timers:,' + firstTimerCount);
+            csv.push('Repeaters:,' + repeaterCount);
+            csv.push('');
+            csv.push('=' .repeat(80));
+            csv.push('');
+            
+            // Applied Filters
+            const deptFilter = document.getElementById('filterDeptAll').value;
+            const resultFilter = document.getElementById('filterResultAll').value;
+            const examTypeFilter = document.getElementById('filterExamTypeAll').value;
+            const searchFilter = document.getElementById('searchAllDept').value;
+            
+            csv.push('APPLIED FILTERS');
+            csv.push('-'.repeat(40));
+            csv.push('Department:,' + (deptFilter || 'All Departments'));
+            csv.push('Result:,' + (resultFilter || 'All Results'));
+            csv.push('Exam Type:,' + (examTypeFilter || 'All Types'));
+            csv.push('Search:,' + (searchFilter || 'None'));
+            csv.push('');
+            csv.push('=' .repeat(80));
+            csv.push('');
+            
+            // Data Table Header
+            csv.push('DETAILED RECORDS');
+            csv.push('-'.repeat(40));
+            csv.push('');
+            const headers = ['ID', 'Department', 'Board Exam Type', 'Exam Date', 'Take Attempts', 'Result'];
+            csv.push(headers.join(','));
+            csv.push('-'.repeat(80));
+            
+            // Data Rows
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [];
+                    cells.forEach((cell, index) => {
+                        let text = cell.textContent.trim().replace(/,/g, ';').replace(/\n/g, ' ').replace(/\s+/g, ' ');
+                        rowData.push('"' + text + '"');
+                    });
+                    csv.push(rowData.join(','));
+                }
+            });
+            
+            csv.push('');
+            csv.push('=' .repeat(80));
+            csv.push('');
+            csv.push('*** END OF REPORT ***');
+            csv.push('');
+            csv.push('This report was generated automatically by the LSPU Board Performance System.');
+            csv.push('For questions or concerns, please contact the ICTS Department.');
+            
+            const csvContent = csv.join('\n');
+            const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'LSPU_All_Departments_Anonymous_Data_Report_' + now.toISOString().split('T')[0] + '.csv';
+            link.click();
+        }
+        
+        function exportAllDeptPDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('landscape', 'mm', 'a4');
+            
+            const table = document.getElementById('allDeptTable');
+            if (!table) return;
+            
+            const now = new Date();
+            const dateStr = now.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            
+            // Count statistics from visible rows
+            let totalRecords = 0;
+            let passedCount = 0;
+            let failedCount = 0;
+            let conditionalCount = 0;
+            let firstTimerCount = 0;
+            let repeaterCount = 0;
+            
+            const rows = table.querySelectorAll('tbody .all-dept-row');
+            const tableData = [];
+            
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    totalRecords++;
+                    const result = row.querySelector('td[data-result]')?.getAttribute('data-result') || '';
+                    const examType = row.querySelector('td[data-examtype]')?.getAttribute('data-examtype') || '';
+                    
+                    if (result === 'Passed') passedCount++;
+                    else if (result === 'Failed') failedCount++;
+                    else if (result === 'Conditional') conditionalCount++;
+                    
+                    if (examType === 'First Timer') firstTimerCount++;
+                    else if (examType === 'Repeater') repeaterCount++;
+                    
+                    const cells = row.querySelectorAll('td');
+                    const rowData = [];
+                    cells.forEach(cell => {
+                        rowData.push(cell.textContent.trim().replace(/\s+/g, ' '));
+                    });
+                    tableData.push(rowData);
+                }
+            });
+            
+            const passRate = totalRecords > 0 ? ((passedCount / totalRecords) * 100).toFixed(1) : '0.0';
+            
+            // Colors
+            const primaryColor = [15, 23, 42];
+            const accentColor = [99, 102, 241];
+            const greenColor = [34, 197, 94];
+            const redColor = [239, 68, 68];
+            
+            // Header Background
+            doc.setFillColor(...primaryColor);
+            doc.rect(0, 0, 297, 45, 'F');
+            
+            // Logo/Title
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text('LAGUNA STATE POLYTECHNIC UNIVERSITY', 148.5, 15, { align: 'center' });
+            
+            doc.setFontSize(14);
+            doc.setFont('helvetica', 'normal');
+            doc.text('ICTS Admin - Board Performance System', 148.5, 24, { align: 'center' });
+            
+            doc.setFontSize(12);
+            doc.setTextColor(148, 163, 184);
+            doc.text('All Departments Data Report', 148.5, 33, { align: 'center' });
+            
+            doc.setFontSize(9);
+            doc.text('Generated: ' + dateStr + ' at ' + timeStr, 148.5, 40, { align: 'center' });
+            
+            // Summary Statistics Section
+            let yPos = 55;
+            
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SUMMARY STATISTICS', 14, yPos);
+            
+            yPos += 8;
+            
+            // Stats boxes
+            const boxWidth = 42;
+            const boxHeight = 20;
+            const boxGap = 4;
+            const startX = 14;
+            
+            const statsBoxes = [
+                { label: 'Total Records', value: totalRecords, color: [99, 102, 241] },
+                { label: 'Passed', value: passedCount, color: [34, 197, 94] },
+                { label: 'Failed', value: failedCount, color: [239, 68, 68] },
+                { label: 'Conditional', value: conditionalCount, color: [139, 92, 246] },
+                { label: 'First Timer', value: firstTimerCount, color: [14, 165, 233] },
+                { label: 'Repeater', value: repeaterCount, color: [245, 158, 11] }
+            ];
+            
+            statsBoxes.forEach((stat, index) => {
+                const x = startX + (index * (boxWidth + boxGap));
+                doc.setFillColor(...stat.color);
+                doc.roundedRect(x, yPos, boxWidth, boxHeight, 3, 3, 'F');
+                
+                doc.setTextColor(255, 255, 255);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text(stat.label.toUpperCase(), x + boxWidth/2, yPos + 7, { align: 'center' });
+                
+                doc.setFontSize(14);
+                doc.setFont('helvetica', 'bold');
+                doc.text(String(stat.value), x + boxWidth/2, yPos + 16, { align: 'center' });
+            });
+            
+            // Pass Rate Box
+            yPos += boxHeight + 6;
+            doc.setFillColor(16, 185, 129);
+            doc.roundedRect(startX, yPos, 90, 12, 2, 2, 'F');
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'bold');
+            doc.text('Overall Pass Rate: ' + passRate + '%', startX + 45, yPos + 8, { align: 'center' });
+            
+            // Applied Filters
+            const deptFilter = document.getElementById('filterDeptAll').value;
+            const resultFilter = document.getElementById('filterResultAll').value;
+            const examTypeFilter = document.getElementById('filterExamTypeAll').value;
+            const searchFilter = document.getElementById('searchAllDept').value;
+            
+            doc.setTextColor(100, 116, 139);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            const filterText = 'Filters - Dept: ' + (deptFilter || 'All') + ' | Result: ' + (resultFilter || 'All') + ' | Type: ' + (examTypeFilter || 'All') + ' | Search: ' + (searchFilter || 'None');
+            doc.text(filterText, startX + 95, yPos + 8);
+            
+            yPos += 20;
+            
+            // Data Table
+            doc.setTextColor(...primaryColor);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DETAILED RECORDS (' + totalRecords + ' records)', 14, yPos);
+            
+            yPos += 5;
+            
+            doc.autoTable({
+                startY: yPos,
+                head: [['ID', 'Department', 'Board Exam Type', 'Exam Date', 'Take Attempts', 'Result']],
+                body: tableData,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [30, 41, 59],
+                    textColor: [255, 255, 255],
+                    fontStyle: 'bold',
+                    fontSize: 9,
+                    halign: 'center'
+                },
+                bodyStyles: {
+                    fontSize: 8,
+                    cellPadding: 3
+                },
+                alternateRowStyles: {
+                    fillColor: [241, 245, 249]
+                },
+                columnStyles: {
+                    0: { halign: 'center', cellWidth: 20 },
+                    1: { halign: 'center', cellWidth: 30 },
+                    2: { halign: 'left', cellWidth: 70 },
+                    3: { halign: 'center', cellWidth: 40 },
+                    4: { halign: 'center', cellWidth: 35 },
+                    5: { halign: 'center', cellWidth: 30 }
+                },
+                didParseCell: function(data) {
+                    if (data.section === 'body' && data.column.index === 5) {
+                        const value = data.cell.raw;
+                        if (value === 'Passed') {
+                            data.cell.styles.textColor = [34, 197, 94];
+                            data.cell.styles.fontStyle = 'bold';
+                        } else if (value === 'Failed') {
+                            data.cell.styles.textColor = [239, 68, 68];
+                            data.cell.styles.fontStyle = 'bold';
+                        } else if (value === 'Conditional') {
+                            data.cell.styles.textColor = [168, 85, 247];
+                            data.cell.styles.fontStyle = 'bold';
+                        }
+                    }
+                    if (data.section === 'body' && data.column.index === 4) {
+                        const value = data.cell.raw;
+                        if (value.includes('First')) {
+                            data.cell.styles.textColor = [59, 130, 246];
+                        } else if (value.includes('Repeater')) {
+                            data.cell.styles.textColor = [249, 115, 22];
+                        }
+                    }
+                },
+                margin: { left: 14, right: 14 }
+            });
+            
+            // Footer on each page
+            const pageCount = doc.internal.getNumberOfPages();
+            for (let i = 1; i <= pageCount; i++) {
+                doc.setPage(i);
+                doc.setFillColor(241, 245, 249);
+                doc.rect(0, 200, 297, 10, 'F');
+                doc.setTextColor(100, 116, 139);
+                doc.setFontSize(8);
+                doc.setFont('helvetica', 'normal');
+                doc.text('LSPU Board Performance System - ICTS Admin', 14, 206);
+                doc.text('Page ' + i + ' of ' + pageCount, 283, 206, { align: 'right' });
+            }
+            
+            doc.save('LSPU_All_Departments_Anonymous_Data_Report_' + now.toISOString().split('T')[0] + '.pdf');
+        }
+        </script>
+
+        <?php else: ?>
+        <!-- ============ SPECIFIC DEPARTMENT VIEW ============ -->
+        <?php
+        // Fetch anonymous data for selected department
+        $dept_full_name = $current_department;
+        $anon_query = "SELECT * FROM anonymous_board_passers WHERE department='$dept_full_name' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY id DESC";
+        $anon_data = $conn->query($anon_query);
+        
+        // Calculate anonymous stats
+        $anon_stats = ['total' => 0, 'passed' => 0, 'failed' => 0, 'conditional' => 0, 'first_timer' => 0, 'repeater' => 0, 'first_timer_passed' => 0, 'repeater_passed' => 0];
+        if ($anon_data) {
+            while ($row = $anon_data->fetch_assoc()) {
+                $anon_stats['total']++;
+                if ($row['result'] === 'Passed') $anon_stats['passed']++;
+                elseif ($row['result'] === 'Failed') $anon_stats['failed']++;
+                elseif ($row['result'] === 'Conditional') $anon_stats['conditional']++;
+                if ($row['exam_type'] === 'First Timer') {
+                    $anon_stats['first_timer']++;
+                    if ($row['result'] === 'Passed') $anon_stats['first_timer_passed']++;
+                } elseif ($row['exam_type'] === 'Repeater') {
+                    $anon_stats['repeater']++;
+                    if ($row['result'] === 'Passed') $anon_stats['repeater_passed']++;
+                }
+            }
+            $anon_data->data_seek(0);
+        }
+        $anon_pass_rate = $anon_stats['total'] > 0 ? number_format(($anon_stats['passed'] / $anon_stats['total']) * 100, 1) : '0.0';
+        $ft_rate = $anon_stats['first_timer'] > 0 ? number_format(($anon_stats['first_timer_passed'] / $anon_stats['first_timer']) * 100, 1) : '0.0';
+        $rep_rate = $anon_stats['repeater'] > 0 ? number_format(($anon_stats['repeater_passed'] / $anon_stats['repeater']) * 100, 1) : '0.0';
+        ?>
+
+        <!-- Anonymous Data Statistics Header -->
+        <h3 style="color: #fff; font-size: 1.1rem; margin-bottom: 16px; font-weight: 600;">
+            <i class="fas fa-chart-bar" style="margin-right: 8px; color: #60a5fa;"></i> Data Statistics
+        </h3>
+
+        <!-- Stats Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 16px; margin-bottom: 20px;">
+            <div style="background: linear-gradient(135deg, #6366f1, #818cf8); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Total Records</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['total'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #16a34a, #22c55e); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Passed</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['passed'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #ef4444, #f87171); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Failed</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['failed'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #8b5cf6, #a78bfa); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Conditional</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['conditional'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #0ea5e9, #38bdf8); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">First Timer</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['first_timer'] ?></div>
+            </div>
+            <div style="background: linear-gradient(135deg, #f59e0b, #fbbf24); padding: 20px; border-radius: 12px; text-align: center;">
+                <div style="color: rgba(255,255,255,0.9); font-size: 0.8rem; text-transform: uppercase; font-weight: 600;">Repeater</div>
+                <div style="color: #fff; font-size: 2rem; font-weight: 700; margin-top: 4px;"><?= $anon_stats['repeater'] ?></div>
+            </div>
+        </div>
+
+        <!-- Anonymous Data Table -->
+        <div style="background: #1e293b; border-radius: 12px; padding: 20px; border: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                <h3 style="color: #fff; font-size: 1.1rem; font-weight: 600; margin: 0;">
+                    <i class="fas fa-table" style="margin-right: 8px; color: #60a5fa;"></i>
+                    <?= $current_department ?> - Data Records
+                </h3>
+                <span style="color: #94a3b8; font-size: 0.85rem;"><?= $anon_stats['total'] ?> total records</span>
+            </div>
+
+            <?php if ($anon_stats['total'] > 0): ?>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: linear-gradient(135deg, #334155, #1e293b);">
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; border-radius: 8px 0 0 0;">ID</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Board Exam Type</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Exam Date</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase;">Take Attempts</th>
+                            <th style="padding: 12px 16px; text-align: left; color: #fff; font-weight: 600; font-size: 0.8rem; text-transform: uppercase; border-radius: 0 8px 0 0;">Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php 
+                        $anon_data->data_seek(0);
+                        while ($row = $anon_data->fetch_assoc()): 
+                        ?>
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <td style="padding: 12px 16px; color: #94a3b8; font-size: 0.9rem;"><?= htmlspecialchars($row['id']) ?></td>
+                            <td style="padding: 12px 16px; color: #fff; font-size: 0.9rem;"><?= htmlspecialchars($row['board_exam_type']) ?></td>
+                            <td style="padding: 12px 16px; color: #94a3b8; font-size: 0.9rem;">
+                                <?php 
+                                $date = new DateTime($row['board_exam_date']);
+                                echo $date->format('F Y');
+                                ?>
+                            </td>
+                            <td style="padding: 12px 16px;">
+                                <span style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: <?= $row['exam_type'] === 'First Timer' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(249, 115, 22, 0.2)' ?>; color: <?= $row['exam_type'] === 'First Timer' ? '#60a5fa' : '#fb923c' ?>;">
+                                    <?= htmlspecialchars($row['exam_type']) ?>
+                                </span>
+                            </td>
+                            <td style="padding: 12px 16px;">
+                                <span style="padding: 4px 10px; border-radius: 6px; font-size: 0.75rem; font-weight: 600; background: <?= $row['result'] === 'Passed' ? 'rgba(34, 197, 94, 0.2)' : ($row['result'] === 'Failed' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(168, 85, 247, 0.2)') ?>; color: <?= $row['result'] === 'Passed' ? '#22c55e' : ($row['result'] === 'Failed' ? '#ef4444' : '#a855f7') ?>;">
+                                    <?= htmlspecialchars($row['result']) ?>
+                                </span>
+                            </td>
+                        </tr>
+                        <?php endwhile; ?>
+                    </tbody>
+                </table>
+            </div>
+            <?php else: ?>
+            <div style="text-align: center; padding: 40px 20px; color: #64748b;">
+                <i class="fas fa-inbox" style="font-size: 3rem; color: #475569; margin-bottom: 16px; display: block;"></i>
+                <h4 style="color: #94a3b8; margin-bottom: 8px;">No Data</h4>
+                <p style="font-size: 0.9rem;">No records found for this department.</p>
+            </div>
+            <?php endif; ?>
+        </div>
+        <?php endif; ?>
+    </div>
+    <!-- End of main dashboard content -->
+
+    <!-- Hidden card for Board Passers (kept for reference but not displayed) -->
+    <div class="card" style="display: none;">
+        <div style="margin-bottom: 20px;">
+            <h2 style="color: #fff;"><?= $current_department ?> - Board Passers Database</h2>
+        </div>
 
             <!-- Filter Section -->
             <div class="filter-section">
@@ -4881,7 +5994,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                             <label for="yearFilter">Graduation Year <small>(Hold Ctrl/Cmd for multiple)</small></label>
                             <select id="yearFilter" class="filter-input" multiple size="4">
                                 <?php 
-                $years = $conn->query("SELECT DISTINCT year_graduated FROM board_passers WHERE department='Engineering' ORDER BY year_graduated DESC");
+                $years = $conn->query("SELECT DISTINCT year_graduated FROM board_passers WHERE department='$current_department' ORDER BY year_graduated DESC");
                 while($year = $years->fetch_assoc()): 
                 ?>
                                 <option value="<?= htmlspecialchars($year['year_graduated']) ?>">
@@ -5755,7 +6868,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
                 <div class="export-detail-item">
                     <span class="export-detail-label">File Name:</span>
-                    <span id="exportFileName" class="export-detail-value">Engineering_Board_Passers.csv</span>
+                    <span id="exportFileName" class="export-detail-value"><?= $selected_department ?>_Board_Passers.csv</span>
                 </div>
             </div>
 
@@ -5847,6 +6960,10 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     <script src="https://unpkg.com/jspdf-autotable@latest/dist/jspdf.plugin.autotable.min.js"></script>
 
     <script>
+    // Current department info (for ICTS admin multi-department support)
+    const CURRENT_DEPARTMENT = <?= json_encode($current_department) ?>;
+    const SELECTED_DEPARTMENT = <?= json_encode($selected_department) ?>;
+    
     /*
     ===========================================
     🎉 DASHBOARD ACTION BUTTONS - FULLY FIXED!
@@ -9043,7 +10160,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             const link = document.createElement('a');
             const url = URL.createObjectURL(blob);
             link.setAttribute('href', url);
-            link.setAttribute('download', `board_passers_engineering_${new Date().toISOString().slice(0,10)}.csv`);
+            link.setAttribute('download', `board_passers_${SELECTED_DEPARTMENT.toLowerCase()}_${new Date().toISOString().slice(0,10)}.csv`);
             link.style.visibility = 'hidden';
             document.body.appendChild(link);
             link.click();
@@ -9213,7 +10330,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
         const selectedFormat = formats[format];
         const timestamp = getCurrentDateString();
-        const filename = `Engineering_Board_Passers_${timestamp}.${selectedFormat.extension}`;
+        const filename = `${SELECTED_DEPARTMENT}_Board_Passers_${timestamp}.${selectedFormat.extension}`;
 
         formatType.textContent = selectedFormat.name;
         recordCount.textContent = `${window.currentExportRows.length} records`;
@@ -9294,14 +10411,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     function performCSVExport() {
         const csvData = generateCSVData(window.currentExportRows);
-        const filename = `Engineering_Board_Passers_${getCurrentDateString()}.csv`;
+        const filename = `${SELECTED_DEPARTMENT}_Board_Passers_${getCurrentDateString()}.csv`;
         downloadFile(csvData, filename, 'text/csv');
         showExportNotification(`Successfully exported ${window.currentExportRows.length} records as CSV!`, 'success');
     }
 
     function performExcelExport() {
         const excelData = generateExcelData(window.currentExportRows);
-        const filename = `Engineering_Board_Passers_${getCurrentDateString()}.xls`;
+        const filename = `${SELECTED_DEPARTMENT}_Board_Passers_${getCurrentDateString()}.xls`;
         downloadFile(excelData, filename, 'application/vnd.ms-excel');
         showExportNotification(`Successfully exported ${window.currentExportRows.length} records as Excel!`, 'success');
     }
@@ -10012,7 +11129,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             ].join(','))
         ].join('\n');
 
-        downloadFile(csvContent, 'board_passers_engineering.csv', 'text/csv');
+        downloadFile(csvContent, `board_passers_${SELECTED_DEPARTMENT.toLowerCase()}.csv`, 'text/csv');
         showExportMessage(`Successfully exported ${data.length} records as CSV`, 'success');
     }
 
@@ -10034,14 +11151,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             ].join('\t'))
         ].join('\n');
 
-        downloadFile(csvContent, 'board_passers_engineering.xls', 'application/vnd.ms-excel');
+        downloadFile(csvContent, `board_passers_${SELECTED_DEPARTMENT.toLowerCase()}.xls`, 'application/vnd.ms-excel');
         showExportMessage(`Successfully exported ${data.length} records as Excel`, 'success');
     }
 
     // Export to JSON
     function exportToJSON(data) {
         const jsonContent = JSON.stringify(data, null, 2);
-        downloadFile(jsonContent, 'board_passers_engineering.json', 'application/json');
+        downloadFile(jsonContent, `board_passers_${SELECTED_DEPARTMENT.toLowerCase()}.json`, 'application/json');
         showExportMessage(`Successfully exported ${data.length} records as JSON`, 'success');
     }
 
@@ -11055,7 +12172,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
         console.log('✅ Generating CSV data for', window.currentExportData.length, 'rows');
         const csvData = generateCSVData(window.currentExportData);
-        downloadFile(csvData, `Engineering_Board_Passers_${getCurrentDateString()}.csv`, 'text/csv');
+        downloadFile(csvData, `${SELECTED_DEPARTMENT}_Board_Passers_${getCurrentDateString()}.csv`, 'text/csv');
         showExportMessage(`Successfully exported ${window.currentExportData.length} records as CSV!`, 'success');
         closeExportModal();
     }
@@ -11071,7 +12188,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
         console.log('✅ Generating Excel data for', window.currentExportData.length, 'rows');
         const excelData = generateExcelData(window.currentExportData);
-        downloadFile(excelData, `Engineering_Board_Passers_${getCurrentDateString()}.xls`, 'application/vnd.ms-excel');
+        downloadFile(excelData, `${SELECTED_DEPARTMENT}_Board_Passers_${getCurrentDateString()}.xls`, 'application/vnd.ms-excel');
         showExportMessage(`Successfully exported ${window.currentExportData.length} records as Excel!`, 'success');
         closeExportModal();
     }
@@ -11383,7 +12500,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 </html>`;
 
         // Create filename with timestamp
-        const filename = `LSPU_Engineering_Board_Passers_${getCurrentDateString()}.html`;
+        const filename = `LSPU_${SELECTED_DEPARTMENT}_Board_Passers_${getCurrentDateString()}.html`;
 
         // Generate actual PDF using window.print() method
         console.log('📥 Creating actual PDF download...');

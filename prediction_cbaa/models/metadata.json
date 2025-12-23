@@ -1,0 +1,103 @@
+{
+  "department": "Business Administration and Accountancy",
+  "training_date": "2025-12-06T15:37:19.143021",
+  "training_records": 6,
+  "best_model": "Lasso Regression",
+  "metrics": {
+    "Linear Regression": {
+      "name": "Linear Regression",
+      "train_r2": 1.0,
+      "test_r2": 0.9570502929008039,
+      "train_mae": 1.7763568394002505e-15,
+      "test_mae": 10.135845277043849,
+      "train_rmse": 3.552713678800501e-15,
+      "test_rmse": 10.362155555095201,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 89.86415472295616
+    },
+    "Ridge Regression": {
+      "name": "Ridge Regression",
+      "train_r2": 0.9697074427959048,
+      "test_r2": 0.8754063252019653,
+      "train_mae": 0.9465882770428986,
+      "test_mae": 17.372088396608678,
+      "train_rmse": 1.1342790566216119,
+      "test_rmse": 17.648914612380185,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 82.62791160339133
+    },
+    "Lasso Regression": {
+      "name": "Lasso Regression",
+      "train_r2": 0.9997645513855762,
+      "test_r2": 0.9996912381177783,
+      "train_mae": 0.0842754238492085,
+      "test_mae": 0.7671900653859076,
+      "train_rmse": 0.10000000333918889,
+      "test_rmse": 0.8785810751174038,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 99.2328099346141
+    },
+    "Random Forest": {
+      "name": "Random Forest",
+      "train_r2": 0.793474051705857,
+      "test_r2": -0.20621327358756636,
+      "train_mae": 2.824243999999996,
+      "test_mae": 47.80000400000001,
+      "train_rmse": 2.9616876710797833,
+      "test_rmse": 54.91387059722631,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 52.19999599999999
+    },
+    "Gradient Boosting": {
+      "name": "Gradient Boosting",
+      "train_r2": 0.9999999992944921,
+      "test_r2": -0.0988634740479668,
+      "train_mae": 0.00014588649128510767,
+      "test_mae": 42.19875233347428,
+      "train_rmse": 0.00017310232015261087,
+      "test_rmse": 52.413344532856485,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 57.80124766652572
+    },
+    "Support Vector Machine": {
+      "name": "Support Vector Machine",
+      "train_r2": 0.01695700992105953,
+      "test_r2": -0.2481460445479553,
+      "train_mae": 3.848014992387701,
+      "test_mae": 50.00000246782068,
+      "train_rmse": 6.461572184014995,
+      "test_rmse": 55.860228350498964,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 49.99999753217932
+    },
+    "Decision Tree": {
+      "name": "Decision Tree",
+      "train_r2": 1.0,
+      "test_r2": -0.0825433417000001,
+      "train_mae": 0.0,
+      "test_mae": 41.919200000000004,
+      "train_rmse": 0.0,
+      "test_rmse": 52.022671540877255,
+      "cv_mean": NaN,
+      "cv_std": NaN,
+      "accuracy": 58.080799999999996
+    }
+  },
+  "num_features": 8,
+  "feature_names": [
+    "year_numeric",
+    "takers_scaled",
+    "passers_ratio",
+    "exam_month_num",
+    "is_Certified_Public_Accountant_Licensure_Exam_CPALE",
+    "passing_rate_lag1",
+    "passing_rate_lag2",
+    "passing_rate_ma3"
+  ]
+}

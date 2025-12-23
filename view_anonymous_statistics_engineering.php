@@ -993,7 +993,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph'
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-area" style="margin-right: 12px;"></i>Anonymous Data Statistics</h2>
+            <h2><i class="fas fa-chart-area" style="margin-right: 12px;"></i>Data Statistics</h2>
             <div style="display: flex; gap: 12px;">
                 <button onclick="exportToPDF()" class="btn-link" style="border: none; cursor: pointer;">
                     <i class="fas fa-file-pdf"></i> Export to PDF
@@ -1677,8 +1677,8 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph'
                     document.getElementById('contentArea').innerHTML = `
                         <div class="empty-state">
                             <i class="fas fa-chart-bar"></i>
-                            <h3>No Anonymous Data Available</h3>
-                            <p>Start by adding anonymous board examinee data to view statistics.</p>
+                            <h3>No Data Available</h3>
+                            <p>Start by adding board examinee data to view statistics.</p>
                             <br>
                             <a href="testing_anonymous_data.php" class="btn-link">
                                 <i class="fas fa-plus-circle"></i> Add First Record
@@ -3245,7 +3245,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph'
                 pdf.setTextColor(15, 23, 36);
                 pdf.setFontSize(18);
                 pdf.setFont(undefined, 'bold');
-                pdf.text('Anonymous Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
+                pdf.text('Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
                 
                 currentY += 10;
                 pdf.setFontSize(10);
@@ -3316,7 +3316,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph'
                     pdf.setFontSize(8);
                     pdf.setTextColor(148, 163, 184);
                     pdf.text(
-                        `Page ${i} of ${pageCount} | LSPU College of Engineering - Anonymous Statistics`,
+                        `Page ${i} of ${pageCount} | LSPU College of Engineering - Statistics`,
                         pageWidth / 2,
                         pageHeight - 10,
                         { align: 'center' }

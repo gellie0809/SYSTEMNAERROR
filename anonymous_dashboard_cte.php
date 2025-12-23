@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cte_admin@lspu.edu.ph') {
+// Allow CTE admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cte_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -224,44 +224,78 @@ $conn->close();
             min-height: 100vh;
         }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #4663ac 0%, #c1d8f0 100%);
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+        /* CTE-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a {
+        color: #c1d8f0 !important;
+    }
+    .sidebar-nav i,
+    .sidebar-nav ion-icon {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a.active,
+    .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #4663ac 0%, #c1d8f0 100%) !important;
+        color: #fff !important;
+    }
+    
+    .sidebar-nav a.active i,
+    .sidebar-nav a.active ion-icon,
+    .sidebar-nav a:hover i,
+    .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #fff;
-            font-weight: 700;
-        }
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #4663ac 0%, #c1d8f0 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
 
-        .logout-btn {
-            background: rgba(255, 255, 255, 0.15);
-            color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 12px 24px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-decoration: none;
-        }
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin: 0;
+    }
 
-        .logout-btn:hover {
-            background: rgba(255, 255, 255, 0.25);
-            transform: translateY(-2px);
-        }
+    .logout-btn {
+        background: rgba(255, 255, 255, 0.1);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .logout-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
 
         .main {
             margin-left: 260px;
@@ -867,7 +901,7 @@ $conn->close();
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Anonymous Data Dashboard</h2>
+            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Data Dashboard</h2>
             <a href="testing_anonymous_data_CTE.php" class="add-data-btn">
                 <i class="fas fa-plus-circle"></i> Add Anonymous Data
             </a>
@@ -930,7 +964,7 @@ $conn->close();
         <!-- Data Table -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-table"></i> Anonymous Data Records</h3>
+                <h3><i class="fas fa-table"></i> Data Records</h3>
                 <span style="color: #64748b; font-size: 0.9rem;">
                     <?php echo number_format($total_records); ?> total records
                 </span>
@@ -992,8 +1026,8 @@ $conn->close();
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h3>No Anonymous Data Yet</h3>
-                    <p>Start by adding anonymous board examinee data using the form.</p>
+                    <h3>No Data Yet</h3>
+                    <p>Start by adding board examinee data using the form.</p>
                     <br>
                     <a href="testing_anonymous_data_CTE.php" class="add-data-btn">
                         <i class="fas fa-plus-circle"></i> Add First Record
@@ -1007,7 +1041,7 @@ $conn->close();
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Anonymous Record</h3>
+                <h3><i class="fas fa-edit"></i> Edit Record</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -1208,7 +1242,7 @@ $conn->close();
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this anonymous record? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }

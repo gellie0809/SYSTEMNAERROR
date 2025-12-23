@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Criminal Justice Education admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph') {
+// Allow CCJE admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'ccje_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -915,6 +915,40 @@ $conn->close();
         #logoutModal .modal-btn.logout-cancel:hover {
             background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%) !important;
         }
+
+    /* CCJE-specific sidebar color overrides for red theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(211, 47, 47, 0.08) !important;
+        border-right: 1px solid rgba(211, 47, 47, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #800020 !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #D32F2F 0%, #800020 100%) !important;
+        color: #fff !important;
+        box-shadow: 0 8px 25px rgba(211, 47, 47, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
     </style>
 </head>
 <body>
@@ -927,7 +961,7 @@ $conn->close();
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Anonymous Data Dashboard</h2>
+            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Data Dashboard</h2>
             <a href="testing_anonymous_data_ccje.php" class="add-data-btn">
                 <i class="fas fa-plus-circle"></i> Add Anonymous Data
             </a>
@@ -990,7 +1024,7 @@ $conn->close();
         <!-- Data Table -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-table"></i> Anonymous Data Records</h3>
+                <h3><i class="fas fa-table"></i> Data Records</h3>
                 <span style="color: #64748b; font-size: 0.9rem;">
                     <?php echo number_format($total_records); ?> total records
                 </span>
@@ -1052,8 +1086,8 @@ $conn->close();
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h3>No Anonymous Data Yet</h3>
-                    <p>Start by adding anonymous board examinee data using the form.</p>
+                    <h3>No Data Yet</h3>
+                    <p>Start by adding board examinee data using the form.</p>
                     <br>
                     <a href="testing_anonymous_data.php" class="add-data-btn">
                         <i class="fas fa-plus-circle"></i> Add First Record
@@ -1067,7 +1101,7 @@ $conn->close();
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Anonymous Record</h3>
+                <h3><i class="fas fa-edit"></i> Edit Record</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -1272,7 +1306,7 @@ $conn->close();
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this anonymous record? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }

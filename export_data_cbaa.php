@@ -141,10 +141,26 @@ $conn->close();
     }
 
     body {
-        background: linear-gradient(120deg, #e0e7ef 0%, #f7fafc 100%);
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
     }
 
     /* Sidebar styling moved to css/sidebar.css (shared) */
@@ -154,29 +170,29 @@ $conn->close();
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .dashboard-title {
         font-size: 1.4rem;
-        color: #fff;
+        color: #FFFFFF;
         font-weight: 700;
         letter-spacing: 1px;
         margin: 0;
     }
 
     .logout-btn {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 12px;
         padding: 12px 24px;
         font-size: 0.95rem;
@@ -192,8 +208,8 @@ $conn->close();
     }
 
     .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.5);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
@@ -221,7 +237,7 @@ $conn->close();
         font-weight: 700;
         margin-bottom: 40px;
         color: #fff;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         padding: 24px 40px;
         border-radius: 16px;
         box-shadow: 0 12px 40px rgba(44, 90, 160, 0.3);
@@ -247,7 +263,7 @@ $conn->close();
     /* Export Page Styles */
     .card-header {
         padding: 40px 50px;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         position: relative;
         overflow: hidden;
@@ -342,7 +358,7 @@ $conn->close();
         width: 80px;
         height: 80px;
         margin: 0 auto 20px;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         border-radius: 20px;
         display: flex;
         align-items: center;
@@ -367,7 +383,7 @@ $conn->close();
     }
 
     .export-btn {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         border: none;
         border-radius: 12px;
@@ -384,18 +400,18 @@ $conn->close();
     }
 
     .export-btn:hover {
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(44, 90, 160, 0.4);
     }
 
     .export-csv {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
     }
 
     .export-csv:hover {
-        background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
+        background: linear-gradient(135deg, #B45309 0%, #D97706 100%) !important;
         box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4) !important;
     }
 
@@ -407,7 +423,7 @@ $conn->close();
     }
 
     .info-card h4 {
-        color: #2c5aa0;
+        color: #D97706;
         font-size: 1.2rem;
         font-weight: 700;
         margin: 0 0 20px 0;
@@ -535,7 +551,7 @@ $conn->close();
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 25%, #60a5fa 50%, #3182ce 75%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 25%, #FBBF24 50%, #F59E0B 75%, #D97706 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -558,13 +574,13 @@ $conn->close();
 
     #logoutModal .modal-header {
         margin-bottom: 32px !important;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 100%) !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
         border: 2px solid #bfdbfe !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(49, 130, 206, 0.15) !important;
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.15) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -574,7 +590,7 @@ $conn->close();
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #1e40af 0%, #3182ce 50%, #60a5fa 100%) !important;
+        background: linear-gradient(90deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -585,7 +601,7 @@ $conn->close();
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -593,7 +609,7 @@ $conn->close();
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #F59E0B 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
@@ -604,7 +620,7 @@ $conn->close();
         box-shadow:
             0 20px 40px rgba(30, 64, 175, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(49, 130, 206, 0.2) !important;
+            0 0 0 6px rgba(217, 119, 6, 0.2) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -617,7 +633,7 @@ $conn->close();
             box-shadow:
                 0 20px 40px rgba(30, 64, 175, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(49, 130, 206, 0.2);
+                0 0 0 6px rgba(217, 119, 6, 0.2);
             transform: scale(1);
         }
 
@@ -625,7 +641,7 @@ $conn->close();
             box-shadow:
                 0 25px 50px rgba(30, 64, 175, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(49, 130, 206, 0.3);
+                0 0 0 8px rgba(217, 119, 6, 0.3);
             transform: scale(1.05);
         }
     }
@@ -637,7 +653,7 @@ $conn->close();
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #60a5fa, #3182ce, #1e40af, #2563eb) !important;
+        background: linear-gradient(135deg, #FBBF24, #F59E0B, #D97706, #F59E0B) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -657,7 +673,7 @@ $conn->close();
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -669,7 +685,7 @@ $conn->close();
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #2563eb !important;
+        color: #F59E0B !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -691,7 +707,7 @@ $conn->close();
     }
 
     #logoutModal .modal-text::before {
-        content: '⚠️' !important;
+        content: 'Ã¢Å¡Â Ã¯Â¸Â' !important;
         position: absolute !important;
         top: -12px !important;
         left: 50% !important;
@@ -856,7 +872,7 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #F59E0B 100%) !important;
         color: #ffffff !important;
         border: none !important;
         outline: none !important;
@@ -881,7 +897,7 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%) !important;
+        background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #D97706 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -894,7 +910,7 @@ $conn->close();
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #B45309 0%, #D97706 50%, #D97706 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -928,7 +944,7 @@ $conn->close();
 
     /* Success state for logout button */
     #logoutModal .modal-btn.logout-confirm.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #B45309 100%) !important;
         transform: translateY(-2px) scale(1.05) !important;
         box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4) !important;
     }
@@ -1080,13 +1096,149 @@ $conn->close();
             transform: translateY(0) scale(1);
         }
     }
+
+    /* CBAA-specific sidebar color overrides for yellow theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
+    /* Mobile Responsive Styles */
+    @media (max-width: 768px) {
+        .topbar {
+            left: 0;
+            padding: 0 20px;
+        }
+
+        .dashboard-title {
+            font-size: 1.1rem;
+        }
+
+        .main {
+            margin-left: 0;
+            padding: 90px 15px 30px;
+        }
+
+        .export-header {
+            padding: 30px 20px;
+        }
+
+        .export-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .filter-section {
+            padding: 20px;
+        }
+
+        .filter-row {
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .export-options {
+            padding: 20px;
+        }
+
+        .option-card {
+            padding: 20px;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        select {
+            font-size: 16px; /* Prevents zoom on iOS */
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 400px;
+            padding: 30px 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+        }
+
+        .modal-buttons {
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            width: 100%;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .dashboard-title {
+            font-size: 1rem;
+        }
+
+        .main {
+            padding: 85px 10px 20px;
+        }
+
+        .export-header {
+            padding: 25px 15px;
+        }
+
+        .export-header h1 {
+            font-size: 1.1rem;
+        }
+
+        .filter-section {
+            padding: 15px;
+        }
+
+        .export-options {
+            padding: 15px;
+        }
+
+        .option-card {
+            padding: 15px;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            font-size: 0.85rem;
+        }
+    }
     </style>
 </head>
 
 <body>
     <?php include __DIR__ . '/includes/cbaa_nav.php'; ?>
     <div class="topbar">
-        <h1 class="dashboard-title">College of Business Administration and Accountancy Admin Dashboard</h1>
+        <h1 class="dashboard-title">Business Administration and Accountancy Admin Dashboard</h1>
         <a href="logout.php" class="logout-btn" onclick="return confirmLogout(event)">
             <i class="fas fa-sign-out-alt"></i>
             Logout
@@ -1098,7 +1250,7 @@ $conn->close();
                 <div class="header-content">
                     <i class="fas fa-download header-icon"></i>
                     <div>
-                        <h1 class="header-title">Export Board Passers Data – College of Business Administration and
+                        <h1 class="header-title">Export Board Passers Data - College of Business Administration and
                             Accountancy </h1>
                         <p class="header-subtitle">Download board passer records in various formats</p>
                     </div>
@@ -1270,7 +1422,7 @@ $conn->close();
 
     // Interactive logout function with enhanced animations
     function handleInteractiveLogout(button) {
-        console.log('🚀 Interactive logout initiated!');
+        console.log('Ã°Å¸Å¡â‚¬ Interactive logout initiated!');
 
         // Prevent double clicks
         if (button.classList.contains('loading')) {
@@ -1298,7 +1450,7 @@ $conn->close();
 
             // Wait for success animation, then redirect
             setTimeout(() => {
-                console.log('✅ Logout successful! Redirecting to login page...');
+                console.log('¦ Logout successful! Redirecting to login page...');
                 window.location.href = 'index.php';
             }, 1500);
 
@@ -1314,7 +1466,7 @@ $conn->close();
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
           color: white;
           padding: 20px 32px;
           border-radius: 16px;

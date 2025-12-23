@@ -82,7 +82,9 @@ if ($selected_exam_type > 0) {
   $sql = "SELECT DISTINCT s.id, TRIM(s.subject_name) AS subject_name, COALESCE(s.total_items,50) AS total_items
           FROM subjects s
           LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-          WHERE s.department='Business Administration and Accountancy' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
+          WHERE s.department='Business Administration and Accountancy' AND TRIM(s.subject_name) != '' 
+          AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+          AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
           ORDER BY s.subject_name ASC";
   $sub_q = $conn->query($sql);
 } else {
@@ -94,12 +96,39 @@ if ($sub_q) {
   }
 }
 
+// Create anonymous_board_passers table if it doesn't exist
+$create_table_sql = "CREATE TABLE IF NOT EXISTS anonymous_board_passers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course VARCHAR(255) NOT NULL,
+    board_exam_type VARCHAR(255) NOT NULL,
+    board_exam_date DATE NOT NULL,
+    exam_type VARCHAR(100) NOT NULL COMMENT 'First Timer or Repeater',
+    result VARCHAR(50) NOT NULL,
+    department VARCHAR(100) DEFAULT 'Business Administration and Accountancy',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_dept (department),
+    INDEX idx_course (course),
+    INDEX idx_exam_type (board_exam_type),
+    INDEX idx_result (result),
+    INDEX idx_date (board_exam_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+$conn->query($create_table_sql);
+
+// Add course column if it doesn't exist (for existing tables)
+$check_course_col = $conn->query("SHOW COLUMNS FROM anonymous_board_passers LIKE 'course'");
+if ($check_course_col && $check_course_col->num_rows === 0) {
+    $conn->query("ALTER TABLE anonymous_board_passers ADD COLUMN course VARCHAR(255) NOT NULL AFTER id");
+}
+
 // Messages
 $success_message = '';
 $error_message = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Check examinee type
+  $examinee_type = $_POST['examinee_type'] ?? 'named';
+  
   // Collect input
   $first_name = trim($_POST['first_name'] ?? '');
   $last_name = trim($_POST['last_name'] ?? '');
@@ -123,26 +152,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Validation
   $errors = [];
-  if (empty($first_name)) {
-    $errors[] = 'First name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
-    $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($last_name)) {
-    $errors[] = 'Last name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
-    $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
-    $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
-    $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($sex)) { $errors[] = 'Sex is required'; }
-  if (empty($course)) { $errors[] = 'Course is required'; }
-  if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
-    $errors[] = 'Year must be between 1950 and ' . date('Y');
+  
+  // For anonymous entries, skip personal information validation but require course
+  if ($examinee_type === 'named') {
+    if (empty($first_name)) {
+      $errors[] = 'First name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
+      $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($last_name)) {
+      $errors[] = 'Last name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
+      $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
+      $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
+      $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($sex)) { $errors[] = 'Sex is required'; }
+    if (empty($course)) { $errors[] = 'Course is required'; }
+    if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
+      $errors[] = 'Year must be between 1950 and ' . date('Y');
+    }
+  } else {
+    // Anonymous entries still need course
+    if (empty($course)) { $errors[] = 'Course is required'; }
   }
   if (empty($board_exam_date)) {
     $errors[] = 'Board exam date is required';
@@ -161,8 +197,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($exam_type)) { $errors[] = 'Take attempts is required'; }
   if (empty($board_exam_type)) { $errors[] = 'Board exam type is required'; }
 
-  // Resolve board_exam_type name to ID for subject filtering
-  if (empty($errors)) {
+  // Handle anonymous entry
+  if (empty($errors) && $examinee_type === 'anonymous') {
+    $stmt = $conn->prepare("INSERT INTO anonymous_board_passers (course, board_exam_type, board_exam_date, exam_type, result, department) VALUES (?, ?, ?, ?, ?, 'Business Administration and Accountancy')");
+    if ($stmt) {
+      $stmt->bind_param('sssss', $course, $board_exam_type, $board_exam_date, $exam_type, $result);
+      if ($stmt->execute()) {
+        $success_message = 'Exam data added successfully!';
+        $_POST = []; // Clear form
+      } else {
+        $error_message = 'Error adding exam data: ' . $stmt->error;
+      }
+      $stmt->close();
+    } else {
+      $error_message = 'Database error: ' . $conn->error;
+    }
+  }
+  // Resolve board_exam_type name to ID for subject filtering (for named students)
+  elseif (empty($errors) && $examinee_type === 'named') {
     $posted_board_exam_type_name = $board_exam_type;
     $posted_board_exam_type_id = 0;
     if (!empty($posted_board_exam_type_name)) {
@@ -184,7 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $sql = "SELECT s.id, TRIM(s.subject_name) AS subject_name, COALESCE(s.total_items,50) AS total_items
         FROM subjects s
         LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-        WHERE s.department='Business Administration and Accountancy' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
+        WHERE s.department='Business Administration and Accountancy' AND TRIM(s.subject_name) != '' 
+        AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+        AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
         GROUP BY s.id
         ORDER BY subject_name ASC";
       $sub_q = $conn->query($sql);
@@ -192,10 +246,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         while ($r = $sub_q->fetch_assoc()) { $subjects[] = $r; }
       }
     }
-  }
 
-  if (empty($errors)) {
-    $conn->begin_transaction();
+    if (empty($errors)) {
+      $conn->begin_transaction();
 
     // Check if `result` column exists in board_passers
     $has_result_col = false;
@@ -341,6 +394,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_message = 'Error adding record: ' . $stmt->error;
     }
     $stmt->close();
+    } // Close the elseif named student block
   } else {
     $error_message = implode(', ', $errors);
   }
@@ -386,13 +440,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     body {
-        background: linear-gradient(135deg, #F8F7F4 0%, #F5E6C3 100%);
-        /* Gold gradient background */
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
         position: relative;
-        overflow-x: hidden;
     }
 
     body::before {
@@ -403,43 +455,77 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         right: 0;
         bottom: 0;
         background:
-            radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 60%, rgba(201, 168, 79, 0.08) 0%, transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(232, 196, 104, 0.1) 0%, transparent 50%);
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
 
     /* Sidebar styling moved to css/sidebar.css (shared) */
 
+    /* CBAA-specific sidebar color overrides for yellow theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.08) !important;
+        border-right: 1px solid rgba(135, 121, 40, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #AA4C0A !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #E08600 !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: #E08600 !important;
+        color: #FFFFFF !important;
+        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #FFFFFF !important;
+    }
+
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .dashboard-title {
         font-size: 1.4rem;
-        color: #fff;
+        color: #FFFFFF;
         font-weight: 700;
         letter-spacing: 1px;
         margin: 0;
     }
 
     .logout-btn {
-        background: rgba(255, 255, 255, 0.1);
-        color: #fff;
-        border: 2px solid rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 12px;
         padding: 12px 24px;
         font-size: 0.95rem;
@@ -451,11 +537,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         display: flex;
         align-items: center;
         gap: 8px;
+        backdrop-filter: blur(10px);
     }
 
     .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
 
     .main-content {
@@ -473,8 +562,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         -webkit-backdrop-filter: blur(20px);
         border-radius: 28px;
         padding: 0;
-        box-shadow: 0 32px 64px rgba(44, 90, 160, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-        border: 2px solid rgba(44, 90, 160, 0.1);
+        box-shadow: 0 32px 64px rgba(217, 119, 6, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        border: 2px solid rgba(217, 119, 6, 0.1);
         overflow: hidden;
         width: 100%;
         max-width: none;
@@ -502,13 +591,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(212, 175, 55, 0.02) 0%, rgba(201, 168, 79, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.02) 0%, rgba(245, 158, 11, 0.03) 100%);
         pointer-events: none;
         z-index: 1;
     }
 
     .form-header {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         /* Gold gradient */
         color: #1a1614;
         padding: 40px;
@@ -595,7 +684,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 0 auto 24px;
         font-size: 2.2rem;
         box-shadow:
-            0 15px 35px rgba(212, 175, 55, 0.3),
+            0 15px 35px rgba(217, 119, 6, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
         border: 2px solid rgba(255, 255, 255, 0.25);
         position: relative;
@@ -620,7 +709,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-icon:hover {
         transform: scale(1.1) rotate(5deg);
         box-shadow:
-            0 20px 40px rgba(44, 90, 160, 0.4),
+            0 20px 40px rgba(217, 119, 6, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
@@ -629,7 +718,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background: linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(243, 244, 246, 0.9) 100%);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
-        border-bottom: 1px solid rgba(44, 90, 160, 0.1);
+        border-bottom: 1px solid rgba(217, 119, 6, 0.1);
         position: relative;
         z-index: 2;
     }
@@ -658,7 +747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, rgba(245, 158, 11, 0.03) 100%);
         opacity: 0;
         transition: all 0.3s ease;
     }
@@ -668,12 +757,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .tab-btn.active {
-        color: #D4AF37;
+        color: #D97706;
         /* Gold */
-        background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(201, 168, 79, 0.08) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, rgba(245, 158, 11, 0.08) 100%);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border-bottom: 3px solid #D4AF37;
+        border-bottom: 3px solid #D97706;
     }
 
     .tab-btn.active::after {
@@ -683,9 +772,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(90deg, #D97706 0%, #F59E0B 100%);
         /* Gold gradient */
-        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
     }
 
     .tab-btn i {
@@ -698,7 +787,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .tab-btn.active i {
-        color: #D4AF37;
+        color: #D97706;
         /* Gold */
         transform: scale(1.15);
     }
@@ -732,7 +821,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .tab-header {
         padding: 50px 60px 40px;
         text-align: center;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, rgba(245, 158, 11, 0.03) 100%);
         position: relative;
         overflow: hidden;
         z-index: 2;
@@ -746,7 +835,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 200%;
         height: 200%;
         background:
-            radial-gradient(circle, rgba(44, 90, 160, 0.08) 0%, transparent 70%);
+            radial-gradient(circle, rgba(217, 119, 6, 0.08) 0%, transparent 70%);
         animation: tabFloat 6s ease-in-out infinite;
         z-index: 1;
     }
@@ -767,7 +856,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 80px;
         height: 80px;
         border-radius: 20px;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         /* Gold gradient */
         color: #1a1614;
         display: flex;
@@ -776,7 +865,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 0 auto 24px;
         font-size: 2rem;
         box-shadow:
-            0 15px 35px rgba(212, 175, 55, 0.4),
+            0 15px 35px rgba(217, 119, 6, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.2);
         position: relative;
@@ -790,18 +879,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         0%,
         100% {
             transform: scale(1);
-            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
+            box-shadow: 0 15px 35px rgba(217, 119, 6, 0.4);
         }
 
         50% {
             transform: scale(1.05);
-            box-shadow: 0 20px 40px rgba(212, 175, 55, 0.5);
+            box-shadow: 0 20px 40px rgba(217, 119, 6, 0.5);
         }
     }
 
     .tab-icon:hover {
         transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 20px 40px rgba(44, 90, 160, 0.6);
+        box-shadow: 0 20px 40px rgba(217, 119, 6, 0.6);
     }
 
 
@@ -836,7 +925,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -5px;
         right: -5px;
         bottom: -5px;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.05) 0%, rgba(245, 158, 11, 0.03) 100%);
         border-radius: 20px;
         opacity: 0;
         transition: all 0.3s ease;
@@ -849,7 +938,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .form-group.focused::before {
         opacity: 1;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.08) 0%, rgba(58, 141, 222, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.08) 0%, rgba(245, 158, 11, 0.05) 100%);
     }
 
     .form-group label {
@@ -866,20 +955,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .form-group label:hover {
-        color: #C9A84F;
+        color: #F59E0B;
         transform: translateX(2px);
     }
 
     .form-group label i {
-        color: #D4AF37;
-        filter: drop-shadow(0 2px 4px rgba(212, 175, 55, 0.2));
+        color: #D97706;
+        filter: drop-shadow(0 2px 4px rgba(217, 119, 6, 0.2));
         transition: all 0.3s ease;
         font-size: 1.1rem;
     }
 
     .form-group label:hover i {
         transform: scale(1.1) rotate(5deg);
-        color: #C9A84F;
+        color: #D97706;
     }
 
     .form-group input,
@@ -895,7 +984,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow:
-            0 4px 6px -1px rgba(44, 90, 160, 0.1),
+            0 4px 6px -1px rgba(217, 119, 6, 0.1),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
         font-family: 'Inter', sans-serif;
         resize: vertical;
@@ -914,10 +1003,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-group select:focus,
     .form-group textarea:focus {
         outline: none;
-        border-color: #D4AF37;
+        border-color: #F59E0B;
         box-shadow:
-            0 0 0 4px rgba(212, 175, 55, 0.15),
-            0 8px 25px rgba(212, 175, 55, 0.2);
+            0 0 0 4px rgba(217, 119, 6, 0.15),
+            0 8px 25px rgba(217, 119, 6, 0.2);
         transform: translateY(-3px) scale(1.01);
         background: rgba(255, 255, 255, 1);
     }
@@ -925,10 +1014,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-group input:hover,
     .form-group select:hover,
     .form-group textarea:hover {
-        border-color: #C9A84F;
+        border-color: #D97706;
         transform: translateY(-1px);
         box-shadow:
-            0 6px 12px rgba(212, 175, 55, 0.15),
+            0 6px 12px rgba(217, 119, 6, 0.15),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
     }
 
@@ -940,7 +1029,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background: linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(243, 244, 246, 0.9) 100%);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
-        border-top: 1px solid rgba(44, 90, 160, 0.1);
+        border-top: 1px solid rgba(217, 119, 6, 0.1);
         position: relative;
         z-index: 2;
     }
@@ -982,21 +1071,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         /* Emerald Green */
         color: white;
         box-shadow:
-            0 8px 25px rgba(212, 175, 55, 0.4),
+            0 8px 25px rgba(217, 119, 6, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         margin-left: auto;
         border-color: rgba(255, 255, 255, 0.2);
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #B8941F 100%);
+        background: linear-gradient(135deg, #D97706 0%, #D97706 100%);
         transform: translateY(-3px) scale(1.02);
         box-shadow:
-            0 12px 35px rgba(212, 175, 55, 0.5),
+            0 12px 35px rgba(217, 119, 6, 0.5),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
@@ -1020,7 +1109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         box-shadow:
             0 8px 20px rgba(0, 0, 0, 0.12),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        color: #D4AF37;
+        color: #F59E0B;
         /* Cyan on hover */
     }
 
@@ -1043,10 +1132,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .alert-success {
-        background: linear-gradient(145deg, rgba(212, 175, 55, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
-        color: #C9A84F;
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.2);
+        background: linear-gradient(145deg, rgba(217, 119, 6, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%);
+        border: 1px solid rgba(217, 119, 6, 0.3);
+        color: #D97706;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
     }
 
     .alert-error {
@@ -1206,7 +1295,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* Elegant header for validation modal */
     .validation-modal .modal-header {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #1a1614;
         padding: 32px 36px;
         display: flex;
@@ -1214,7 +1303,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         align-items: center;
         text-align: center;
         gap: 18px;
-        box-shadow: 0 8px 24px rgba(212, 175, 55, 0.25);
+        box-shadow: 0 8px 24px rgba(217, 119, 6, 0.25);
         position: relative;
         overflow: hidden;
         flex-shrink: 0;
@@ -1309,12 +1398,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .field-list::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(180deg, #F59E0B 0%, #D97706 100%);
         border-radius: 10px;
     }
 
     .validation-modal .field-list::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #C9A84F 0%, #D4AF37 100%);
+        background: linear-gradient(180deg, #D97706 0%, #F59E0B 100%);
     }
 
     .validation-modal .field-list h4 {
@@ -1330,7 +1419,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .field-list h4::before {
-        content: '📋';
+        content: 'ðŸ“‹';
         font-size: 1.3rem;
     }
 
@@ -1356,16 +1445,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .field-item:hover {
-        border-color: #D4AF37;
+        border-color: #F59E0B;
         box-shadow:
-            0 4px 16px rgba(212, 175, 55, 0.2),
-            0 0 0 1px #D4AF37;
+            0 4px 16px rgba(217, 119, 6, 0.2),
+            0 0 0 1px #F59E0B;
         transform: translateX(6px);
         background: linear-gradient(90deg, #ffffff 0%, #FFFEF9 100%);
     }
 
     .validation-modal .field-item i {
-        color: #D4AF37;
+        color: #F59E0B;
         font-size: 1.3rem;
         min-width: 28px;
         text-align: center;
@@ -1391,16 +1480,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin-top: 0;
         padding: 18px 20px;
         background: linear-gradient(135deg, #FEF9E7 0%, #F5E6C3 100%);
-        border-left: 4px solid #D4AF37;
+        border-left: 4px solid #F59E0B;
         border-radius: 12px;
         display: flex;
         align-items: flex-start;
         gap: 14px;
-        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.1);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.1);
     }
 
     .validation-modal .field-list .info-note i {
-        color: #D4AF37;
+        color: #F59E0B;
         font-size: 1.2rem;
         margin-top: 2px;
         flex-shrink: 0;
@@ -1408,14 +1497,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .validation-modal .field-list .info-note p {
         margin: 0;
-        color: #D4AF37;
+        color: #F59E0B;
         font-size: 0.93rem;
         line-height: 1.6;
         font-weight: 500;
     }
 
     .validation-modal .field-list .info-note strong {
-        color: #D4AF37;
+        color: #F59E0B;
         font-weight: 700;
     }
 
@@ -1429,7 +1518,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .modal-btn.validation-ok {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #ffffff;
         padding: 14px 32px;
         border-radius: 12px;
@@ -1439,7 +1528,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         cursor: pointer;
         transition: all 0.3s ease;
         box-shadow:
-            0 4px 14px rgba(212, 175, 55, 0.35),
+            0 4px 14px rgba(217, 119, 6, 0.35),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         display: flex;
         align-items: center;
@@ -1447,16 +1536,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .modal-btn.validation-ok:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #B8941F 100%);
+        background: linear-gradient(135deg, #D97706 0%, #D97706 100%);
         transform: translateY(-2px);
         box-shadow:
-            0 6px 20px rgba(212, 175, 55, 0.45),
+            0 6px 20px rgba(217, 119, 6, 0.45),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
     .validation-modal .modal-btn.validation-ok:active {
         transform: translateY(0);
-        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
     }
 
     .validation-modal .modal-btn.validation-ok i {
@@ -1473,7 +1562,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* Polished header for confirmation modal */
     .confirmation-modal .modal-header {
-        background: linear-gradient(90deg, #D4AF37, #D4AF37);
+        background: linear-gradient(90deg, #F59E0B, #F59E0B);
         color: white;
         padding: 14px 18px;
         display: flex;
@@ -1523,7 +1612,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .receipt-section {
         margin-top: 12px;
         padding-top: 12px;
-        border-top: 1px dashed rgba(44, 90, 160, 0.06)
+        border-top: 1px dashed rgba(217, 119, 6, 0.06)
     }
 
     .receipt-row {
@@ -1558,7 +1647,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .modal-btn.confirmation-confirm {
-        background: linear-gradient(90deg, #D4AF37, #C9A84F);
+        background: linear-gradient(90deg, #F59E0B, #D97706);
         color: #fff;
         padding: 10px 16px;
         border-radius: 10px;
@@ -1568,7 +1657,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .modal-btn.confirmation-cancel {
         background: transparent;
-        border: 1px solid rgba(44, 90, 160, 0.12);
+        border: 1px solid rgba(217, 119, 6, 0.12);
         padding: 10px 16px;
         border-radius: 10px
     }
@@ -1594,7 +1683,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         padding: 48px 44px !important;
         border-radius: 28px !important;
         box-shadow:
-            0 32px 64px -12px rgba(212, 175, 55, 0.25),
+            0 32px 64px -12px rgba(217, 119, 6, 0.25),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         max-width: 480px !important;
         width: 92% !important;
@@ -1613,7 +1702,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #D4AF37 0%, #3182ce 25%, #60a5fa 50%, #3182ce 75%, #D4AF37 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #F59E0B 25%, #FBBF24 50%, #F59E0B 75%, #F59E0B 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -1652,7 +1741,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #D4AF37 0%, #3182ce 50%, #60a5fa 100%) !important;
+        background: linear-gradient(90deg, #F59E0B 0%, #F59E0B 50%, #FBBF24 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -1671,7 +1760,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
         /* Orange to Red */
         border-radius: 50% !important;
         display: flex !important;
@@ -1681,7 +1770,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         color: white !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(212, 175, 55, 0.4),
+            0 20px 40px rgba(217, 119, 6, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
             0 0 0 6px rgba(49, 130, 206, 0.2) !important;
         position: relative !important;
@@ -1694,7 +1783,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         0%,
         100% {
             box-shadow:
-                0 20px 40px rgba(212, 175, 55, 0.4),
+                0 20px 40px rgba(217, 119, 6, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
                 0 0 0 6px rgba(49, 130, 206, 0.2);
             transform: scale(1);
@@ -1702,7 +1791,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         50% {
             box-shadow:
-                0 25px 50px rgba(212, 175, 55, 0.6),
+                0 25px 50px rgba(217, 119, 6, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
                 0 0 0 8px rgba(49, 130, 206, 0.3);
             transform: scale(1.05);
@@ -1716,7 +1805,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -1736,7 +1825,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -1748,7 +1837,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #C9A84F !important;
+        color: #D97706 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -1770,7 +1859,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     #logoutModal .modal-text::before {
-        content: '⚠️' !important;
+        content: 'âš ï¸' !important;
         position: absolute !important;
         top: -12px !important;
         left: 50% !important;
@@ -1935,7 +2024,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #D4AF37 0%, #3182ce 50%, #C9A84F 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #F59E0B 50%, #D97706 100%) !important;
         color: #ffffff !important;
         border: none !important;
         outline: none !important;
@@ -1960,7 +2049,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #1e3a8a 0%, #D4AF37 50%, #B8941F 100%) !important;
+        background: linear-gradient(135deg, #1e3a8a 0%, #F59E0B 50%, #D97706 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -1973,7 +2062,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #1e3a8a 0%, #B8941F 50%, #D4AF37 100%) !important;
+        background: linear-gradient(135deg, #1e3a8a 0%, #D97706 50%, #F59E0B 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -2007,9 +2096,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* Success state for logout button */
     #logoutModal .modal-btn.logout-confirm.success {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 50%, #B8941F 100%) !important;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 50%, #D97706 100%) !important;
         transform: translateY(-2px) scale(1.05) !important;
-        box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4) !important;
+        box-shadow: 0 12px 30px rgba(217, 119, 6, 0.4) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm.success .btn-text {
@@ -2234,8 +2323,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-tip {
-        background: linear-gradient(145deg, rgba(212, 175, 55, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%);
-        border: 1px solid rgba(212, 175, 55, 0.3);
+        background: linear-gradient(145deg, rgba(217, 119, 6, 0.1) 0%, rgba(29, 78, 216, 0.05) 100%);
+        border: 1px solid rgba(217, 119, 6, 0.3);
         border-radius: 12px;
         padding: 16px 20px;
         margin: 20px 0;
@@ -2247,13 +2336,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-tip i {
-        color: #D4AF37;
+        color: #F59E0B;
         font-size: 1.2rem;
     }
 
     .validation-tip p {
         margin: 0;
-        color: #D4AF37;
+        color: #F59E0B;
         font-weight: 500;
         line-height: 1.5;
     }
@@ -2284,13 +2373,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         -webkit-backdrop-filter: blur(25px);
         border-radius: 28px;
         box-shadow:
-            0 32px 64px rgba(44, 90, 160, 0.15),
-            0 16px 32px rgba(212, 175, 55, 0.08),
+            0 32px 64px rgba(217, 119, 6, 0.15),
+            0 16px 32px rgba(217, 119, 6, 0.08),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        border: 1px solid rgba(44, 90, 160, 0.15);
+        border: 1px solid rgba(217, 119, 6, 0.15);
         position: relative;
         scrollbar-width: thin;
-        scrollbar-color: rgba(44, 90, 160, 0.2) transparent;
+        scrollbar-color: rgba(217, 119, 6, 0.2) transparent;
     }
 
     /* Enhanced Custom Scrollbar */
@@ -2304,20 +2393,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .confirmation-modal::-webkit-scrollbar-thumb {
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.4) 0%, rgba(212, 175, 55, 0.4) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.4) 0%, rgba(217, 119, 6, 0.4) 100%);
         border-radius: 10px;
         border: 1px solid rgba(255, 255, 255, 0.5);
     }
 
     .confirmation-modal::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.6) 0%, rgba(212, 175, 55, 0.6) 100%);
+        background: linear-gradient(135deg, rgba(217, 119, 6, 0.6) 0%, rgba(217, 119, 6, 0.6) 100%);
     }
 
     /* Clean Modal Header */
     .confirmation-modal .modal-header {
         padding: 32px 32px 24px;
         text-align: center;
-        border-bottom: 1px solid rgba(44, 90, 160, 0.08);
+        border-bottom: 1px solid rgba(217, 119, 6, 0.08);
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.95) 100%);
         border-radius: 28px 28px 0 0;
     }
@@ -2345,11 +2434,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         right: 0;
         height: 4px;
         background: linear-gradient(90deg,
-                #2c5aa0 0%,
-                #3182ce 25%,
-                #D4AF37 50%,
-                #C9A84F 75%,
-                #2c5aa0 100%);
+                #D97706 0%,
+                #F59E0B 25%,
+                #F59E0B 50%,
+                #D97706 75%,
+                #D97706 100%);
         animation: gradientShift 3s ease-in-out infinite;
     }
 
@@ -2366,7 +2455,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .confirmation-icon {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         width: 72px;
         height: 72px;
         border-radius: 20px;
@@ -2377,7 +2466,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         color: white;
         font-size: 1.75rem;
         box-shadow:
-            0 8px 32px rgba(212, 175, 55, 0.25),
+            0 8px 32px rgba(217, 119, 6, 0.25),
             inset 0 2px 0 rgba(255, 255, 255, 0.2);
         position: relative;
         transition: all 0.3s ease;
@@ -2386,7 +2475,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .confirmation-icon:hover {
         transform: translateY(-2px);
         box-shadow:
-            0 12px 40px rgba(212, 175, 55, 0.3),
+            0 12px 40px rgba(217, 119, 6, 0.3),
             inset 0 2px 0 rgba(255, 255, 255, 0.2);
     }
 
@@ -2419,12 +2508,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 32px 0;
         overflow: hidden;
         box-shadow:
-            0 4px 20px rgba(44, 90, 160, 0.08),
+            0 4px 20px rgba(217, 119, 6, 0.08),
             0 1px 3px rgba(0, 0, 0, 0.05);
     }
 
     .receipt-header {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         padding: 24px 28px;
         text-align: center;
@@ -2478,7 +2567,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .receipt-section h5 i {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         width: 28px;
         height: 28px;
@@ -2487,7 +2576,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         align-items: center;
         justify-content: center;
         font-size: 0.75rem;
-        box-shadow: 0 2px 8px rgba(44, 90, 160, 0.2);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.2);
     }
 
     .receipt-row {
@@ -2562,9 +2651,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .result-passed {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: white;
-        border: 2px solid #B8941F;
+        border: 2px solid #D97706;
     }
 
     .result-failed {
@@ -2587,30 +2676,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         text-align: center;
         font-size: 1rem;
         color: #64748b;
-        border-top: 2px solid rgba(44, 90, 160, 0.1);
+        border-top: 2px solid rgba(217, 119, 6, 0.1);
     }
 
     .receipt-footer i {
-        color: #3182ce;
+        color: #F59E0B;
         margin-right: 8px;
         font-size: 1.1rem;
     }
 
     .modal-btn.confirmation-confirm {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
         color: #ffffff;
         border: none;
         font-weight: 600;
         padding: 12px 24px;
         border-radius: 12px;
         transition: all 0.2s ease;
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
     }
 
     .modal-btn.confirmation-confirm:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #B8941F 100%);
+        background: linear-gradient(135deg, #D97706 0%, #D97706 100%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 16px rgba(212, 175, 55, 0.4);
+        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.4);
     }
 
     .modal-btn.confirmation-cancel {
@@ -2766,7 +2855,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <!-- Top bar -->
     <div class="topbar">
-        <h1 class="dashboard-title">College of Business Administration and Accountancy Admin Dashboard</h1>
+        <h1 class="dashboard-title">Business Administration and Accountancy Admin Dashboard</h1>
         <a href="logout.php" class="logout-btn" onclick="return confirmLogout(event)">
             <i class="fas fa-sign-out-alt"></i>
             Logout
@@ -2798,9 +2887,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Enter student information below</p>
             </div>
 
+            <!-- Board Examinee Type Selection -->
+            <div class="examinee-type-section" style="margin-bottom: 24px; padding: 24px; background: linear-gradient(145deg, #E2DFDA 0%, #e8f5e9 100%); border-radius: 16px; border: 2px solid rgba(145, 179, 142, 0.3);">
+                <h4 style="margin-bottom: 16px; color: #1e4620; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-user-tag"></i>
+                    Board Examinee Type
+                </h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #d1e7dd; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="named">
+                        <input type="radio" name="examinee_type_radio" value="named" checked onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-graduate" style="color: #8BA49A; margin-right: 6px;"></i>
+                            Named Student
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Full personal information and exam details required</p>
+                    </label>
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #d1e7dd; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="anonymous">
+                        <input type="radio" name="examinee_type_radio" value="anonymous" onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-secret" style="color: #8BA49A; margin-right: 6px;"></i>
+                            Data Entry
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Exam data only, no personal information collected</p>
+                    </label>
+                </div>
+            </div>
+
             <!-- Tab Navigation -->
-            <div class="tab-navigation">
-                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')">
+            <div class="tab-navigation" id="tabNavigation">
+                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')" id="personalTabBtn">
                     <i class="fas fa-user"></i>
                     Personal Info
                 </button>
@@ -2811,6 +2926,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <form method="POST" action="">
+                <input type="hidden" name="examinee_type" id="examineeTypeHidden" value="named">
+                
                 <!-- Personal Information Tab -->
                 <div id="personalTab" class="tab-content active">
                     <div class="tab-header">
@@ -2917,6 +3034,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-grid">
                         <div class="form-group">
+                            <label for="course_exam">
+                                <i class="fas fa-graduation-cap"></i>Course *
+                            </label>
+                            <select id="course_exam" name="course" required>
+                                <option value="">Select Course</option>
+                                <?php foreach($courses as $course): ?>
+                                <option value="<?= htmlspecialchars($course) ?>"
+                                    <?= (isset($_POST['course']) && $_POST['course'] == $course) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($course) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group named-only-field">
                             <label for="year_graduated">
                                 <i class="fas fa-calendar"></i>Year Graduated *
                             </label>
@@ -2949,7 +3081,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 gap: 6px;
                 font-style: italic;
               ">
-                                <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+                                <i class="fas fa-info-circle" style="color: #D97706;"></i>
                                 Available dates will appear after selecting a board exam type
                             </div>
                         </div>
@@ -2970,7 +3102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 gap: 6px;
                 font-style: italic;
               ">
-                                <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+                                <i class="fas fa-info-circle" style="color: #D97706;"></i>
                                 Date must be between January 1, 2019 and December 31, 2024
                             </div>
                         </div>
@@ -3052,13 +3184,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="tab-footer">
-                        <button type="button" onclick="prevTab()" class="btn btn-secondary">
+                        <button type="button" id="prevTabBtn" onclick="prevTab()" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             Previous
                         </button>
                         <button type="button" id="addStudentBtn" onclick="addStudentDirect()" class="btn btn-primary">
                             <i class="fas fa-plus"></i>
-                            Add New Board Examinee
+                            <span id="submitBtnText">Add New Board Examinee</span>
                         </button>
                     </div>
                 </div>
@@ -3170,7 +3302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <div class="modal-buttons"
-                style="padding: 20px 28px; margin-top: 0; background: rgba(248, 250, 252, 0.8); border-top: 2px solid rgba(44, 90, 160, 0.1); border-radius: 0 0 20px 20px;">
+                style="padding: 20px 28px; margin-top: 0; background: rgba(248, 250, 252, 0.8); border-top: 2px solid rgba(217, 119, 6, 0.1); border-radius: 0 0 20px 20px;">
                 <button id="confirmAddStudent" class="modal-btn confirmation-confirm">
                     <i class="fas fa-check"></i>
                     Add to Database
@@ -3437,7 +3569,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 const infoDiv = boardExamDateSelect.parentElement.querySelector('div');
                 if (infoDiv) {
                     infoDiv.innerHTML = `
-              <i class="fas fa-check-circle" style="color: #D4AF37;"></i>
+              <i class="fas fa-check-circle" style="color: #F59E0B;"></i>
               ${availableDates.length} date(s) available for ${selectedOption.text}
             `;
                 }
@@ -3464,7 +3596,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const infoDiv = boardExamDateSelect.parentElement.querySelector('div');
             if (infoDiv) {
                 infoDiv.innerHTML = `
-            <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+            <i class="fas fa-info-circle" style="color: #D97706;"></i>
             Available dates will appear after selecting a board exam type
           `;
             }
@@ -3531,8 +3663,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Add validation visual feedback
             input.addEventListener('input', function() {
                 if (this.value.trim() !== '') {
-                    this.style.borderColor = '#D4AF37';
-                    this.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.15)';
+                    this.style.borderColor = '#F59E0B';
+                    this.style.boxShadow = '0 0 0 4px rgba(217, 119, 6, 0.15)';
                 } else if (this.hasAttribute('required')) {
                     this.style.borderColor = '#f59e0b';
                     this.style.boxShadow = '0 0 0 4px rgba(245, 158, 11, 0.15)';
@@ -3605,7 +3737,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ripple.style.cssText = `
             position: absolute;
             border-radius: 50%;
-            background: rgba(44, 90, 160, 0.3);
+            background: rgba(217, 119, 6, 0.3);
             transform: scale(0);
             animation: ripple 0.6s ease-out;
             width: 20px;
@@ -3733,7 +3865,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Interactive logout function with enhanced animations
     function handleInteractiveLogout(button) {
-        console.log('🚀 Interactive logout initiated!');
+        console.log('ðŸš€ Interactive logout initiated!');
 
         // Prevent double clicks
         if (button.classList.contains('loading')) {
@@ -3761,7 +3893,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // Wait for success animation, then redirect
             setTimeout(() => {
-                console.log('✅ Logout successful! Redirecting to login page...');
+                console.log('âœ… Logout successful! Redirecting to login page...');
                 window.location.href = 'index.php';
             }, 1500);
 
@@ -3777,11 +3909,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
           color: white;
           padding: 20px 32px;
           border-radius: 16px;
-          box-shadow: 0 16px 40px rgba(212, 175, 55, 0.4);
+          box-shadow: 0 16px 40px rgba(217, 119, 6, 0.4);
           z-index: 10002;
           font-family: 'Inter', sans-serif;
           font-weight: 700;
@@ -3861,7 +3993,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Enhanced add new board examinee function with beautiful confirmation modal
     function addStudentDirect() {
-        console.log('🚀 ADD NEW BOARD EXAMINEE: Starting validation and confirmation');
+        console.log('ðŸš€ ADD NEW BOARD EXAMINEE: Starting validation and confirmation');
 
         // Quick validation of required fields
         const form = document.querySelector('form');
@@ -3892,8 +4024,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 field.style.borderColor = '#ef4444';
                 field.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.15)';
             } else {
-                field.style.borderColor = '#D4AF37';
-                field.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.15)';
+                field.style.borderColor = '#F59E0B';
+                field.style.boxShadow = '0 0 0 4px rgba(217, 119, 6, 0.15)';
             }
         }
 
@@ -3959,7 +4091,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     modalContent.style.zIndex = '10011';
                 }
 
-                console.log('✨ Beautiful confirmation modal displayed with animations');
+                console.log('âœ¨ Beautiful confirmation modal displayed with animations');
             } else {
                 // Fallback: show the existing confirmation modal if present
                 const fallbackModal = document.getElementById('confirmationModal');
@@ -3993,16 +4125,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     function populateConfirmationModal() {
-        // Get form values
-        const firstName = document.getElementById('first_name').value.trim();
-        const lastName = document.getElementById('last_name').value.trim();
-        const middleName = document.getElementById('middle_name').value.trim();
-        const suffix = document.getElementById('suffix').value.trim();
-        const sex = document.getElementById('sex').value;
-        const course = document.getElementById('course').value;
-        const yearGraduated = document.getElementById('year_graduated').value;
-
-        // Get board exam date (from dropdown or custom input)
+        const examineeType = document.getElementById('examineeTypeHidden').value;
+        
         const boardExamDateSelect = document.getElementById('board_exam_date');
         const customDateInput = document.getElementById('custom_board_exam_date');
         let boardExamDate = '';
@@ -4018,18 +4142,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const result = document.getElementById('result').value;
         const examType = document.getElementById('exam_type').value;
         const boardExamType = document.getElementById('board_exam_type').value;
-        const rating = document.getElementById('rating').value;
 
-        // Build full name
-        let fullName = lastName + ', ' + firstName;
-        if (middleName) {
-            fullName += ' ' + middleName;
-        }
-        if (suffix) {
-            fullName += ' ' + suffix;
-        }
-
-        // Format exam date
         const examDate = new Date(boardExamDate);
         const formattedExamDate = examDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -4037,7 +4150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             day: 'numeric'
         });
 
-        // Set current date
         const currentDate = new Date().toLocaleDateString('en-US', {
             year: 'numeric',
             month: 'long',
@@ -4046,18 +4158,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             minute: '2-digit'
         });
 
-        // Populate modal fields
         document.getElementById('receiptDate').textContent = currentDate;
-        document.getElementById('confirmName').textContent = fullName;
-        document.getElementById('confirmSex').textContent = sex;
-        document.getElementById('confirmCourse').textContent = course;
-        document.getElementById('confirmYear').textContent = yearGraduated;
+        
+        if (examineeType === 'anonymous') {
+            const course = document.getElementById('course_exam').value;
+            
+            document.getElementById('confirmName').textContent = 'Data Entry';
+            document.getElementById('confirmSex').textContent = 'N/A';
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = 'N/A';
+            
+            const ratingRow = document.getElementById('ratingRow');
+            if (ratingRow) ratingRow.style.display = 'none';
+        } else {
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const middleName = document.getElementById('middle_name').value.trim();
+            const suffix = document.getElementById('suffix').value.trim();
+            const sex = document.getElementById('sex').value;
+            const course = document.getElementById('course').value;
+            const yearGraduated = document.getElementById('year_graduated').value;
+            const rating = document.getElementById('rating').value;
+
+            let fullName = lastName + ', ' + firstName;
+            if (middleName) {
+                fullName += ' ' + middleName;
+            }
+            if (suffix) {
+                fullName += ' ' + suffix;
+            }
+
+            document.getElementById('confirmName').textContent = fullName;
+            document.getElementById('confirmSex').textContent = sex;
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = yearGraduated;
+            
+            const ratingRow = document.getElementById('ratingRow');
+            if (rating && rating.trim() !== '') {
+                document.getElementById('confirmRating').textContent = rating + '%';
+                ratingRow.style.display = 'flex';
+            } else {
+                ratingRow.style.display = 'none';
+            }
+        }
+        
         document.getElementById('confirmExamDate').textContent = formattedExamDate;
         document.getElementById('confirmResult').textContent = result;
         document.getElementById('confirmExamType').textContent = examType;
         document.getElementById('confirmBoardExamType').textContent = boardExamType;
 
-        // Style result badge
         const resultElement = document.getElementById('confirmResult');
         resultElement.className = 'value result-badge';
         if (result === 'Passed') {
@@ -4082,7 +4231,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Handle confirmation modal buttons - SIMPLIFIED
     document.getElementById('confirmAddStudent').onclick = function() {
-        console.log('✅ Admin confirmed - submitting form');
+        console.log('âœ… Admin confirmed - submitting form');
         // restore scrolling
         try {
             document.body.style.overflow = '';
@@ -4136,6 +4285,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
 
     // Tab navigation functions
+    function toggleExamineeFields() {
+        const examineeType = document.querySelector('input[name="examinee_type_radio"]:checked').value;
+        const personalTab = document.getElementById('personalTab');
+        const personalTabBtn = document.getElementById('personalTabBtn');
+        const tabNavigation = document.getElementById('tabNavigation');
+        const examTab = document.getElementById('examTab');
+        const hiddenInput = document.getElementById('examineeTypeHidden');
+        const prevTabBtn = document.getElementById('prevTabBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+        
+        if (hiddenInput) {
+            hiddenInput.value = examineeType;
+        }
+        
+        document.querySelectorAll('.examinee-type-label').forEach(label => {
+            const type = label.getAttribute('data-type');
+            if (type === examineeType) {
+                label.style.borderColor = '#8BA49A';
+                label.style.background = 'linear-gradient(145deg, #E2DFDA 0%, #ffffff 100%)';
+                label.style.boxShadow = '0 4px 15px rgba(145, 179, 142, 0.2)';
+            } else {
+                label.style.borderColor = '#d1e7dd';
+                label.style.background = 'white';
+                label.style.boxShadow = 'none';
+            }
+        });
+        
+        if (examineeType === 'anonymous') {
+            if (personalTab) personalTab.style.display = 'none';
+            if (personalTabBtn) personalTabBtn.style.display = 'none';
+            if (prevTabBtn) prevTabBtn.style.display = 'none';
+            if (submitBtnText) submitBtnText.textContent = 'Add Exam Data';
+            
+            if (examTab) {
+                examTab.style.display = 'block';
+                examTab.classList.add('active');
+            }
+            
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = 'none';
+            });
+            
+            const personalFields = personalTab ? personalTab.querySelectorAll('input[required], select[required]') : [];
+            personalFields.forEach(field => {
+                field.removeAttribute('required');
+            });
+            
+            const yearField = document.getElementById('year_graduated');
+            const ratingField = document.getElementById('rating');
+            
+            if (yearField) yearField.removeAttribute('required');
+            if (ratingField) ratingField.removeAttribute('required');
+        } else {
+            if (personalTabBtn) personalTabBtn.style.display = 'flex';
+            if (prevTabBtn) prevTabBtn.style.display = '';
+            if (submitBtnText) submitBtnText.textContent = 'Add New Board Examinee';
+            
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = '';
+            });
+            
+            switchTab('personal');
+            
+            const lastNameField = document.getElementById('last_name');
+            const firstNameField = document.getElementById('first_name');
+            const sexField = document.getElementById('sex');
+            const courseField = document.getElementById('course');
+            const courseExamField = document.getElementById('course_exam');
+            const yearField = document.getElementById('year_graduated');
+            const ratingField = document.getElementById('rating');
+            
+            if (lastNameField) lastNameField.setAttribute('required', 'required');
+            if (firstNameField) firstNameField.setAttribute('required', 'required');
+            if (sexField) sexField.setAttribute('required', 'required');
+            if (courseField) courseField.setAttribute('required', 'required');
+            if (courseExamField) courseExamField.setAttribute('required', 'required');
+            if (yearField) yearField.setAttribute('required', 'required');
+            if (ratingField) ratingField.setAttribute('required', 'required');
+        }
+    }
+    
     function switchTab(tabName) {
         // Hide all tabs first
         document.querySelectorAll('.tab-content').forEach(tab => {
@@ -4190,7 +4420,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         icon: getFieldIcon(field.name)
                     });
                 } else {
-                    field.style.borderColor = '#D4AF37';
+                    field.style.borderColor = '#F59E0B';
                 }
             }
 
@@ -4230,12 +4460,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     function showValidationModal(missingFields, firstEmptyField) {
-        console.log('🚨 VALIDATION MODAL: Showing modal for', missingFields.length, 'missing fields');
+        console.log('ðŸš¨ VALIDATION MODAL: Showing modal for', missingFields.length, 'missing fields');
 
         try {
             const missingFieldsList = document.getElementById('missingFieldsList');
             if (!missingFieldsList) {
-                console.error('❌ Missing fields list element not found!');
+                console.error('âŒ Missing fields list element not found!');
                 // fallback: log and focus
                 console.log('Please fill in all required fields:', missingFields.map(f => f.name).join(', '));
                 if (firstEmptyField) firstEmptyField.focus();
@@ -4252,7 +4482,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             let hasExamTabMissing = false;
 
             missingFields.forEach(field => {
-                console.log('➕ Adding missing field to modal:', field.name, '(', field.element, ')');
+                console.log('âž• Adding missing field to modal:', field.name, '(', field.element, ')');
 
                 if (personalTabFields.includes(field.element)) {
                     hasPersonalTabMissing = true;
@@ -4297,12 +4527,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 try {
                     document.body.style.overflow = 'hidden';
                 } catch (e) {}
-                console.log('✅ Validation modal displayed with', missingFields.length, 'missing fields');
+                console.log('âœ… Validation modal displayed with', missingFields.length, 'missing fields');
 
                 const validationOkBtn = document.getElementById('validationOk');
                 if (validationOkBtn) {
                     validationOkBtn.onclick = function() {
-                        console.log('👆 Validation OK clicked - closing modal');
+                        console.log('ðŸ‘† Validation OK clicked - closing modal');
                         // hide with animation
                         validationModal.classList.remove('show');
                         validationModal.style.opacity = '0';
@@ -4314,13 +4544,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         // Smart navigation: go to the appropriate tab
                         if (hasPersonalTabMissing) {
-                            console.log('🔄 Switching to Personal Info tab (has missing fields)');
+                            console.log('ðŸ”„ Switching to Personal Info tab (has missing fields)');
                             switchTab('personal');
                         }
 
                         if (firstEmptyField) {
                             setTimeout(() => {
-                                console.log('🎯 Focusing on first empty field:', firstEmptyField.id);
+                                console.log('ðŸŽ¯ Focusing on first empty field:', firstEmptyField.id);
                                 firstEmptyField.focus();
                                 firstEmptyField.scrollIntoView({
                                     behavior: 'smooth',
@@ -4331,12 +4561,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     };
                 }
             } else {
-                console.error('❌ Validation modal not found!');
+                console.error('âŒ Validation modal not found!');
                 console.log('Please fill in all required fields:', missingFields.map(f => f.name).join(', '));
                 if (firstEmptyField) firstEmptyField.focus();
             }
         } catch (error) {
-            console.error('❌ Error in showValidationModal:', error);
+            console.error('âŒ Error in showValidationModal:', error);
             console.log('Please fill in all required fields:', missingFields.map(f => f.name).join(', '));
             if (firstEmptyField) firstEmptyField.focus();
         }
@@ -4371,7 +4601,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         allInputs.forEach(input => {
             input.addEventListener('blur', function() {
                 if (this.value.trim()) {
-                    this.style.borderColor = '#2c5aa0';
+                    this.style.borderColor = '#D97706';
                 } else {
                     this.style.borderColor = '#ef4444';
                 }
@@ -4379,7 +4609,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             input.addEventListener('input', function() {
                 if (this.value.trim()) {
-                    this.style.borderColor = '#2c5aa0';
+                    this.style.borderColor = '#D97706';
                 }
             });
         });
@@ -4410,19 +4640,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         if (input.value) {
             if (year < 2019 || year > 2024) {
-                showDateError(input, '⚠️ Board exam date must be between 2019-2024');
+                showDateError(input, 'âš ï¸ Board exam date must be between 2019-2024');
                 input.style.borderColor = '#ef4444';
                 input.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.15)';
                 return false;
             } else if (date > today) {
-                showDateError(input, '⚠️ Board exam date cannot be in the future');
+                showDateError(input, 'âš ï¸ Board exam date cannot be in the future');
                 input.style.borderColor = '#ef4444';
                 input.style.boxShadow = '0 0 0 4px rgba(239, 68, 68, 0.15)';
                 return false;
             } else {
                 // Valid date
-                input.style.borderColor = '#D4AF37';
-                input.style.boxShadow = '0 0 0 4px rgba(212, 175, 55, 0.15)';
+                input.style.borderColor = '#F59E0B';
+                input.style.boxShadow = '0 0 0 4px rgba(217, 119, 6, 0.15)';
                 return true;
             }
         }

@@ -1,5 +1,5 @@
 <?php
-// process_login.php - INSECURE VERSION (No Hashing)
+// process_login.php - SECURE VERSION (With Password Hashing)
 
 // Connect to the database
 $servername = "localhost";
@@ -15,52 +15,65 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = trim($_POST["email"]);
     $pass_from_form = trim($_POST["password"]); // This is the plain password from the form
 
-    // INSECURE: This query looks for an exact match of the plain password
-    // in the database.
-    $sql = "SELECT * FROM users WHERE email = ? AND password = ?";
+    // SECURE: Query only by email first
+    $sql = "SELECT id, email, password FROM users WHERE email = ?";
     $stmt = $conn->prepare($sql);
     
-    // Bind both the email and the plain password
-    $stmt->bind_param("ss", $email, $pass_from_form);
+    // Bind only the email
+    $stmt->bind_param("s", $email);
     
     $stmt->execute();
     $result = $stmt->get_result();
 
-    // If the query finds exactly one row, the login is successful
+    // Check if user exists
     if ($result->num_rows > 0) {
-        // SUCCESS!
-        $_SESSION["users"] = $email;
-        // Redirect based on department email
-        switch ($email) {
-            case 'eng_admin@lspu.edu.ph':
-                header("Location: dashboard_engineering.php");
-                break;
-            case 'cas_admin@lspu.edu.ph':
-                header("Location: dashboard_cas.php");
-                break;
-            case 'cbaa_admin@lspu.edu.ph':
-                header("Location: dashboard_cbaa.php");
-                break;
-            case 'ccje_admin@lspu.edu.ph':
-                header("Location: dashboard_ccje.php");
-                break;
-            case 'cte_admin@lspu.edu.ph':
-                header("Location: dashboard_cte.php");
-                break;
-            case 'icts_admin@lspu.edu.ph':
-                header("Location: dashboard_icts.php");
-                break;
-            case 'president@lspu.edu.ph':
-                header("Location: dashboard_president.php");
-                break;
-            default:
-                header("Location: homepage_admin.php");
+        $user = $result->fetch_assoc();
+        
+        // SECURE: Use password_verify() to check the hashed password
+        if (password_verify($pass_from_form, $user['password'])) {
+            // SUCCESS! Password matches
+            $_SESSION["users"] = $email;
+            
+            // Redirect based on department email
+            switch ($email) {
+                case 'eng_admin@lspu.edu.ph':
+                    header("Location: dashboard_engineering.php");
+                    break;
+                case 'cas_admin@lspu.edu.ph':
+                    header("Location: dashboard_cas.php");
+                    break;
+                case 'cbaa_admin@lspu.edu.ph':
+                    header("Location: dashboard_cbaa.php");
+                    break;
+                case 'ccje_admin@lspu.edu.ph':
+                    header("Location: dashboard_ccje.php");
+                    break;
+                case 'cte_admin@lspu.edu.ph':
+                    header("Location: dashboard_cte.php");
+                    break;
+                case 'icts_admin@lspu.edu.ph':
+                    header("Location: dashboard_icts.php");
+                    break;
+                case 'president@lspu.edu.ph':
+                    header("Location: dashboard_president.php");
+                    break;
+                default:
+                    header("Location: homepage_admin.php");
+            }
+            exit();
+        } else {
+            // FAILURE! Password doesn't match
+            header("Location: index.php?error=1");
+            exit();
         }
+    } else {
+        // FAILURE! No user found with that email
+        header("Location: index.php?error=1");
         exit();
     }
     
-    // FAILURE! No user was found with that email AND that exact password.
-    header("Location: index.php?error=1");
-    exit();
+    $stmt->close();
 }
+
+$conn->close();
 ?>

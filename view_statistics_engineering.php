@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph') {
+// Allow Engineering admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'eng_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }

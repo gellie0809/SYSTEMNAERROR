@@ -1,4 +1,4 @@
-# Database configuration (sensitive)
+﻿# Database configuration (sensitive)
 db_config.php
 
 # Backup files
@@ -33,3 +33,32 @@ tmp/
 # Environment files
 .env
 .env.local
+
+# Python virtual environments
+venv/
+env/
+ENV/
+.venv
+prediction_cas/venv/
+prediction_cbaa/venv/
+prediction_ccje/venv/
+prediction_cte/venv/
+prediction/venv/
+**/venv/
+
+# Python compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Machine learning models (large files)
+*.pkl
+*.h5
+*.model
+*.joblib
+
+# Database backups
+database_backups/
+*.sql

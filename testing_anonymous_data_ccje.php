@@ -909,6 +909,40 @@ $conn->close();
             width: 100% !important;
         }
     }
+
+    /* CCJE-specific sidebar color overrides for red theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(211, 47, 47, 0.08) !important;
+        border-right: 1px solid rgba(211, 47, 47, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #800020 !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #D32F2F 0%, #800020 100%) !important;
+        color: #fff !important;
+        box-shadow: 0 8px 25px rgba(211, 47, 47, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
     </style>
 </head>
 <body>
@@ -1036,7 +1070,7 @@ $conn->close();
                         <i class="fas fa-eraser"></i> Clear Form
                     </button>
                     <button type="submit" name="add_anonymous" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Anonymous Data
+                        <i class="fas fa-plus-circle"></i> Add Data
                     </button>
                 </div>
             </form>

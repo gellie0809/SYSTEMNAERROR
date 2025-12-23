@@ -163,32 +163,39 @@ $conn->close();
         box-sizing: border-box;
     }
 
-    body {
-        background: linear-gradient(120deg, #e0e7ef 0%, #f7fafc 100%);
-        margin: 0;
-        font-family: 'Inter', sans-serif;
-        min-height: 100vh;
+     @media (max-width: 900px) {
+        .main-content {
+            margin-left: 80px;
+        }
+
+        .topbar {
+            left: 80px;
+        }
+
+        .sidebar {
+            width: 80px !important;
+
+        }
     }
 
-    /* Sidebar styling moved to css/sidebar.css (shared) */
+    @media (max-width: 600px) {
+        .sidebar {
+            display: none;
+        }
 
-    .topbar {
-        position: fixed;
-        top: 0;
-        left: 260px;
-        right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
-        height: 70px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
-        z-index: 50;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        .topbar,
+        .main-content {
+            margin-left: 80px;
+        }
+
+        .topbar {
+            padding: 16px 20px;
+        }
+
+        .topbar {
+            left: 0px;
+        }
     }
-
-
     @media (max-width: 900px) {
         .main-content {
             margin-left: 80px;
@@ -223,6 +230,46 @@ $conn->close();
         }
     }
 
+     /* CTE-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a {
+        color: #c1d8f0 !important;
+    }
+    .sidebar-nav i,
+    .sidebar-nav ion-icon {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a.active,
+    .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #4663ac 0%, #c1d8f0 100%) !important;
+        color: #fff !important;
+    }
+    
+    .sidebar-nav a.active i,
+    .sidebar-nav a.active ion-icon,
+    .sidebar-nav a:hover i,
+    .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
+
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #4663ac 0%, #c1d8f0 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
     .dashboard-title {
         font-size: 1.4rem;
         color: #fff;
@@ -255,6 +302,8 @@ $conn->close();
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
+
+
 
     .main-content {
         margin-left: 260px;

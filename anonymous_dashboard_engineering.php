@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'eng_admin@lspu.edu.ph') {
+// Allow Engineering admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'eng_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -171,7 +171,7 @@ $conn->close();
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Anonymous Dashboard - Engineering</title>
+    <title>Data Dashboard - Engineering</title>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="css/sidebar.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1338,10 +1338,15 @@ $conn->close();
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Anonymous Data Dashboard</h2>
-            <a href="testing_anonymous_data.php" class="add-data-btn">
-                <i class="fas fa-plus-circle"></i> Add Anonymous Data
-            </a>
+            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Data Dashboard</h2>
+            <div style="display: flex; gap: 12px;">
+                <a href="prediction_engineering.php" class="add-data-btn" style="background: linear-gradient(135deg, #3B6255 0%, #8BA49A 100%);">
+                    <i class="fas fa-brain"></i> Predictions
+                </a>
+                <a href="testing_anonymous_data.php" class="add-data-btn">
+                    <i class="fas fa-plus-circle"></i> Add Data
+                </a>
+            </div>
         </div>
 
         <!-- Statistics Grid -->
@@ -1468,7 +1473,7 @@ $conn->close();
         <!-- Data Table -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-table"></i> Anonymous Data Records</h3>
+                <h3><i class="fas fa-table"></i> Data Records</h3>
                 <span style="color: #64748b; font-size: 0.9rem;">
                     <?php echo number_format($total_records); ?> total records
                 </span>
@@ -1530,8 +1535,8 @@ $conn->close();
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h3>No Anonymous Data Yet</h3>
-                    <p>Start by adding anonymous board examinee data using the form.</p>
+                    <h3>No Data Yet</h3>
+                    <p>Start by adding board examinee data using the form.</p>
                     <br>
                     <a href="testing_anonymous_data.php" class="add-data-btn">
                         <i class="fas fa-plus-circle"></i> Add First Record
@@ -1545,7 +1550,7 @@ $conn->close();
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Anonymous Record</h3>
+                <h3><i class="fas fa-edit"></i> Edit Record</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -1848,7 +1853,7 @@ $conn->close();
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this anonymous record? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }

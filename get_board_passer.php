@@ -6,7 +6,7 @@ require_once __DIR__ . '/db_config.php';
 // Allowed departments
 $allowedDepartments = [
     'Engineering',
-    'Arts and Science',
+    'Arts and Sciences',
     'Business Administration and Accountancy',
     'Criminal Justice Education',
     'Teacher Education'

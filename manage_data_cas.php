@@ -240,24 +240,79 @@ if ($selected_exam_type_id > 0) {
         box-sizing: border-box;
     }
 
-    body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
-        min-height: 100vh;
+    /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
     }
+
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #FFA1C3 0%, #830034 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(131, 0, 52, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
+     body {
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
+        /* Pink gradient background */
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 161, 195, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(131, 0, 52, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(79, 0, 36, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
 
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        box-shadow: 0 4px 20px rgba(79, 0, 36, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -314,26 +369,26 @@ if ($selected_exam_type_id > 0) {
     }
 
     .panel {
-        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #fdf2f8 100%);
         border-radius: 16px;
         padding: 24px;
-        box-shadow: 0 10px 40px rgba(6, 182, 212, 0.15);
-        border: 2px solid rgba(6, 182, 212, 0.15);
+        box-shadow: 0 10px 40px rgba(131, 0, 52, 0.15);
+        border: 2px solid rgba(236, 72, 153, 0.15);
         transition: all 0.3s ease;
     }
 
     .panel:hover {
-        box-shadow: 0 15px 50px rgba(6, 182, 212, 0.25);
-        border-color: rgba(6, 182, 212, 0.25);
+        box-shadow: 0 15px 50px rgba(131, 0, 52, 0.25);
+        border-color: rgba(236, 72, 153, 0.35);
         transform: translateY(-2px);
     }
 
     .panel h3 {
         margin: 0 0 14px 0;
-        color: #0e7490;
+        color: #4F0024;
         font-size: 1.1rem;
         padding-bottom: 8px;
-        border-bottom: 2px solid #06b6d4;
+        border-bottom: 2px solid #830034;
     }
 
     .list-item {
@@ -342,16 +397,16 @@ if ($selected_exam_type_id > 0) {
         align-items: center;
         padding: 14px 16px;
         border-radius: 12px;
-        background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
-        border: 1px solid rgba(6, 182, 212, 0.1);
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
+        border: 1px solid rgba(131, 0, 52, 0.1);
         transition: all 0.2s ease;
     }
 
     .list-item:hover {
-        background: linear-gradient(135deg, #cffafe 0%, #a5f3fc 100%);
-        border-color: rgba(6, 182, 212, 0.3);
+        background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+        border-color: rgba(236, 72, 153, 0.3);
         transform: translateX(4px);
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.15);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.2);
     }
 
     .list-item+.list-item {
@@ -365,7 +420,7 @@ if ($selected_exam_type_id > 0) {
     }
 
     .btn {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         padding: 10px 16px;
         border-radius: 10px;
@@ -378,12 +433,12 @@ if ($selected_exam_type_id > 0) {
         font-weight: 600;
         font-size: 0.9rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
     }
 
     .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
     }
 
     .muted {
@@ -413,8 +468,8 @@ if ($selected_exam_type_id > 0) {
     input[type="date"]:focus,
     select:focus {
         outline: none;
-        border-color: #06b6d4;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1);
+        border-color: #830034;
+        box-shadow: 0 0 0 3px rgba(131, 0, 52, 0.1);
     }
 
     .actions {
@@ -432,7 +487,7 @@ if ($selected_exam_type_id > 0) {
     }
 
     .edit-btn {
-        background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         padding: 10px 16px;
         border-radius: 10px;
@@ -445,12 +500,12 @@ if ($selected_exam_type_id > 0) {
         font-weight: 600;
         font-size: 0.9rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(249, 115, 22, 0.2);
+        box-shadow: 0 4px 14px rgba(236, 72, 153, 0.3);
     }
 
     .edit-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(249, 115, 22, 0.4);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.5);
     }
 
     .msg {
@@ -489,7 +544,7 @@ if ($selected_exam_type_id > 0) {
     }
 
     .view-btn {
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #c026d3 0%, #a21caf 100%);
         color: #fff;
         padding: 10px 16px;
         border-radius: 10px;
@@ -502,12 +557,12 @@ if ($selected_exam_type_id > 0) {
         font-weight: 600;
         font-size: 0.9rem;
         transition: all 0.3s ease;
-        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.2);
+        box-shadow: 0 4px 14px rgba(192, 38, 211, 0.3);
     }
 
     .view-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 8px 25px rgba(192, 38, 211, 0.5);
     }
 
     .cancel-btn {
@@ -551,7 +606,7 @@ if ($selected_exam_type_id > 0) {
         left: 0;
         right: 0;
         height: 4px;
-        background: linear-gradient(90deg, #06b6d4 0%, #0891b2 50%, #06b6d4 100%);
+        background: linear-gradient(90deg, #830034 0%, #4F0024 50%, #830034 100%);
         background-size: 200% 100%;
         animation: shimmer 3s linear infinite;
     }
@@ -579,11 +634,11 @@ if ($selected_exam_type_id > 0) {
     }
 
     .modal-content h3 {
-        color: #0e7490;
+        color: #4F0024;
         font-size: 1.4rem;
         margin-bottom: 24px;
         padding-bottom: 16px;
-        border-bottom: 3px solid #06b6d4;
+        border-bottom: 3px solid #830034;
         display: flex;
         align-items: center;
         gap: 12px;
@@ -594,7 +649,7 @@ if ($selected_exam_type_id > 0) {
     .modal-content label {
         display: block;
         margin-bottom: 10px;
-        color: #0e7490;
+        color: #4F0024;
         font-weight: 700;
         font-size: 0.95rem;
         letter-spacing: 0.3px;
@@ -617,25 +672,25 @@ if ($selected_exam_type_id > 0) {
     .modal-content input[type="number"]:focus,
     .modal-content input[type="date"]:focus {
         outline: none;
-        border-color: #06b6d4;
-        box-shadow: 0 0 0 4px rgba(6, 182, 212, 0.15), 0 4px 12px rgba(6, 182, 212, 0.2);
+        border-color: #830034;
+        box-shadow: 0 0 0 4px rgba(131, 0, 52, 0.15), 0 4px 12px rgba(131, 0, 52, 0.2);
         transform: translateY(-2px);
     }
 
     .modal-content .btn {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         padding: 14px 32px;
         border-radius: 14px;
         font-size: 1.05rem;
         font-weight: 700;
-        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35);
         letter-spacing: 0.3px;
     }
 
     .modal-content .btn:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
         transform: translateY(-3px);
-        box-shadow: 0 12px 30px rgba(16, 185, 129, 0.5);
+        box-shadow: 0 12px 30px rgba(236, 72, 153, 0.5);
     }
 
     .modal-content .btn:active {
@@ -668,7 +723,7 @@ if ($selected_exam_type_id > 0) {
         display: none;
         position: fixed;
         inset: 0;
-        background: rgba(6, 182, 212, 0.15);
+        background: rgba(131, 0, 52, 0.15);
         align-items: center;
         justify-content: center;
         z-index: 1000;
@@ -693,11 +748,11 @@ if ($selected_exam_type_id > 0) {
     }
 
     .add-form-section {
-        background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
         padding: 18px;
         border-radius: 12px;
         margin-bottom: 20px;
-        border: 2px solid #7dd3fc;
+        border: 2px solid #FFA1C3;
     }
 
     .confirm-modal-overlay {
@@ -713,11 +768,11 @@ if ($selected_exam_type_id > 0) {
     }
 
     .confirm-modal-content {
-        background: linear-gradient(135deg, #ffffff 0%, #f0fdfa 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #FFF0FC 100%);
         padding: 40px;
         border-radius: 24px;
         width: 480px;
-        box-shadow: 0 30px 80px rgba(6, 182, 212, 0.4), 0 0 0 1px rgba(6, 182, 212, 0.2);
+        box-shadow: 0 30px 80px rgba(131, 0, 52, 0.4), 0 0 0 1px rgba(131, 0, 52, 0.2);
         animation: confirmSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
         text-align: center;
     }
@@ -738,14 +793,14 @@ if ($selected_exam_type_id > 0) {
         width: 80px;
         height: 80px;
         margin: 0 auto 24px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #830034 0%, #4F0024 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 3rem;
         color: white;
-        box-shadow: 0 12px 35px rgba(6, 182, 212, 0.5);
+        box-shadow: 0 12px 35px rgba(131, 0, 52, 0.5);
         animation: iconPulse 2.5s ease-in-out infinite;
         position: relative;
     }
@@ -755,7 +810,7 @@ if ($selected_exam_type_id > 0) {
         position: absolute;
         inset: -8px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #830034 0%, #4F0024 100%);
         opacity: 0.2;
         animation: ringPulse 2.5s ease-in-out infinite;
     }
@@ -787,7 +842,7 @@ if ($selected_exam_type_id > 0) {
     }
 
     .confirm-title {
-        color: #0e7490;
+        color: #4F0024;
         font-size: 1.6rem;
         font-weight: 800;
         margin-bottom: 14px;
@@ -862,7 +917,7 @@ if ($selected_exam_type_id > 0) {
     <?php include __DIR__ . '/includes/cas_nav.php'; ?>
 
     <div class="topbar">
-        <h1 class="dashboard-title">CAS Admin Dashboard</h1>
+        <h1 class="dashboard-title">College of Arts and Science Admin Dashboard</h1>
         <div style="display:flex;align-items:center;gap:12px;">
             <button onclick="showKeyboardShortcutsHelp && showKeyboardShortcutsHelp()" class="shortcuts-btn"
                 title="Ctrl + H"
@@ -966,8 +1021,8 @@ if ($selected_exam_type_id > 0) {
                     <?php else: ?>
                     <?php $etname = null; foreach ($exam_types as $e) if ($e['id']==$selected_exam_type_id) $etname=$e['name']; ?>
                     <div
-                        style="margin-bottom:16px; padding:12px; background:linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%); border-radius:10px; border:2px solid #7dd3fc;">
-                        <strong style="color:#0e7490; font-size:1.05rem;"><i class="fas fa-check-circle"></i>
+                        style="margin-bottom:16px; padding:12px; background:linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%); border-radius:10px; border:2px solid #FFA1C3;">
+                        <strong style="color:#4F0024; font-size:1.05rem;"><i class="fas fa-check-circle"></i>
                             <?= htmlspecialchars($etname ?? 'Selected') ?></strong>
                     </div>
 
@@ -1059,7 +1114,7 @@ if ($selected_exam_type_id > 0) {
                 <input type="hidden" name="exam_type_id" id="editExamTypeId">
                 <div style="margin-bottom:20px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-tag"></i> Exam Type Name</label>
                     <input type="text" name="edit_exam_type_name" id="editExamTypeName"
                         placeholder="Enter exam type name" style="font-size:1rem;">
@@ -1080,14 +1135,14 @@ if ($selected_exam_type_id > 0) {
                 <input type="hidden" name="subject_id" id="editSubjectId">
                 <div style="margin-bottom:18px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-tag"></i> Subject Name</label>
                     <input type="text" name="edit_subject_name" id="editSubjectName" placeholder="Enter subject name"
                         style="font-size:1rem;">
                 </div>
                 <div style="margin-bottom:20px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-list-ol"></i> Total Items</label>
                     <input type="number" name="edit_subject_items" id="editSubjectItems" min="1"
                         placeholder="Enter total items" style="font-size:1rem;">
@@ -1107,7 +1162,7 @@ if ($selected_exam_type_id > 0) {
                 <input type="hidden" name="course_id" id="editCourseId">
                 <div style="margin-bottom:20px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-tag"></i> Course Name</label>
                     <input type="text" name="edit_course_name" id="editCourseName" placeholder="Enter course name"
                         style="font-size:1rem;">
@@ -1131,13 +1186,13 @@ if ($selected_exam_type_id > 0) {
                 <input type="hidden" name="exam_date_id" id="editExamDateId">
                 <div style="margin-bottom:18px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-calendar-day"></i> Exam Date</label>
                     <input type="month" name="edit_exam_date_value" id="editExamDateValue" style="font-size:1rem;">
                 </div>
                 <div style="margin-bottom:20px;">
                     <label
-                        style="display:block; margin-bottom:8px; color:#0e7490; font-weight:600; font-size:0.9rem;"><i
+                        style="display:block; margin-bottom:8px; color:#4F0024; font-weight:600; font-size:0.9rem;"><i
                             class="fas fa-info-circle"></i> Description (Optional)</label>
                     <input type="text" name="edit_exam_date_description" id="editExamDateDescription"
                         placeholder="Enter description" style="font-size:1rem;">

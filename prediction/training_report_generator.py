@@ -18,30 +18,31 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 
 class TrainingReportPDF(FPDF):
-    def __init__(self):
+    def __init__(self, dept_name='Engineering', dept_color=(59, 98, 85), dept_color_light=(139, 164, 154)):
         super().__init__()
         self.set_auto_page_break(auto=True, margin=15)
+        self.dept_name = dept_name
+        self.dept_color = dept_color
+        self.dept_color_light = dept_color_light
         
     def header(self):
         # LSPU Header
         self.set_font('Arial', 'B', 16)
-        self.set_text_color(59, 98, 85)  # LSPU Green
+        self.set_text_color(self.dept_color[0], self.dept_color[1], self.dept_color[2])
         self.cell(0, 10, 'LAGUNA STATE POLYTECHNIC UNIVERSITY', 0, 1, 'C')
         self.set_font('Arial', 'I', 10)
-        self.set_text_color(139, 164, 154)
-        self.cell(0, 5, 'College of Engineering', 0, 1, 'C')
+        self.set_text_color(self.dept_color_light[0], self.dept_color_light[1], self.dept_color_light[2])
+        dept_name = 'College of Arts and Sciences' if self.dept_name == 'Arts and Sciences' else 'College of Engineering'
+        self.cell(0, 5, dept_name, 0, 1, 'C')
         self.set_text_color(0, 0, 0)
         self.ln(5)
         
     def footer(self):
         self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.set_text_color(128, 128, 128)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
-        
+    
     def chapter_title(self, title, icon=''):
         self.set_font('Arial', 'B', 14)
-        self.set_fill_color(139, 164, 154)
+        self.set_fill_color(self.dept_color_light[0], self.dept_color_light[1], self.dept_color_light[2])
         self.set_text_color(255, 255, 255)
         self.cell(0, 10, f'  {icon} {title}', 0, 1, 'L', True)
         self.set_text_color(0, 0, 0)
@@ -64,13 +65,24 @@ class TrainingReportPDF(FPDF):
         self.ln(3)
 
 class TrainingReportGenerator:
-    def __init__(self):
+    def __init__(self, department='Engineering'):
+        self.department = department
         self.db_config = {
             'host': 'localhost',
             'user': 'root',
             'password': '',
             'database': 'project_db'
         }
+        
+        # Set department-specific settings
+        if department == 'Arts and Sciences':
+            self.dept_short = 'CAS'
+            self.dept_color = (159, 18, 57)  # Rose color for CAS
+            self.dept_color_light = (254, 205, 211)
+        else:
+            self.dept_short = 'COE'
+            self.dept_color = (59, 98, 85)  # Green color for Engineering
+            self.dept_color_light = (139, 164, 154)
         
     def collect_training_data(self):
         """Collect and prepare training data"""
@@ -89,13 +101,13 @@ class TrainingReportGenerator:
                     board_exam_date,
                     department
                 FROM anonymous_board_passers
-                WHERE department = 'Engineering'
+                WHERE department = %s
                 AND (is_deleted IS NULL OR is_deleted = 0)
                 AND board_exam_date IS NOT NULL
                 ORDER BY board_exam_date ASC
             """
             
-            cursor.execute(query)
+            cursor.execute(query, (self.department,))
             data = cursor.fetchall()
             cursor.close()
             conn.close()
@@ -189,15 +201,26 @@ class TrainingReportGenerator:
                 accuracy_df = None
                 
             return validation_data, accuracy_df
-            
         except Exception as e:
             print(f"Error loading validation results: {e}")
             return None, None
             
-    def generate_pdf_report(self, output_path='output/training_report.pdf'):
+    def generate_pdf_report(self, output_path='output/training_report.pdf', department=None):
         """Generate comprehensive PDF report"""
+        # Allow override of department for this specific report
+        if department:
+            self.department = department
+            if department == 'Arts and Sciences':
+                self.dept_short = 'CAS'
+                self.dept_color = (159, 18, 57)
+                self.dept_color_light = (254, 205, 211)
+            else:
+                self.dept_short = 'COE'
+                self.dept_color = (59, 98, 85)
+                self.dept_color_light = (139, 164, 154)
+        
         print("\n" + "="*80)
-        print(" GENERATING TRAINING REPORT PDF".center(80))
+        print(f" GENERATING {self.department.upper()} TRAINING REPORT PDF".center(80))
         print("="*80 + "\n")
         
         # Collect data
@@ -221,13 +244,17 @@ class TrainingReportGenerator:
         
         # Create PDF
         print("\nStep 4: Generating PDF document...")
-        pdf = TrainingReportPDF()
+        pdf = TrainingReportPDF(
+            dept_name=self.department,
+            dept_color=self.dept_color,
+            dept_color_light=self.dept_color_light
+        )
         
         # Cover Page
         pdf.add_page()
         pdf.ln(40)
         pdf.set_font('Arial', 'B', 24)
-        pdf.set_text_color(59, 98, 85)
+        pdf.set_text_color(self.dept_color[0], self.dept_color[1], self.dept_color[2])
         pdf.multi_cell(0, 12, 'AI BOARD EXAM PREDICTION\nTRAINING REPORT', 0, 'C')
         pdf.ln(10)
         
@@ -235,7 +262,8 @@ class TrainingReportGenerator:
         pdf.set_text_color(0, 0, 0)
         pdf.cell(0, 8, f'Report Generated: {datetime.now().strftime("%B %d, %Y at %I:%M %p")}', 0, 1, 'C')
         pdf.ln(5)
-        pdf.cell(0, 8, 'College of Engineering', 0, 1, 'C')
+        dept_full = 'College of Arts and Sciences' if self.department == 'Arts and Sciences' else 'College of Engineering'
+        pdf.cell(0, 8, dept_full, 0, 1, 'C')
         pdf.cell(0, 8, 'Laguna State Polytechnic University', 0, 1, 'C')
         
         # Executive Summary
@@ -243,7 +271,7 @@ class TrainingReportGenerator:
         pdf.chapter_title('EXECUTIVE SUMMARY', 'SUMMARY')
         
         pdf.set_font('Arial', '', 10)
-        summary_text = f"""This report documents the complete machine learning training process for the AI Board Exam Prediction System. The system uses advanced regression algorithms to predict board exam passing rates for the College of Engineering.
+        summary_text = f"""This report documents the complete machine learning training process for the AI Board Exam Prediction System. The system uses advanced regression algorithms to predict board exam passing rates for the {dept_full}.
 
 Key Highlights:
 - Total Dataset: {len(df)} aggregated statistical records

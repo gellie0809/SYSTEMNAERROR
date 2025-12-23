@@ -150,7 +150,7 @@ $conn->close();
 <head>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <title>Testing Anonymous Data - Engineering</title>
+    <title>Testing Data - Engineering</title>
     <link rel="stylesheet" href="style.css"/>
     <link rel="stylesheet" href="css/sidebar.css"/>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1100,12 +1100,12 @@ $conn->close();
                     <div class="icon-wrapper">
                         <i class="fas fa-flask"></i>
                     </div>
-                    <span>Add Anonymous Board Examinee Data</span>
+                    <span>Add Board Examinee Data</span>
                 </h2>
             </div>
             <a href="anonymous_dashboard_engineering.php" class="view-dashboard-btn">
                 <i class="fas fa-chart-pie"></i> 
-                <span>View Anonymous Dashboard</span>
+                <span>View Dashboard</span>
             </a>
         </div>
 
@@ -1128,8 +1128,8 @@ $conn->close();
                 <i class="fas fa-info-circle"></i>
             </div>
             <div class="info-content">
-                <h3>About Testing Anonymous Data</h3>
-                <p>This feature allows you to add anonymous board examinee data for testing and statistical purposes.</p>
+                <h3>About Testing Data</h3>
+                <p>This feature allows you to add board examinee data for testing and statistical purposes.</p>
                 <p class="note"><i class="fas fa-shield-alt"></i> <strong>Note:</strong> No personal information (name, course, etc.) is required. Only exam-related data is collected.</p>
             </div>
         </div>
@@ -1223,7 +1223,7 @@ $conn->close();
                         <i class="fas fa-eraser"></i> Clear Form
                     </button>
                     <button type="submit" name="add_anonymous" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Anonymous Data
+                        <i class="fas fa-plus-circle"></i> Add Data
                     </button>
                 </div>
             </form>

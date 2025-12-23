@@ -1,5 +1,5 @@
 {
-  "trained_date": "2025-12-05T07:46:15.031263",
+  "trained_date": "2025-12-15T02:17:11.101512",
   "best_model": "Linear Regression",
   "features": [
     "year_normalized",

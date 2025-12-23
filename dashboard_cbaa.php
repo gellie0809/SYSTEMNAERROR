@@ -5,11 +5,14 @@ session_start();
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
 ini_set('display_errors', 0);
 
-// Only allow College of Business Administration and Accountancy admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph') {
+// Allow College of Business Administration and Accountancy admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cbaa_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
+
+// Check if user is ICTS admin
+$is_icts_admin = ($_SESSION["users"] === 'icts_admin@lspu.edu.ph');
 
 // Database connection
 $servername = "localhost";
@@ -21,8 +24,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error); 
 }
 
-// Fetch board passers sorted alphabetically by name
-$passers = $conn->query("SELECT *, CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name) as full_name FROM board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY first_name ASC");
+// Fetch anonymous board data (exclude soft-deleted records)
+$passers = $conn->query("SELECT * FROM anonymous_board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY id DESC");
 $total_records = $passers->num_rows;
 // Reset the result set for table display
 $passers->data_seek(0);
@@ -131,10 +134,26 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     body {
-        background: #f3e9adff;
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 50%, #FDE68A 100%);
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
+        position: relative;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(217, 119, 6, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(251, 191, 36, 0.06) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
     }
 
     /* Sidebar styling moved to css/sidebar.css (shared) */
@@ -144,29 +163,29 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         top: 0;
         left: 260px;
         right: 0;
-        background: #E8B923;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(135, 121, 40, 0.3);
+        box-shadow: 0 4px 20px rgba(217, 119, 6, 0.3);
         z-index: 50;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     .dashboard-title {
         font-size: 1.4rem;
-        color: #201D18;
+        color: #FFFFFF;
         font-weight: 700;
         letter-spacing: 1px;
         margin: 0;
     }
 
     .logout-btn {
-        background: rgba(32, 29, 24, 0.1);
-        color: #201D18;
-        border: 2px solid rgba(32, 29, 24, 0.3);
+        background: rgba(255, 255, 255, 0.2);
+        color: #FFFFFF;
+        border: 2px solid rgba(255, 255, 255, 0.4);
         border-radius: 12px;
         padding: 12px 24px;
         font-size: 0.95rem;
@@ -182,10 +201,34 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .logout-btn:hover {
-        background: rgba(32, 29, 24, 0.2);
-        border-color: rgba(32, 29, 24, 0.5);
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.3);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .icts-back-btn {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .icts-back-btn:hover {
+        background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
     }
 
     .main-content {
@@ -210,11 +253,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         font-size: 2.2rem;
         font-weight: 700;
         margin-bottom: 40px;
-        color: #1a1614;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        color: #FFFFFF;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         padding: 24px 40px;
         border-radius: 16px;
-        box-shadow: 0 12px 40px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 12px 40px rgba(217, 119, 6, 0.3);
         text-align: center;
         letter-spacing: 1.2px;
         text-transform: uppercase;
@@ -223,9 +266,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .shortcuts-btn {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
-        border: 2px solid #877928;
+        background: linear-gradient(135deg, #FBBF24 0%, #FCD34D 100%);
+        color: #78350F;
+        border: 2px solid #D97706;
         border-radius: 12px;
         padding: 10px 16px;
         font-size: 0.9rem;
@@ -242,10 +285,10 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .shortcuts-btn:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #B8941F 100%);
-        border-color: rgba(135, 121, 40, 0.55);
+        background: linear-gradient(135deg, #FCD34D 0%, #FDE68A 100%);
+        border-color: #F59E0B;
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.3);
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.3);
     }
 
     .shortcuts-btn:active {
@@ -254,8 +297,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .guide-close-btn {
-        background: #E8B923;
-        color: #201D18;
+        background: #F59E0B;
+        color: #FFFFFF;
         border: none;
         border-radius: 8px;
         padding: 12px 24px;
@@ -268,7 +311,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .guide-close-btn:hover {
         transform: scale(1.05);
-        box-shadow: 0 8px 25px rgba(135, 121, 40, 0.4);
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.4);
     }
 
     .guide-close-btn:active {
@@ -340,11 +383,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         font-size: 1.8rem;
         font-weight: 700;
         margin-bottom: 24px;
-        color: #201D18;
-        background: #E8B923;
+        color: #FFFFFF;
+        background: #F59E0B;
         padding: 20px 32px;
         border-radius: 12px;
-        box-shadow: 0 4px 12px rgba(135, 121, 40, 0.3);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
         text-align: center;
         letter-spacing: 0.8px;
         text-transform: uppercase;
@@ -381,17 +424,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .board-table th {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
-        font-weight: 600;
-        font-size: 0.85rem;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        color: #FFFFFF;
+        font-weight: 700;
+        font-size: 0.88rem;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 1.2px;
         position: sticky;
         top: 0;
         z-index: 10;
-        box-shadow: 0 2px 8px rgba(135, 121, 40, 0.25);
-        border-bottom: 2px solid rgba(135, 121, 40, 0.3);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
+        border-bottom: 3px solid #B45309;
     }
 
     .board-table th:first-child {
@@ -412,9 +455,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .board-table tbody tr:hover {
-        background: #F5E6C3;
+        background: #FEF3C7;
         transform: translateY(-1px);
-        box-shadow: 0 4px 16px rgba(135, 121, 40, 0.2);
+        box-shadow: 0 4px 16px rgba(217, 119, 6, 0.2);
     }
 
     .board-table tbody tr:last-child td:first-child {
@@ -454,17 +497,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     select:focus,
     textarea:focus {
         outline: none;
-        border-color: #06b6d4;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        border-color: #F59E0B;
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
     }
 
-    /* Small teal buttons */
+    /* Golden action buttons */
     .btn,
     .action-btn,
     button.small {
         background: #ffffff;
-        color: #06b6d4;
-        border: 1px solid #06b6d4;
+        color: #D97706;
+        border: 1px solid #D97706;
         padding: 8px 12px;
         border-radius: 10px;
         font-weight: 600;
@@ -475,9 +518,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .btn:hover,
     .action-btn:hover,
     button.small:hover {
-        background: #06b6d4;
+        background: #D97706;
         color: #ffffff;
-        box-shadow: 0 6px 16px rgba(3, 105, 112, 0.22);
+        box-shadow: 0 6px 16px rgba(217, 119, 6, 0.25);
     }
 
     /* Column-specific styling */
@@ -555,19 +598,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .status-passed {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        /* Emerald Green */
-        color: #ffffff;
-        border-color: #10b981;
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+         background: #FEF3C7;
+        color: #4c3e06ff;
+        border-color: #cda919ff;
+        box-shadow: 0 2px 8px #ecc012ff;
     }
 
     .status-failed {
-        background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-        /* Coral Red */
-        color: #ffffff;
-        border-color: #f87171;
-        box-shadow: 0 2px 8px rgba(248, 113, 113, 0.3);
+        background: #dbaf00ff;
+        color: #f3e5afff;
+        border-color: #cda919ff;
+        box-shadow: 0 2px 8px #ecc012ff;
     }
 
     .status-cond {
@@ -579,19 +620,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .exam-first-timer {
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
-        /* Purple */
-        color: #ffffff;
-        border-color: #8b5cf6;
-        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        background: #FEF3C7;
+        color: #4c3e06ff;
+        border-color: #cda919ff;
+        box-shadow: 0 2px 8px #ecc012ff;
     }
 
     .exam-repeater {
-        background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
-        /* Slate */
-        color: #ffffff;
-        border-color: #94a3b8;
-        box-shadow: 0 2px 8px rgba(148, 163, 184, 0.3);
+        background: #8e7a28ff;
+        color: #f3e5afff;
+        border-color: #cda919ff;
+        box-shadow: 0 2px 8px #ecc012ff;
     }
 
     /* Action Buttons */
@@ -653,15 +692,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .delete-btn {
-        background: #ef4444 !important;
-        /* Coral Red */
+        background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%) !important;
         color: white !important;
     }
 
     .delete-btn:hover {
-        background: #dc2626 !important;
-        /* Deeper Red */
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
+        background: linear-gradient(135deg, #C2410C 0%, #9A3412 100%) !important;
+        box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4) !important;
     }
 
     .save-btn {
@@ -738,8 +775,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .no-records {
         text-align: center;
         padding: 80px 40px;
-        background: linear-gradient(135deg, #f0fdfa 0%, #ecfeff 100%);
-        border: 2px dashed #06b6d4;
+        background: linear-gradient(135deg, #FFFBEA 0%, #FEF3C7 100%);
+        border: 2px dashed #F59E0B;
         border-radius: 20px;
         margin: 40px 0;
     }
@@ -759,8 +796,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .add-first-btn {
-        background: linear-gradient(135deg, #D4AF37, #B8941F);
-        color: #1a1614;
+        background: linear-gradient(135deg, #FBBF24, #FCD34D);
+        color: #FFFFFF;
         padding: 12px 24px;
         border: none;
         border-radius: 8px;
@@ -770,13 +807,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         transition: all 0.3s ease;
         text-decoration: none;
         display: inline-block;
-        box-shadow: 0 4px 6px -1px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 4px 6px -1px rgba(217, 119, 6, 0.3);
     }
 
     .add-first-btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 8px 15px -3px rgba(212, 175, 55, 0.4);
-        background: linear-gradient(135deg, #C9A84F, #A87F38);
+        box-shadow: 0 8px 15px -3px rgba(217, 119, 6, 0.4);
+        background: linear-gradient(135deg, #FCD34D, #FDE68A);
     }
 
     /* Enhanced Edit Mode Styles */
@@ -1241,28 +1278,28 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .btn-primary {
-        background: #E8B923;
-        color: #201D18;
-        box-shadow: 0 4px 15px rgba(135, 121, 40, 0.3);
+        background: #F59E0B;
+        color: #FFFFFF;
+        box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
     }
 
     .btn-primary:hover {
-        background: #877928;
+        background: #D97706;
         color: white;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(135, 121, 40, 0.5);
+        box-shadow: 0 6px 20px rgba(217, 119, 6, 0.5);
     }
 
     .btn-export {
-        background: #877928;
+        background: #F59E0B;
         color: white;
-        box-shadow: 0 4px 15px rgba(135, 121, 40, 0.3);
+        box-shadow: 0 4px 15px rgba(217, 119, 6, 0.3);
     }
 
     .btn-export:hover {
-        background: #201D18;
+        background: #D97706;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(135, 121, 40, 0.5);
+        box-shadow: 0 6px 20px rgba(217, 119, 6, 0.5);
     }
 
     .btn-secondary {
@@ -1310,8 +1347,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     #addStudentModal .add-modal-header {
-        background: linear-gradient(135deg, #D4AF37 0%, #B8941F 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        color: #FFFFFF;
         padding: 32px;
         text-align: center;
         position: relative;
@@ -1382,7 +1419,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #D4AF37, #B8941F);
+        background: linear-gradient(90deg, #FBBF24, #FCD34D);
     }
 
     .tab-btn:hover:not(.active) {
@@ -1413,14 +1450,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         width: 60px;
         height: 60px;
         border-radius: 16px;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        color: #FFFFFF;
         display: flex;
         align-items: center;
         justify-content: center;
         margin: 0 auto 16px;
         font-size: 1.5rem;
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.3);
     }
 
     .tab-header h4 {
@@ -1547,16 +1584,16 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .tab-footer .btn-primary {
-        background: linear-gradient(135deg, #D4AF37 0%, #B8941F 100%);
-        color: #1a1614;
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+        background: linear-gradient(135deg, #FBBF24 0%, #FCD34D 100%);
+        color: #FFFFFF;
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
         margin-left: auto;
     }
 
     .tab-footer .btn-primary:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #A87F38 100%);
+        background: linear-gradient(135deg, #FCD34D 0%, #FDE68A 100%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+        box-shadow: 0 6px 20px rgba(217, 119, 6, 0.5);
     }
 
     .tab-footer .btn-primary:disabled {
@@ -1660,7 +1697,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         left: 0;
         right: 0;
         height: 4px;
-        background: #E8B923;
+        background: #F59E0B;
         opacity: 0;
         transition: opacity 0.3s ease;
     }
@@ -1802,8 +1839,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         justify-content: space-between;
         align-items: center;
         padding: 20px 28px;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        border-bottom: 1px solid rgba(135, 121, 40, 0.2);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        border-bottom: 1px solid rgba(245, 158, 11, 0.2);
         border-radius: 0;
         position: relative;
         overflow: hidden;
@@ -1839,7 +1876,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .toggle-btn {
-        background: rgba(26, 22, 20, 0.85);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         border: none;
         border-radius: 10px;
@@ -1851,15 +1888,15 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         align-items: center;
         gap: 8px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
         position: relative;
         z-index: 1;
     }
 
     .toggle-btn:hover {
-        background: #1a1614;
+        background: linear-gradient(135deg, #EA580C 0%, #D97706 100%);
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+        box-shadow: 0 6px 20px rgba(234, 88, 12, 0.4);
     }
 
     .toggle-btn i {
@@ -1919,7 +1956,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .filter-input {
         padding: 12px 14px;
-        border: 2px solid #E5D5A8;
+        border: 2px solid #FDE68A;
         border-radius: 12px;
         font-size: 0.9rem;
         font-family: 'Inter', sans-serif;
@@ -1945,15 +1982,15 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .filter-input[multiple] option:hover {
-        background: linear-gradient(135deg, #F5E6C3 0%, #EFE0BC 100%);
+        background: linear-gradient(135deg, #FEF3C7 0%, #FCD34D 100%);
         transform: translateX(3px);
     }
 
     .filter-input[multiple] option:checked {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+        color: #FFFFFF;
         font-weight: 600;
-        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 2px 8px rgba(217, 119, 6, 0.3);
     }
 
     .filter-group label small {
@@ -1964,13 +2001,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .filter-input:focus {
-        border-color: #D4AF37;
-        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
+        border-color: #F59E0B;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08);
         transform: translateY(-1px);
     }
 
     .filter-input:hover {
-        border-color: #DCC780;
+        border-color: #FCD34D;
     }
 
     /* Search Bar Styling */
@@ -1996,14 +2033,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .search-group label i {
-        color: #D4AF37;
+        color: #F59E0B;
     }
 
     .search-input {
         width: 100%;
         padding: 14px 18px;
         padding-right: 50px;
-        border: 2px solid #E5D5A8;
+        border: 2px solid #FDE68A;
         border-radius: 14px;
         font-size: 0.95rem;
         font-family: 'Inter', sans-serif;
@@ -2014,14 +2051,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .search-input:focus {
-        border-color: #D4AF37;
-        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15), 0 6px 16px rgba(0, 0, 0, 0.08);
+        border-color: #F59E0B;
+        box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15), 0 6px 16px rgba(0, 0, 0, 0.08);
         transform: translateY(-2px);
         background: white;
     }
 
     .search-input:hover {
-        border-color: #DCC780;
+        border-color: #FCD34D;
     }
 
     .search-input::placeholder {
@@ -2036,7 +2073,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         transform: translateY(-50%);
         width: 28px;
         height: 28px;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
+        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
         border-radius: 50%;
         display: flex;
         align-items: center;
@@ -2046,13 +2083,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         color: white;
         font-size: 0.8rem;
-        box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
     }
 
     .search-clear:hover {
-        background: linear-gradient(135deg, #B8941F 0%, #A87F38 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         transform: translateY(-50%) scale(1.15);
-        box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+        box-shadow: 0 4px 12px rgba(217, 119, 6, 0.4);
     }
 
     .search-clear.show {
@@ -2087,7 +2124,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .export-main-btn {
-        background: #877928;
+        background: #AA4C0A;
         color: white;
         box-shadow: 0 8px 25px rgba(135, 121, 40, 0.4);
         position: relative;
@@ -2113,8 +2150,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .export-main-btn:hover {
         transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 35px rgba(135, 121, 40, 0.5);
-        background: #201D18;
+        box-shadow: 0 12px 35px rgba(170, 76, 10, 0.5);
+        background: #763A12;
     }
 
     .export-main-btn:active {
@@ -2124,36 +2161,36 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .apply-btn {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
-        box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+        background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%);
+        color: #FFFFFF;
+        box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
         font-weight: 700;
     }
 
     .apply-btn:hover {
-        background: linear-gradient(135deg, #C9A84F 0%, #B8941F 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
+        color: #FFFFFF;
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(212, 175, 55, 0.45);
+        box-shadow: 0 8px 20px rgba(217, 119, 6, 0.45);
     }
 
     .clear-btn {
-        background: linear-gradient(135deg, #C9A84F 0%, #A87F38 100%);
-        color: #1a1614;
-        box-shadow: 0 4px 14px rgba(201, 168, 79, 0.35);
+        background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%);
+        color: #FFFFFF;
+        box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
         font-weight: 700;
     }
 
     .clear-btn:hover {
-        background: linear-gradient(135deg, #B8941F 0%, #8F6B2A 100%);
+        background: linear-gradient(135deg, #B91C1C 0%, #991B1B 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(201, 168, 79, 0.45);
+        box-shadow: 0 8px 20px rgba(185, 28, 28, 0.45);
     }
 
     .export-btn {
-        background: linear-gradient(135deg, #5c5347 0%, #4a453d 100%);
+        background: linear-gradient(135deg, #64748B 0%, #475569 100%);
         color: white;
-        box-shadow: 0 4px 14px rgba(92, 83, 71, 0.35);
+        box-shadow: 0 4px 14px rgba(100, 116, 139, 0.35);
         position: relative !important;
         z-index: 100 !important;
         pointer-events: auto !important;
@@ -2161,9 +2198,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .export-btn:hover {
-        background: linear-gradient(135deg, #4a453d 0%, #3d3a33 100%);
+        background: linear-gradient(135deg, #475569 0%, #334155 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(92, 83, 71, 0.45);
+        box-shadow: 0 8px 20px rgba(71, 85, 105, 0.45);
     }
 
     .export-arrow {
@@ -2365,8 +2402,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .filter-count {
         margin-left: auto;
         padding: 10px 20px;
-        background: linear-gradient(135deg, #FEF9E7 0%, #F5E6C3 100%);
-        border: 2px solid #D4AF37;
+        background: linear-gradient(135deg, #FEF9E7 0%, #F5DE7A 100%);
+        border: 2px solid #E08600;
         border-radius: 12px;
         font-size: 0.9rem;
         color: #6B5B2E;
@@ -2523,8 +2560,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         border-radius: 20px 20px 0 0;
         text-align: center;
         position: relative;
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 50%, #E8C468 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #763A12 0%, #AA4C0A 50%, #E08600 100%);;
     }
 
     .modal-header::before {
@@ -2924,26 +2960,25 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     /* Header – teal gradient */
     #editStudentModal .modal-header {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 45%, #E8C468 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #763A12 0%, #AA4C0A 45%, #E08600 100%);
     }
 
     #editStudentModal .modal-header h3 {
-        color: #1a1614;
+        color: #FFFFFF;
         font-weight: 800;
     }
 
     #editStudentModal .modal-header p {
-        color: rgba(26, 22, 20, 0.75);
+        color: rgba(255, 255, 255, 0.9);
     }
 
     #editStudentModal .modal-close {
-        color: #1a1614;
-        border-color: rgba(26, 22, 20, 0.25);
+        color: #FFFFFF;
+        border-color: rgba(255, 255, 255, 0.3);
     }
 
     #editStudentModal .modal-close:hover {
-        background: rgba(26, 22, 20, 0.15);
+        background: rgba(255, 255, 255, 0.2);
     }
 
     /* Section headers */
@@ -3312,12 +3347,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
         z-index: 9998 !important;
-        display: none !important;
+        display: none;
         justify-content: center !important;
         align-items: center !important;
         animation: fadeInOverlay 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
 
+    #logoutModal.modal.show,
     #logoutModal.modal[style*="flex"] {
         display: flex !important;
     }
@@ -3355,7 +3391,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         padding: 48px 44px !important;
         border-radius: 28px !important;
         box-shadow:
-            0 32px 64px -12px rgba(212, 175, 55, 0.3),
+            0 32px 64px -12px rgba(217, 119, 6, 0.25),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         max-width: 480px !important;
         width: 92% !important;
@@ -3374,7 +3410,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 25%, #FBEF9C 50%, #FEE32B 75%, #877928 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #FBBF24 25%, #FCD34D 50%, #FBBF24 75%, #D97706 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -3397,13 +3433,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     #logoutModal .modal-header {
         margin-bottom: 32px !important;
-        background: #FDFDF9 !important;
+        background: #FFFBEA !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
-        border: 2px solid #FEE32B !important;
+        border: 2px solid #FBBF24 !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(254, 227, 43, 0.15) !important;
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.15) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -3413,7 +3449,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(90deg, #D97706 0%, #FBBF24 50%, #FCD34D 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -3424,7 +3460,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(254, 227, 43, 0.1) 0%, rgba(251, 239, 156, 0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(252, 211, 77, 0.05) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -3432,18 +3468,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         margin: 0 auto 24px !important;
-        color: #201D18 !important;
+        color: #FFFFFF !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(254, 227, 43, 0.4),
+            0 20px 40px rgba(217, 119, 6, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(254, 227, 43, 0.2) !important;
+            0 0 0 6px rgba(251, 191, 36, 0.2) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -3454,17 +3490,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         0%,
         100% {
             box-shadow:
-                0 20px 40px rgba(254, 227, 43, 0.4),
+                0 20px 40px rgba(217, 119, 6, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(254, 227, 43, 0.2);
+                0 0 0 6px rgba(251, 191, 36, 0.2);
             transform: scale(1);
         }
 
         50% {
             box-shadow:
-                0 25px 50px rgba(254, 227, 43, 0.6),
+                0 25px 50px rgba(217, 119, 6, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(254, 227, 43, 0.3);
+                0 0 0 8px rgba(251, 191, 36, 0.3);
             transform: scale(1.05);
         }
     }
@@ -3476,7 +3512,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #FBEF9C, #FEE32B, #877928) !important;
+        background: linear-gradient(135deg, #FCD34D, #FBBF24, #F59E0B) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -3496,7 +3532,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #877928 0%, #201D18 100%) !important;
+        background: linear-gradient(135deg, #AA4C0A 0%, #763A12 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -3508,7 +3544,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #877928 !important;
+        color: #AA4C0A !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -3695,8 +3731,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #877928 0%, #FEE32B 50%, #FBEF9C 100%) !important;
-        color: #201D18 !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 50%, #FBBF24 100%) !important;
         border: none !important;
         outline: none !important;
         box-shadow: none !important;
@@ -3720,7 +3755,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #FBEF9C 0%, #FEE32B 50%, #877928 100%) !important;
+        background: linear-gradient(135deg, #FBBF24 0%, #FCD34D 50%, #FDE68A 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -3733,7 +3768,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #FEE32B 0%, #877928 50%, #FBEF9C 100%) !important;
+        background: linear-gradient(135deg, #FCD34D 0%, #FBBF24 50%, #F59E0B 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -3780,7 +3815,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     #logoutModal .modal-btn.logout-confirm.success .btn-check {
         opacity: 1 !important;
         transform: translateX(0) scale(1.2) !important;
-        color: #201D18 !important;
+        color: #FFFFFF !important;
     }
 
     #logoutModal .modal-btn.logout-cancel {
@@ -4177,8 +4212,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     #logoutModal .modal-btn.logout-confirm {
         position: relative !important;
         overflow: hidden !important;
-        background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%) !important;
-        box-shadow: 0 8px 25px rgba(49, 130, 206, 0.3) !important;
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
+        box-shadow: 0 8px 25px rgba(217, 119, 6, 0.3) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm::before {
@@ -4245,8 +4280,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .export-modal-header {
-        background: linear-gradient(135deg, #D4AF37 0%, #C9A84F 100%);
-        color: #1a1614;
+        background: linear-gradient(135deg, #763A12 0%, #AA4C0A 100%);
         padding: 35px 30px;
         text-align: center;
         position: relative;
@@ -4330,8 +4364,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .export-option-card:hover {
         transform: translateY(-3px) scale(1.02);
-        border-color: #D4AF37;
-        box-shadow: 0 12px 30px rgba(212, 175, 55, 0.25);
+        border-color: #E08600;        box-shadow: 0 12px 30px rgba(224, 134, 0, 0.25);
         background: linear-gradient(135deg, #ffffff 0%, #FFFEF9 100%);
     }
 
@@ -4572,7 +4605,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .export-confirm-btn {
         flex: 2;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         color: white;
         border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 12px;
@@ -4606,8 +4639,8 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 
     .export-confirm-btn:hover {
         transform: translateY(-3px) scale(1.02);
-        box-shadow: 0 12px 30px rgba(44, 90, 160, 0.4);
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        box-shadow: 0 12px 30px rgba(217, 119, 6, 0.4);
+        background: linear-gradient(135deg, #FBBF24 0%, #FCD34D 100%);
     }
 
     .export-confirm-btn:active {
@@ -4761,22 +4794,22 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     html body .sidebar .logo {
-        color: #877928 !important;
+        color: #AA4C0A !important;
     }
 
     html body .sidebar-nav a {
-        color: #877928 !important;
+        color: #AA4C0A !important;
     }
 
     html body .sidebar-nav i,
     html body .sidebar-nav ion-icon {
-        color: #E8B923 !important;
+        color: #E08600 !important;
     }
 
     html body .sidebar-nav a.active,
     html body .sidebar-nav a:hover {
-        background: #E8B923 !important;
-        color: #201D18 !important;
+        background: #E08600 !important;
+        color: #FFFFFF !important;
         box-shadow: 0 8px 25px rgba(135, 121, 40, 0.25) !important;
     }
 
@@ -4784,7 +4817,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     html body .sidebar-nav a.active ion-icon,
     html body .sidebar-nav a:hover i,
     html body .sidebar-nav a:hover ion-icon {
-        color: #201D18 !important;
+        color: #FFFFFF !important;
     }
     </style>
 </head>
@@ -4792,33 +4825,41 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
 <body>
     <?php include __DIR__ . '/includes/cbaa_nav.php'; ?>
     <div class="topbar">
-        <h1 class="dashboard-title">College of Business Administration and Accountancy Admin Dashboard</h1>
+        <h1 class="dashboard-title">Business Administration and Accountancy Admin Dashboard</h1>
         <div style="display: flex; align-items: center; gap: 12px;">
+            <?php if ($is_icts_admin): ?>
+            <a href="dashboard_icts.php?dept=CBAA" class="icts-back-btn" title="Back to ICTS Dashboard">
+                <i class="fas fa-arrow-left"></i>
+                Back to ICTS Dashboard
+            </a>
+            <?php endif; ?>
             <button onclick="showKeyboardShortcutsHelp()" class="shortcuts-btn" title="Ctrl + H">
                 <i class="fas fa-keyboard"></i>
                 <span>Shortcuts</span>
             </button>
-            <a href="logout.php" class="logout-btn" onclick="return confirmLogout(event)">
+            <button type="button" class="logout-btn" onclick="showLogoutModal();">
                 <i class="fas fa-sign-out-alt"></i>
                 Logout
-            </a>
+            </button>
         </div>
     </div>
     <div class="main-content">
         <!-- Dashboard Statistics Overview -->
         <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-icon" style="background: #877928;">
+                <div class="stat-icon" style="background: #AA4C0A;">
                     <i class="fas fa-users"></i>
                 </div>
                 <div class="stat-content">
                     <h3><?= $total_records ?></h3>
-                    <p>Total Board Passers</p>
+                    <p>Total Examinees</p>
                     <?php
-          // Get records added this month
+          // Get records added this month (exclude soft-deleted records)
           $current_month = date('Y-m');
-          $this_month_query = $conn->query("SELECT COUNT(*) as month_count FROM board_passers 
-            WHERE department='Business Administration and Accountancy' AND DATE_FORMAT(board_exam_date, '%Y-%m') = '$current_month'");
+          $this_month_query = $conn->query("SELECT COUNT(*) as month_count FROM anonymous_board_passers 
+            WHERE department='Business Administration and Accountancy' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND DATE_FORMAT(board_exam_date, '%Y-%m') = '$current_month'");
           $this_month_data = $this_month_query->fetch_assoc();
           $this_month_count = $this_month_data ? $this_month_data['month_count'] : 0;
           ?>
@@ -4830,46 +4871,80 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: #E8B923;">
+                <div class="stat-icon" style="background: #E08600;">
                     <i class="fas fa-chart-line"></i>
                 </div>
                 <div class="stat-content">
                     <?php
+          // Calculate passing rate (exclude soft-deleted records)
           $passing_rate_query = $conn->query("SELECT 
             COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
             COUNT(*) as total_count
-            FROM board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted = 0 OR is_deleted IS NULL)");
+            FROM anonymous_board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted IS NULL OR is_deleted = 0)");
           $rate_data = $passing_rate_query->fetch_assoc();
           
           $passing_rate = 0;
           if ($rate_data && $rate_data['total_count'] > 0) {
             $passing_rate = ($rate_data['passed_count'] * 100.0) / $rate_data['total_count'];
           }
+          
+          // Calculate last year's passing rate for comparison
+          $last_year = date('Y') - 1;
+          $last_year_query = $conn->query("SELECT 
+            COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
+            COUNT(*) as total_count
+            FROM anonymous_board_passers 
+            WHERE department='Business Administration and Accountancy' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND YEAR(board_exam_date) = $last_year");
+          $last_year_data = $last_year_query->fetch_assoc();
+          
+          $last_year_rate = 0;
+          if ($last_year_data && $last_year_data['total_count'] > 0) {
+            $last_year_rate = ($last_year_data['passed_count'] * 100.0) / $last_year_data['total_count'];
+          }
+          
+          $rate_change = $passing_rate - $last_year_rate;
+          $change_type = $rate_change > 0 ? 'positive' : ($rate_change < 0 ? 'negative' : 'neutral');
+          $change_icon = $rate_change > 0 ? 'arrow-up' : ($rate_change < 0 ? 'arrow-down' : 'minus');
           ?>
                     <h3><?= number_format($passing_rate, 1) ?>%</h3>
                     <p>Passing Rate</p>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> +2.3% vs last year
-                    </span>
+                    <?php if ($rate_data && $rate_data['total_count'] > 0): ?>
+                        <span class="stat-change <?= $change_type ?>">
+                            <i class="fas fa-<?= $change_icon ?>"></i> 
+                            <?= $rate_change != 0 ? ($rate_change > 0 ? '+' : '') . number_format(abs($rate_change), 1) . '% vs last year' : 'No change vs last year' ?>
+                        </span>
+                    <?php else: ?>
+                        <span class="stat-change neutral">
+                            <i class="fas fa-info-circle"></i> No records yet
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: #F5E6C3;">
-                    <i class="fas fa-graduation-cap"></i>
+                <div class="stat-icon" style="background: #DC2626;">
+                    <i class="fas fa-times-circle"></i>
                 </div>
                 <div class="stat-content">
                     <?php
-          $current_year = date('Y');
-          $recent_passers = $conn->query("SELECT COUNT(*) as recent_count FROM board_passers 
-            WHERE department='Business Administration and Accountancy' AND year_graduated >= $current_year - 1 AND (is_deleted = 0 OR is_deleted IS NULL)");
-          $recent_data = $recent_passers->fetch_assoc();
-          $recent_count = $recent_data ? $recent_data['recent_count'] : 0;
+          // Calculate failed rate (exclude soft-deleted records)
+          $failed_rate_query = $conn->query("SELECT 
+            COUNT(CASE WHEN result = 'Failed' THEN 1 END) as failed_count,
+            COUNT(*) as total_count
+            FROM anonymous_board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted IS NULL OR is_deleted = 0)");
+          $failed_data = $failed_rate_query->fetch_assoc();
+          
+          $failed_rate = 0;
+          if ($failed_data && $failed_data['total_count'] > 0) {
+            $failed_rate = ($failed_data['failed_count'] * 100.0) / $failed_data['total_count'];
+          }
           ?>
-                    <h3><?= $recent_count ?></h3>
-                    <p>Recent Graduates</p>
+                    <h3><?= number_format($failed_rate, 1) ?>%</h3>
+                    <p>Failed Rate</p>
                     <span class="stat-change neutral">
-                        <i class="fas fa-calendar"></i> Last 2 years
+                        <i class="fas fa-info-circle"></i> <?= $failed_data ? $failed_data['failed_count'] : 0 ?> failed
                     </span>
                 </div>
             </div>
@@ -4880,39 +4955,41 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
                 <div class="stat-content">
                     <?php
-          $top_course_query = $conn->query("SELECT course, COUNT(*) as count FROM board_passers 
-            WHERE department='Business Administration and Accountancy' AND result='Passed' AND (is_deleted = 0 OR is_deleted IS NULL)
-            GROUP BY course ORDER BY count DESC LIMIT 1");
-          $top_course = $top_course_query->fetch_assoc();
+          // Get best course passing rate by board_exam_type (exclude soft-deleted records)
+          $best_course_query = $conn->query("SELECT board_exam_type,
+            COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
+            COUNT(*) as total_count,
+            (COUNT(CASE WHEN result = 'Passed' THEN 1 END) * 100.0 / COUNT(*)) as pass_rate
+            FROM anonymous_board_passers 
+            WHERE department='Business Administration and Accountancy' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND board_exam_type IS NOT NULL AND board_exam_type != ''
+            GROUP BY board_exam_type 
+            HAVING total_count > 0
+            ORDER BY pass_rate DESC, total_count DESC LIMIT 1");
+          $best_course = $best_course_query->fetch_assoc();
           
-          // Handle case when no data is available
-          $course_count = 0;
-          $course_name = 'N/A';
+          $best_rate = 0;
+          $best_exam_name = 'N/A';
           
-          if ($top_course && isset($top_course['count'])) {
-            $course_count = $top_course['count'];
-          }
-          
-          if ($top_course && isset($top_course['course']) && !empty($top_course['course'])) {
-            $course_name = $top_course['course'];
+          if ($best_course) {
+            $best_rate = $best_course['pass_rate'];
+            $best_exam_name = $best_course['board_exam_type'];
           }
           ?>
-                    <h3><?= $course_count ?></h3>
-                    <p>Top Course</p>
+                    <h3><?= number_format($best_rate, 1) ?>%</h3>
+                    <p>Best Course Passing Rate</p>
                     <span class="stat-change neutral">
                         <i class="fas fa-star"></i>
-                        <?= htmlspecialchars(substr($course_name ?? '', 0, 15)) ?><?= strlen($course_name ?? '') > 15 ? '...' : '' ?>
+                        <?= htmlspecialchars(substr($best_exam_name ?? '', 0, 15)) ?><?= strlen($best_exam_name ?? '') > 15 ? '...' : '' ?>
                     </span>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="card">
-            <div style="margin-bottom: 20px;">
-                <h2>Board Passers Database</h2>
-            </div>
-
-            <!-- Filter Section -->
+    <!-- Filter Section Removed -->
+    <div style="display:none">
             <div class="filter-section">
                 <div class="filter-header">
                     <h3><i class="fas fa-filter"></i> Filter Records</h3>
@@ -4925,52 +5002,30 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
 
                 <div id="filterContainer" class="filter-container">
-                    <!-- Search Bar -->
-                    <div class="search-section">
-                        <div class="search-group">
-                            <label for="nameSearch">
-                                <i class="fas fa-search"></i> Search Student Name
-                            </label>
-                            <input type="text" id="nameSearch" class="search-input"
-                                placeholder="Type student name to search..." autocomplete="off">
-                            <div class="search-clear" id="clearSearch" title="Clear search">
-                                <i class="fas fa-times"></i>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="filter-grid">
-                        <!-- Course Filter -->
+                        <!-- Board Exam Type Filter -->
                         <div class="filter-group">
-                            <label for="courseFilter">Course <small>(Hold Ctrl/Cmd for multiple)</small></label>
-                            <select id="courseFilter" class="filter-input" multiple size="4">
-                                <?php foreach($courses as $course): ?>
-                                <option value="<?= htmlspecialchars($course) ?>"><?= htmlspecialchars($course) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- Year Filter -->
-                        <div class="filter-group">
-                            <label for="yearFilter">Graduation Year <small>(Hold Ctrl/Cmd for multiple)</small></label>
-                            <select id="yearFilter" class="filter-input" multiple size="4">
+                            <label for="boardExamTypeFilter">Board Exam Type <small>(Hold Ctrl/Cmd for multiple)</small></label>
+                            <select id="boardExamTypeFilter" class="filter-input" multiple size="4">
                                 <?php 
-                $years = $conn->query("SELECT DISTINCT year_graduated FROM board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY year_graduated DESC");
-                while($year = $years->fetch_assoc()): 
-                ?>
-                                <option value="<?= htmlspecialchars($year['year_graduated']) ?>">
-                                    <?= htmlspecialchars($year['year_graduated']) ?></option>
+                                $exam_types = $conn->query("SELECT DISTINCT board_exam_type FROM anonymous_board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY board_exam_type");
+                                while($type = $exam_types->fetch_assoc()): 
+                                ?>
+                                <option value="<?= htmlspecialchars($type['board_exam_type']) ?>"><?= htmlspecialchars($type['board_exam_type']) ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
 
                         <!-- Board Exam Date Filter -->
                         <div class="filter-group">
-                            <label for="examDateFilter">Board Exam Date <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
-                            <select id="examDateFilter" class="filter-input" multiple size="4" disabled>
-                                <option value="" disabled>-- Select board exam type first --</option>
+                            <label for="examDateFilter">Board Exam Date <small>(Hold Ctrl/Cmd for multiple)</small></label>
+                            <select id="examDateFilter" class="filter-input" multiple size="4">
+                                <?php 
+                                $exam_dates = $conn->query("SELECT DISTINCT board_exam_date FROM anonymous_board_passers WHERE department='Business Administration and Accountancy' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY board_exam_date DESC");
+                                while($date = $exam_dates->fetch_assoc()): 
+                                ?>
+                                <option value="<?= htmlspecialchars($date['board_exam_date']) ?>"><?= htmlspecialchars($date['board_exam_date']) ?></option>
+                                <?php endwhile; ?>
                             </select>
                         </div>
 
@@ -4984,26 +5039,12 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                             </select>
                         </div>
 
-                        <!-- Take Attempts Filter -->
+                        <!-- Exam Type Filter -->
                         <div class="filter-group">
-                            <label for="examTypeFilter">Take Attempts <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
+                            <label for="examTypeFilter">Exam Type <small>(Hold Ctrl/Cmd for multiple)</small></label>
                             <select id="examTypeFilter" class="filter-input" multiple size="2">
                                 <option value="First Timer">First Timer</option>
                                 <option value="Repeater">Repeater</option>
-                            </select>
-                        </div>
-
-                        <!-- Board Exam Type Filter -->
-                        <div class="filter-group">
-                            <label for="boardExamTypeFilter">Board Exam Type <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
-                            <select id="boardExamTypeFilter" class="filter-input" multiple size="4">
-                                <?php foreach ($board_exam_types as $exam_type): ?>
-                                <option value="<?= (int)$exam_type['id'] ?>"
-                                    data-name="<?= htmlspecialchars($exam_type['name']) ?>">
-                                    <?= htmlspecialchars($exam_type['name']) ?></option>
-                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -5038,13 +5079,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 <table class="board-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Course</th>
-                            <th>Year Graduated</th>
-                            <th>Board Exam Date</th>
-                            <th>Result</th>
-                            <th>Take Attempts</th>
+                            <th>ID</th>
                             <th>Board Exam Type</th>
+                            <th>Board Exam Date</th>
+                            <th>Exam Type</th>
+                            <th>Result</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -5052,13 +5091,30 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                         <?php if ($total_records > 0): ?>
                         <?php while($row = $passers->fetch_assoc()): ?>
                         <tr data-id="<?= htmlspecialchars($row['id'] ?? '') ?>">
-                            <td class="editable" data-label="Name"><?= htmlspecialchars($row['full_name'] ?? '') ?></td>
-                            <td class="editable" data-label="Course"><?= htmlspecialchars($row['course'] ?? '') ?></td>
-                            <td class="editable" data-label="Year Graduated">
-                                <?= htmlspecialchars($row['year_graduated'] ?? '') ?></td>
-                            <td class="editable" data-label="Board Exam Date"
-                                data-date="<?= htmlspecialchars($row['board_exam_date'] ?? '') ?>">
+                            <td data-label="ID"><?= htmlspecialchars($row['id'] ?? '') ?></td>
+                            <?php 
+                $betRaw = $row['board_exam_type'] ?? '';
+                $betDisplay = 'Not specified';
+                if ($betRaw !== '' && $betRaw !== null) {
+                  if (ctype_digit((string)$betRaw)) {
+                    // lookup ID -> name using $board_exam_types
+                    $betMap = array_column($board_exam_types, 'name', 'id');
+                    $betDisplay = $betMap[$betRaw] ?? $betRaw;
+                  } else {
+                    $betDisplay = $betRaw;
+                  }
+                }
+              ?>
+                            <td data-label="Board Exam Type"><?= htmlspecialchars($betDisplay) ?></td>
+                            <td data-label="Board Exam Date">
                                 <?= htmlspecialchars($row['board_exam_date'] ?? '') ?></td>
+                            <td data-label="Exam Type">
+                                <?php 
+                $examType = $row['exam_type'] ?? 'First Timer';
+                $examBadgeClass = ($examType === 'First Timer') ? 'exam-first-timer' : 'exam-repeater';
+                ?>
+                                <span class="status-badge <?= $examBadgeClass ?>"><?= htmlspecialchars($examType) ?></span>
+                            </td>
                             <td data-label="Result">
                                 <?php 
                 $result = $row['result'];
@@ -5073,45 +5129,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 ?>
                                 <span class="status-badge <?= $badgeClass ?>"><?= htmlspecialchars($result) ?></span>
                             </td>
-                            <td data-label="Take Attempts">
-                                <?php 
-                $examType = $row['exam_type'] ?? 'First Timer';
-                $examBadgeClass = ($examType === 'First Timer') ? 'exam-first-timer' : 'exam-repeater';
-                ?>
-                                <span
-                                    class="status-badge <?= $examBadgeClass ?>"><?= htmlspecialchars($examType) ?></span>
-                            </td>
-                            <?php 
-                $betRaw = $row['board_exam_type'] ?? '';
-                $betDisplay = 'Not specified';
-                if ($betRaw !== '' && $betRaw !== null) {
-                  if (ctype_digit((string)$betRaw)) {
-                    // lookup ID -> name using $board_exam_types
-                    $betMap = array_column($board_exam_types, 'name', 'id');
-                    $betDisplay = $betMap[$betRaw] ?? $betRaw;
-                  } else {
-                    $betDisplay = $betRaw;
-                  }
-                }
-              ?>
-                            <td class="editable" data-label="Board Type"><?= htmlspecialchars($betDisplay) ?></td>
                             <td class="actions-btns" data-label="Actions">
-                                <button class="action-btn edit-btn" onclick="openEdit(this)" data-tooltip="Edit Record"
-                                    title="Edit Record">
-                                    <i class="fas fa-edit"></i>
-                                    <span style="font-size: 10px; margin-left: 2px;">Edit</span>
-                                </button>
                                 <button class="action-btn delete-btn" onclick="deleteRow(this)"
                                     data-tooltip="Delete Record" title="Delete Record">
                                     <i class="fas fa-trash"></i>
-                                    <span style="font-size: 10px; margin-left: 2px;">Del</span>
+                                    <span style="font-size: 10px; margin-left: 2px;">Delete</span>
                                 </button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
                         <?php else: ?>
                         <tr class="no-records-row">
-                            <td colspan="8"
+                            <td colspan="5"
                                 style="text-align: center; padding: 60px 20px; color: #6b7280; font-size: 1.1rem;">
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
                                     <div
@@ -5119,7 +5148,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                                         <i class="fas fa-database" style="font-size: 2rem; color: #94a3b8;"></i>
                                     </div>
                                     <div>
-                                        <h3 style="color: #374151; margin: 0 0 10px 0;">No Board Passers Found</h3>
+                                        <h3 style="color: #374151; margin: 0 0 10px 0;">No Data Found</h3>
                                         <script>
                                         // Filter board exam date options based on selected Board Exam Type
                                         function filterExamDates(boardExamTypeSelectorId, examDateSelectorId) {
@@ -5321,11 +5350,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                             </td>
                         </tr>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    </div></div>
 
     <!-- Edit Student Modal -->
     <div id="editStudentModal" class="custom-modal" style="display: none;">
@@ -8081,27 +8106,25 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         }
 
         const cells = row.querySelectorAll('td');
-        const studentName = cells[0] ? cells[0].textContent.trim() : 'Unknown Student';
 
         // Extract row data for beautiful confirmation
         const rowData = {
             id: studentId,
-            name: studentName,
-            course: cells[1] ? cells[1].textContent.trim() : 'N/A',
-            year: cells[2] ? cells[2].textContent.trim() : 'N/A',
-            date: cells[3] ? cells[3].textContent.trim() : 'N/A',
+            boardExamType: cells[1] ? cells[1].textContent.trim() : 'N/A',
+            date: cells[2] ? cells[2].textContent.trim() : 'N/A',
+            examType: cells[3] ? cells[3].textContent.trim() : 'N/A',
             result: cells[4] ? (cells[4].querySelector('.status-badge') ? cells[4].querySelector('.status-badge')
                 .textContent.trim() : cells[4].textContent.trim()) : 'N/A'
         };
 
-        console.log('🗑️ Delete button clicked for student:', rowData);
+        console.log('🗑️ Delete button clicked for record:', rowData);
 
         // Show beautiful confirmation modal
         showDeleteConfirmationModal(rowData);
     }
 
     function showDeleteConfirmationModal(rowData) {
-        console.log('🗑️ Showing beautiful delete confirmation modal for:', rowData.name);
+        console.log('🗑️ Showing beautiful delete confirmation modal for ID:', rowData.id);
 
         // Create beautiful delete confirmation modal
         const modal = document.createElement('div');
@@ -8142,7 +8165,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         ">
           <!-- Sticky Header -->
           <div style="
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background: linear-gradient(135deg, #EA580C 0%, #C2410C 100%);
             padding: 32px 40px 28px;
             color: white;
             position: relative;
@@ -8199,29 +8222,29 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             max-height: 50vh;
             overflow-y: auto;
           ">
-            <div style="background: #fef2f2; padding: 24px; border-radius: 16px; border-left: 4px solid #ef4444; margin-bottom: 24px;">
+            <div style="background: #fef2f2; padding: 24px; border-radius: 16px; border-left: 4px solid #EA580C; margin-bottom: 24px;">
               <h4 style="color: #dc2626; margin: 0 0 16px 0; font-weight: 700; font-size: 1.1rem;">
-                <i class="fas fa-user-graduate" style="margin-right: 8px;"></i>
-                Student to be deleted:
+                <i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>
+                Record to be deleted:
               </h4>
               
               <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #fecaca;">
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;">
-                  <strong style="color: #374151;">Name:</strong>
-                  <span style="color: #111827; font-weight: 600;">${rowData.name}</span>
+                  <strong style="color: #374151;">ID:</strong>
+                  <span style="color: #111827; font-weight: 600;">${rowData.id}</span>
                   
-                  <strong style="color: #374151;">Course:</strong>
-                  <span style="color: #6b7280;">${rowData.course}</span>
+                  <strong style="color: #374151;">Board Exam Type:</strong>
+                  <span style="color: #6b7280;">${rowData.boardExamType}</span>
                   
-                  <strong style="color: #374151;">Year:</strong>
-                  <span style="color: #6b7280;">${rowData.year}</span>
-                  
-                  <strong style="color: #374151;">Board Exam:</strong>
+                  <strong style="color: #374151;">Exam Date:</strong>
                   <span style="color: #6b7280;">${rowData.date}</span>
+                  
+                  <strong style="color: #374151;">Exam Type:</strong>
+                  <span style="color: #6b7280;">${rowData.examType}</span>
                   
                   <strong style="color: #374151;">Result:</strong>
                   <span style="
-                    color: ${rowData.result === 'PASSED' ? '#059669' : '#dc2626'};
+                    color: ${rowData.result.toLowerCase().includes('passed') ? '#059669' : '#dc2626'};
                     font-weight: 600;
                     text-transform: uppercase;
                   ">${rowData.result}</span>
@@ -8235,21 +8258,21 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 <div>
                   <strong style="display: block; margin-bottom: 4px;">Warning:</strong>
                   <div style="line-height: 1.5;">
-                    This will permanently delete the student's record from the database. 
+                    This will permanently delete this exam record from the database. 
                     This action cannot be reversed and all associated data will be lost.
                   </div>
                 </div>
               </div>
             </div>
             
-            <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="background: #fee2e2; border: 2px solid #EA580C; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
               <div style="display: flex; align-items: flex-start; color: #dc2626;">
                 <i class="fas fa-shield-alt" style="margin-right: 12px; font-size: 1.2rem; margin-top: 2px;"></i>
                 <div>
                   <strong style="display: block; margin-bottom: 4px;">Security Notice:</strong>
                   <div style="line-height: 1.5;">
-                    You are about to permanently remove this student's academic record. 
-                    Make sure this is the correct student before proceeding. 
+                    You are about to permanently remove this exam record. 
+                    Make sure this is the correct record before proceeding. 
                     Consider backing up data if needed.
                   </div>
                 </div>
@@ -9057,22 +9080,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             const rows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
 
             let data = [];
-            let headers = ['Name', 'Course', 'Year Graduated', 'Board Exam Date', 'Result', 'Take Attempts',
-                'Board Exam Type'
-            ];
+            let headers = ['ID', 'Board Exam Type', 'Board Exam Date', 'Exam Type', 'Result'];
 
             // Extract visible row data
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) {
+                if (cells.length >= 5) {
                     data.push([
                         cells[0].textContent.trim(),
                         cells[1].textContent.trim(),
                         cells[2].textContent.trim(),
                         cells[3].textContent.trim(),
-                        cells[4].textContent.trim(),
-                        cells[5].textContent.trim(),
-                        cells[6].textContent.trim()
+                        cells[4].textContent.trim()
                     ]);
                 }
             });
@@ -9473,9 +9492,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             modal.classList.add('show');
             console.log('Added show class to modal with beautiful animations');
 
-            // Check button visibility
-            const yesBtn = document.getElementById('logoutConfirmYes');
-            const noBtn = document.getElementById('logoutConfirmNo');
+            // Check button visibility with correct IDs
+            const yesBtn = document.getElementById('confirmLogoutBtn');
+            const noBtn = document.getElementById('cancelLogout');
             const modalButtons = modal.querySelector('.modal-buttons');
 
             console.log('Yes button found:', yesBtn);
@@ -9549,7 +9568,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         button.classList.add('loading');
 
         // Disable cancel button during logout
-        const cancelBtn = document.getElementById('logoutConfirmNo');
+        const cancelBtn = document.getElementById('cancelLogout');
         if (cancelBtn) {
             cancelBtn.style.opacity = '0.5';
             cancelBtn.style.pointerEvents = 'none';
@@ -9841,65 +9860,36 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         };
 
         const filters = {
-            nameSearch: document.getElementById('nameSearch').value.toLowerCase().trim(),
-            courses: getSelectedValues('courseFilter'),
-            years: getSelectedValues('yearFilter'),
-            examDateIds: getSelectedValues('examDateFilter'),
+            boardExamTypes: getSelectedValues('boardExamTypeFilter'),
+            examDates: getSelectedValues('examDateFilter'),
             results: getSelectedValues('resultFilter'),
-            examTypes: getSelectedValues('examTypeFilter'),
-            boardExamTypes: getSelectedValues('boardExamTypeFilter')
+            examTypes: getSelectedValues('examTypeFilter')
         };
-
-        // Get the actual date strings from the selected exam date IDs
-        let selectedExamDateStrings = [];
-        if (filters.examDateIds.length > 0) {
-            const boardExamDates = window.BOARD_EXAM_DATES || [];
-            filters.examDateIds.forEach(dateId => {
-                const selectedDate = boardExamDates.find(d => String(d.id) === String(dateId));
-                if (selectedDate) {
-                    selectedExamDateStrings.push(selectedDate.date);
-                }
-            });
-        }
 
         let visibleCount = 0;
 
         allRows.forEach(row => {
             let shouldShow = true;
 
-            // Get row data
+            // Get row data - Structure: ID, Board Exam Type, Board Exam Date, Exam Type, Result, Actions
             const cells = row.querySelectorAll('td');
             const rowData = {
-                name: cells[0].textContent.toLowerCase(),
-                course: cells[1].textContent.toLowerCase(),
-                year: cells[2].textContent,
-                examDate: cells[3].textContent.trim(),
-                result: cells[4].textContent.toLowerCase(),
-                examType: cells[5].textContent.toLowerCase(),
-                boardExamType: cells[6].textContent.toLowerCase()
+                boardExamType: cells[1].textContent.toLowerCase().trim(),
+                examDate: cells[2].textContent.trim(),
+                examType: cells[3].textContent.toLowerCase().trim(),
+                result: cells[4].textContent.toLowerCase().trim()
             };
 
-            // Apply name search filter
-            if (filters.nameSearch && !rowData.name.includes(filters.nameSearch)) {
-                shouldShow = false;
-            }
-
             // Apply multi-select filters (OR logic within each filter)
-            if (filters.courses.length > 0) {
-                const matches = filters.courses.some(course =>
-                    rowData.course.includes(course.toLowerCase())
+            if (filters.boardExamTypes.length > 0) {
+                const matches = filters.boardExamTypes.some(type =>
+                    rowData.boardExamType.includes(type.toLowerCase())
                 );
                 if (!matches) shouldShow = false;
             }
 
-            if (filters.years.length > 0) {
-                if (!filters.years.includes(rowData.year)) {
-                    shouldShow = false;
-                }
-            }
-
-            if (selectedExamDateStrings.length > 0) {
-                if (!selectedExamDateStrings.includes(rowData.examDate)) {
+            if (filters.examDates.length > 0) {
+                if (!filters.examDates.includes(rowData.examDate)) {
                     shouldShow = false;
                 }
             }
@@ -9918,18 +9908,6 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 if (!matches) shouldShow = false;
             }
 
-            if (filters.boardExamTypes.length > 0) {
-                const matches = filters.boardExamTypes.some(type => {
-                    // Match by ID or by name
-                    const typeStr = String(type);
-                    return rowData.boardExamType.includes(typeStr.toLowerCase()) ||
-                        (window.BOARD_EXAM_TYPE_MAP && window.BOARD_EXAM_TYPE_MAP[type] &&
-                            rowData.boardExamType.includes(window.BOARD_EXAM_TYPE_MAP[type]
-                                .toLowerCase()));
-                });
-                if (!matches) shouldShow = false;
-            }
-
             // Show/hide row
             if (shouldShow) {
                 row.style.display = '';
@@ -9942,20 +9920,12 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         // Update record count
         updateRecordCount(visibleCount);
 
-        // Show filter applied message with search info
-        const searchTerm = document.getElementById('nameSearch').value.trim();
+        // Show filter applied message
         let message = `Showing ${visibleCount} of ${allRows.length} records`;
-        if (searchTerm) {
-            message += ` for "${searchTerm}"`;
-        }
         showFilterMessage(message);
     }
 
     function clearFilters() {
-        // Reset search input
-        document.getElementById('nameSearch').value = '';
-        document.getElementById('clearSearch').classList.remove('show');
-
         // Reset all multi-select filter inputs
         const clearMultiSelect = (id) => {
             const select = document.getElementById(id);
@@ -9964,16 +9934,10 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             }
         };
 
-        clearMultiSelect('courseFilter');
-        clearMultiSelect('yearFilter');
+        clearMultiSelect('boardExamTypeFilter');
+        clearMultiSelect('examDateFilter');
         clearMultiSelect('resultFilter');
         clearMultiSelect('examTypeFilter');
-        clearMultiSelect('boardExamTypeFilter');
-
-        // Reset exam date filter and disable it
-        const examDateFilter = document.getElementById('examDateFilter');
-        examDateFilter.innerHTML = '<option value="" disabled>-- Select board exam type first --</option>';
-        examDateFilter.disabled = true;
 
         // Show all rows
         allRows.forEach(row => {
@@ -9984,7 +9948,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         updateRecordCount(allRows.length);
 
         // Show cleared message
-        showFilterMessage('All filters and search cleared');
+        showFilterMessage('All filters cleared');
     }
 
     function updateRecordCount(count) {
@@ -10641,7 +10605,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             text-align: center;
             position: relative;
             z-index: 1;
-            background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+            background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -11038,7 +11002,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         transform: translateX(-50%);
         width: 60px;
         height: 4px;
-        background: linear-gradient(135deg, #3182ce 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
         border-radius: 0 0 4px 4px;
         pointer-events: none;
         z-index: 1;
@@ -12082,7 +12046,166 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             }
         });
     })();
+
+    // Setup logout modal event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmBtn = document.getElementById('confirmLogoutBtn');
+        const cancelBtn = document.getElementById('cancelLogout');
+        const modal = document.getElementById('logoutModal');
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                window.location.href = 'logout.php';
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                }
+            });
+        }
+
+        // Close modal when clicking outside
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                }
+            });
+        }
+    });
+
+    // Interactive logout function with enhanced animations
+    function handleInteractiveLogout(button) {
+        console.log('Ã°Å¸Å¡â‚¬ Interactive logout initiated!');
+
+        // Prevent double clicks
+        if (button.classList.contains('loading')) {
+            return;
+        }
+
+        // Add loading state
+        button.classList.add('loading');
+
+        // Disable cancel button during logout
+        const cancelBtn = document.getElementById('logoutConfirmNo');
+        if (cancelBtn) {
+            cancelBtn.style.opacity = '0.5';
+            cancelBtn.style.pointerEvents = 'none';
+        }
+
+        // Show beautiful loading animation for 2 seconds
+        setTimeout(() => {
+            // Remove loading state and add success state
+            button.classList.remove('loading');
+            button.classList.add('success');
+
+            // Show success message
+            showLogoutSuccessMessage();
+
+            // Wait for success animation, then redirect
+            setTimeout(() => {
+                console.log('¦ Logout successful! Redirecting to login page...');
+                window.location.href = 'index.php';
+            }, 1500);
+
+        }, 2000);
+    }
+
+    // Beautiful logout success message
+    function showLogoutSuccessMessage() {
+        const messageDiv = document.createElement('div');
+        messageDiv.innerHTML = `
+        <div style="
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);
+          color: white;
+          padding: 20px 32px;
+          border-radius: 16px;
+          box-shadow: 0 16px 40px rgba(16, 185, 129, 0.4);
+          z-index: 10002;
+          font-family: 'Inter', sans-serif;
+          font-weight: 700;
+          text-align: center;
+          min-width: 300px;
+          backdrop-filter: blur(10px);
+          border: 2px solid rgba(255, 255, 255, 0.2);
+          animation: successSlideIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        ">
+          <div style="
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 1.1rem;
+          ">
+            <i class="fas fa-check-circle" style="
+              font-size: 1.3rem;
+              animation: successCheckBounce 0.8s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.3s both;
+            "></i>
+            Logout Successful!
+          </div>
+          <div style="
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 8px;
+            opacity: 0.9;
+          ">
+            Redirecting to login page...
+          </div>
+        </div>
+        <style>
+          @keyframes successSlideIn {
+            0% { 
+              opacity: 0;
+              transform: translate(-50%, -50%) scale(0.8) translateY(20px);
+            }
+            100% { 
+              opacity: 1;
+              transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+          }
+          @keyframes successCheckBounce {
+            0% { 
+              transform: scale(0) rotate(-180deg);
+            }
+            70% { 
+              transform: scale(1.2) rotate(10deg);
+            }
+            100% { 
+              transform: scale(1) rotate(0deg);
+            }
+          }
+        </style>
+      `;
+        document.body.appendChild(messageDiv);
+
+        // Remove the message after animation
+        setTimeout(() => {
+            document.body.removeChild(messageDiv);
+        }, 3000);
+    }
+
+    // Handle logout confirmation
+    document.getElementById('logoutConfirmNo').onclick = function() {
+        document.getElementById('logoutModal').style.display = 'none';
+    };
+
+    // Close logout modal when clicking outside
+    document.getElementById('logoutModal').onclick = function(e) {
+        if (e.target === this) {
+            this.style.display = 'none';
+        }
+    };
     </script>
+
 </body>
 
 </html>

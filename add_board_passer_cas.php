@@ -17,7 +17,7 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
     
 // Load courses for dropdown (Arts and Sciences)
 $courses = [];
-$course_stmt = $conn->prepare("SELECT course_name FROM courses WHERE department='Arts and Sciences' ORDER BY course_name");
+$course_stmt = $conn->prepare("SELECT course_name FROM courses WHERE department='Arts and Sciences' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY course_name");
 if ($course_stmt && $course_stmt->execute()) {
   $course_result = $course_stmt->get_result();
   while ($row = $course_result->fetch_assoc()) {
@@ -38,7 +38,7 @@ if (empty($courses)) {
 
 // Load board exam types (Arts and Sciences)
 $board_exam_types = [];
-$type_stmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Arts and Sciences' ORDER BY exam_type_name");
+$type_stmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Arts and Sciences' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY exam_type_name");
 if ($type_stmt && $type_stmt->execute()) {
   $type_result = $type_stmt->get_result();
   while ($row = $type_result->fetch_assoc()) {
@@ -52,7 +52,8 @@ $exam_dates_by_type = [];
 $dates_sql = "SELECT d.exam_date, d.exam_description, d.exam_type_id
         FROM board_exam_dates d
         JOIN board_exam_types t ON t.id = d.exam_type_id
-        WHERE d.department='Arts and Sciences' AND YEAR(d.exam_date) BETWEEN 2019 AND 2024
+        WHERE d.department='Arts and Sciences' AND YEAR(d.exam_date) BETWEEN 2019 AND 2024 
+        AND (d.is_deleted = 0 OR d.is_deleted IS NULL) AND (t.is_deleted = 0 OR t.is_deleted IS NULL)
         ORDER BY d.exam_date DESC";
 $dates_result = $conn->query($dates_sql);
 if ($dates_result) {
@@ -82,16 +83,42 @@ if ($selected_exam_type > 0) {
   $sql = "SELECT DISTINCT s.id, TRIM(s.subject_name) as subject_name, COALESCE(s.total_items,50) as total_items
           FROM subjects s
           LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-          WHERE s.department='Arts and Sciences' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
+          WHERE s.department='Arts and Sciences' AND TRIM(s.subject_name) != '' 
+          AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+          AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
           ORDER BY s.subject_name ASC";
   $sub_q = $conn->query($sql);
 } else {
-  $sub_q = $conn->query("SELECT id, TRIM(subject_name) AS subject_name, COALESCE(total_items,50) AS total_items FROM subjects WHERE department='Arts and Sciences' AND TRIM(subject_name) != '' ORDER BY subject_name ASC");
+  $sub_q = $conn->query("SELECT id, TRIM(subject_name) AS subject_name, COALESCE(total_items,50) AS total_items FROM subjects WHERE department='Arts and Sciences' AND TRIM(subject_name) != '' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY subject_name ASC");
 }
 if ($sub_q) {
   while ($r = $sub_q->fetch_assoc()) {
     $subjects[] = $r;
   }
+}
+
+// Create anonymous_board_passers table if it doesn't exist
+$create_table_sql = "CREATE TABLE IF NOT EXISTS anonymous_board_passers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course VARCHAR(255) NOT NULL,
+    board_exam_type VARCHAR(255) NOT NULL,
+    board_exam_date DATE NOT NULL,
+    exam_type VARCHAR(100) NOT NULL COMMENT 'First Timer or Repeater',
+    result VARCHAR(50) NOT NULL,
+    department VARCHAR(100) DEFAULT 'Arts and Sciences',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_dept (department),
+    INDEX idx_course (course),
+    INDEX idx_exam_type (board_exam_type),
+    INDEX idx_result (result),
+    INDEX idx_date (board_exam_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+$conn->query($create_table_sql);
+
+// Add course column if it doesn't exist (for existing tables)
+$check_course_col = $conn->query("SHOW COLUMNS FROM anonymous_board_passers LIKE 'course'");
+if ($check_course_col && $check_course_col->num_rows === 0) {
+    $conn->query("ALTER TABLE anonymous_board_passers ADD COLUMN course VARCHAR(255) NOT NULL AFTER id");
 }
 
 // Messages
@@ -100,6 +127,9 @@ $error_message = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Check examinee type
+  $examinee_type = $_POST['examinee_type'] ?? 'named';
+  
   // Collect input
   $first_name = trim($_POST['first_name'] ?? '');
   $last_name = trim($_POST['last_name'] ?? '');
@@ -123,26 +153,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Validation
   $errors = [];
-  if (empty($first_name)) {
-    $errors[] = 'First name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
-    $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($last_name)) {
-    $errors[] = 'Last name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
-    $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
-    $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
-    $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($sex)) { $errors[] = 'Sex is required'; }
-  if (empty($course)) { $errors[] = 'Course is required'; }
-  if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
-    $errors[] = 'Year must be between 1950 and ' . date('Y');
+  
+  // For anonymous entries, skip personal information validation but require course
+  if ($examinee_type === 'named') {
+    if (empty($first_name)) {
+      $errors[] = 'First name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
+      $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($last_name)) {
+      $errors[] = 'Last name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
+      $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
+      $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
+      $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($sex)) { $errors[] = 'Sex is required'; }
+    if (empty($course)) { $errors[] = 'Course is required'; }
+    if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
+      $errors[] = 'Year must be between 1950 and ' . date('Y');
+    }
+  } else {
+    // Anonymous entries still need course
+    if (empty($course)) { $errors[] = 'Course is required'; }
   }
   if (empty($board_exam_date)) {
     $errors[] = 'Board exam date is required';
@@ -161,8 +198,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($exam_type)) { $errors[] = 'Take attempts is required'; }
   if (empty($board_exam_type)) { $errors[] = 'Board exam type is required'; }
 
-  // Resolve board_exam_type name to ID for subject filtering
-  if (empty($errors)) {
+  // Handle anonymous entry
+  if (empty($errors) && $examinee_type === 'anonymous') {
+    $stmt = $conn->prepare("INSERT INTO anonymous_board_passers (course, board_exam_type, board_exam_date, exam_type, result, department) VALUES (?, ?, ?, ?, ?, 'Arts and Sciences')");
+    if ($stmt) {
+      $stmt->bind_param('sssss', $course, $board_exam_type, $board_exam_date, $exam_type, $result);
+      if ($stmt->execute()) {
+        $success_message = 'Exam data added successfully!';
+        $_POST = []; // Clear form
+      } else {
+        $error_message = 'Error adding exam data: ' . $stmt->error;
+      }
+      $stmt->close();
+    } else {
+      $error_message = 'Database error: ' . $conn->error;
+    }
+  }
+  // Resolve board_exam_type name to ID for subject filtering (for named students)
+  elseif (empty($errors) && $examinee_type === 'named') {
     $posted_board_exam_type_name = $board_exam_type;
     $posted_board_exam_type_id = 0;
     if (!empty($posted_board_exam_type_name)) {
@@ -184,7 +237,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $sql = "SELECT s.id, TRIM(s.subject_name) as subject_name, COALESCE(s.total_items,50) as total_items
         FROM subjects s
         LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-        WHERE s.department='Arts and Sciences' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
+        WHERE s.department='Arts and Sciences' AND TRIM(s.subject_name) != '' 
+        AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+        AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
         GROUP BY s.id
         ORDER BY subject_name ASC";
       $sub_q = $conn->query($sql);
@@ -192,10 +247,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         while ($r = $sub_q->fetch_assoc()) { $subjects[] = $r; }
       }
     }
-  }
 
-  if (empty($errors)) {
-    $conn->begin_transaction();
+    if (empty($errors)) {
+      $conn->begin_transaction();
 
     // Check if `result` column exists in board_passers
     $has_result_col = false;
@@ -341,6 +395,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $error_message = 'Error adding record: ' . $stmt->error;
     }
     $stmt->close();
+    } // Close the elseif named student block
   } else {
     $error_message = implode(', ', $errors);
   }
@@ -361,7 +416,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <style>
     .remark-pass {
         color: #065f46;
-        background: #ecfdf5;
+        background: #fdf2f8;
         padding: 4px 8px;
         border-radius: 6px;
     }
@@ -380,8 +435,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     body {
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
-        /* Cyan gradient background */
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
+        /* Pink gradient background */
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
@@ -397,27 +452,62 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         right: 0;
         bottom: 0;
         background:
-            radial-gradient(circle at 20% 20%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 60%, rgba(8, 145, 168, 0.08) 0%, transparent 50%),
-            radial-gradient(circle at 40% 80%, rgba(14, 116, 144, 0.1) 0%, transparent 50%);
+            radial-gradient(circle at 20% 20%, rgba(255, 161, 195, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(131, 0, 52, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(79, 0, 36, 0.1) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
 
     /* Sidebar styling moved to css/sidebar.css (shared) */
 
+    /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
+    }
+
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #FFA1C3 0%, #830034 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(131, 0, 52, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
+        box-shadow: 0 4px 20px rgba(79, 0, 36, 0.3);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
     }
@@ -502,8 +592,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .form-header {
-        background: linear-gradient(135deg, #1e40af 0%, #06b6d4 100%);
-        /* Navy to Cyan */
+        background: linear-gradient(135deg, #4F0024 0%, #830034 50%, #FFA1C3 100%);
+        /* Maroon to Burgundy to Pink */
         color: white;
         padding: 40px;
         text-align: center;
@@ -589,7 +679,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 0 auto 24px;
         font-size: 2.2rem;
         box-shadow:
-            0 15px 35px rgba(6, 182, 212, 0.3),
+            0 15px 35px rgba(255, 161, 195, 0.3),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
         border: 2px solid rgba(255, 255, 255, 0.25);
         position: relative;
@@ -614,7 +704,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-icon:hover {
         transform: scale(1.1) rotate(5deg);
         box-shadow:
-            0 20px 40px rgba(44, 90, 160, 0.4),
+            0 20px 40px rgba(131, 0, 52, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 
@@ -623,7 +713,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         background: linear-gradient(135deg, rgba(249, 250, 251, 0.95) 0%, rgba(243, 244, 246, 0.9) 100%);
         backdrop-filter: blur(15px);
         -webkit-backdrop-filter: blur(15px);
-        border-bottom: 1px solid rgba(44, 90, 160, 0.1);
+        border-bottom: 1px solid rgba(131, 0, 52, 0.1);
         position: relative;
         z-index: 2;
     }
@@ -652,7 +742,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.05) 0%, rgba(255, 240, 252, 0.03) 100%);
         opacity: 0;
         transition: all 0.3s ease;
     }
@@ -662,12 +752,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .tab-btn.active {
-        color: #06b6d4;
-        /* Cyan */
-        background: linear-gradient(135deg, rgba(6, 182, 212, 0.12) 0%, rgba(8, 145, 168, 0.08) 100%);
+        color: #830034;
+        /* Burgundy */
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.12) 0%, rgba(131, 0, 52, 0.08) 100%);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border-bottom: 3px solid #06b6d4;
+        border-bottom: 3px solid #830034;
     }
 
     .tab-btn.active::after {
@@ -677,9 +767,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #06b6d4 0%, #0891a8 100%);
-        /* Cyan gradient */
-        box-shadow: 0 2px 8px rgba(6, 182, 212, 0.3);
+        background: linear-gradient(90deg, #830034 0%, #4F0024 100%);
+        /* Burgundy gradient */
+        box-shadow: 0 2px 8px rgba(131, 0, 52, 0.3);
     }
 
     .tab-btn i {
@@ -692,8 +782,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .tab-btn.active i {
-        color: #06b6d4;
-        /* Cyan */
+        color: #830034;
+        /* Burgundy */
         transform: scale(1.15);
     }
 
@@ -761,8 +851,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         width: 80px;
         height: 80px;
         border-radius: 20px;
-        background: linear-gradient(135deg, #1e40af 0%, #06b6d4 100%);
-        /* Navy to Cyan */
+        background: linear-gradient(135deg, #830034 0%, #FFA1C3 100%);
+        /* Burgundy to Pink */
         color: white;
         display: flex;
         align-items: center;
@@ -770,7 +860,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         margin: 0 auto 24px;
         font-size: 2rem;
         box-shadow:
-            0 15px 35px rgba(6, 182, 212, 0.4),
+            0 15px 35px rgba(131, 0, 52, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.2);
         position: relative;
@@ -784,18 +874,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         0%,
         100% {
             transform: scale(1);
-            box-shadow: 0 15px 35px rgba(44, 90, 160, 0.4);
+            box-shadow: 0 15px 35px rgba(131, 0, 52, 0.4);
         }
 
         50% {
             transform: scale(1.05);
-            box-shadow: 0 20px 40px rgba(44, 90, 160, 0.5);
+            box-shadow: 0 20px 40px rgba(131, 0, 52, 0.5);
         }
     }
 
     .tab-icon:hover {
         transform: scale(1.1) rotate(5deg);
-        box-shadow: 0 20px 40px rgba(44, 90, 160, 0.6);
+        box-shadow: 0 20px 40px rgba(131, 0, 52, 0.6);
     }
 
 
@@ -830,7 +920,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -5px;
         right: -5px;
         bottom: -5px;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.05) 0%, rgba(58, 141, 222, 0.03) 100%);
+        background: linear-gradient(135deg, rgba(131, 0, 52, 0.05) 0%, rgba(255, 161, 195, 0.03) 100%);
         border-radius: 20px;
         opacity: 0;
         transition: all 0.3s ease;
@@ -843,7 +933,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .form-group.focused::before {
         opacity: 1;
-        background: linear-gradient(135deg, rgba(44, 90, 160, 0.08) 0%, rgba(58, 141, 222, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(131, 0, 52, 0.08) 0%, rgba(255, 161, 195, 0.05) 100%);
     }
 
     .form-group label {
@@ -860,20 +950,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .form-group label:hover {
-        color: #2c5aa0;
+        color: #830034;
         transform: translateX(2px);
     }
 
     .form-group label i {
-        color: #2c5aa0;
-        filter: drop-shadow(0 2px 4px rgba(44, 90, 160, 0.2));
+        color: #830034;
+        filter: drop-shadow(0 2px 4px rgba(131, 0, 52, 0.2));
         transition: all 0.3s ease;
         font-size: 1.1rem;
     }
 
     .form-group label:hover i {
         transform: scale(1.1) rotate(5deg);
-        color: #3182ce;
+        color: #4F0024;
     }
 
     .form-group input,
@@ -908,7 +998,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-group select:focus,
     .form-group textarea:focus {
         outline: none;
-        border-color: #2c5aa0;
+        border-color: #be185d;
         box-shadow:
             0 0 0 4px rgba(44, 90, 160, 0.15),
             0 8px 25px rgba(44, 90, 160, 0.2);
@@ -919,7 +1009,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .form-group input:hover,
     .form-group select:hover,
     .form-group textarea:hover {
-        border-color: #3182ce;
+        border-color: #db2777;
         transform: translateY(-1px);
         box-shadow:
             0 6px 12px rgba(44, 90, 160, 0.15),
@@ -976,21 +1066,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        /* Emerald Green */
+        background: linear-gradient(135deg, #830034 0%, #4F0024 100%);
+        /* Burgundy to Maroon */
         color: white;
         box-shadow:
-            0 8px 25px rgba(16, 185, 129, 0.4),
+            0 8px 25px rgba(131, 0, 52, 0.4),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
         margin-left: auto;
         border-color: rgba(255, 255, 255, 0.2);
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         transform: translateY(-3px) scale(1.02);
         box-shadow:
-            0 12px 35px rgba(16, 185, 129, 0.5),
+            0 12px 35px rgba(131, 0, 52, 0.5),
             inset 0 1px 0 rgba(255, 255, 255, 0.4);
     }
 
@@ -1014,8 +1104,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         box-shadow:
             0 8px 20px rgba(0, 0, 0, 0.12),
             inset 0 1px 0 rgba(255, 255, 255, 0.9);
-        color: #06b6d4;
-        /* Cyan on hover */
+        color: #830034;
+        /* Burgundy on hover */
     }
 
     .btn-secondary:active {
@@ -1200,7 +1290,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* Elegant header for validation modal */
     .validation-modal .modal-header {
-        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        background: linear-gradient(135deg, #9f1239 0%, #3b82f6 100%);
         color: #ffffff;
         padding: 32px 36px;
         display: flex;
@@ -1208,7 +1298,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         align-items: center;
         text-align: center;
         gap: 18px;
-        box-shadow: 0 8px 24px rgba(30, 64, 175, 0.25);
+        box-shadow: 0 8px 24px rgba(219, 39, 119, 0.25);
         position: relative;
         overflow: hidden;
         flex-shrink: 0;
@@ -1303,12 +1393,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .validation-modal .field-list::-webkit-scrollbar-thumb {
-        background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+        background: linear-gradient(180deg, #3b82f6 0%, #830034 100%);
         border-radius: 10px;
     }
 
     .validation-modal .field-list::-webkit-scrollbar-thumb:hover {
-        background: linear-gradient(180deg, #2563eb 0%, #1e40af 100%);
+        background: linear-gradient(180deg, #830034 0%, #9f1239 100%);
     }
 
     .validation-modal .field-list h4 {
@@ -1402,14 +1492,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .validation-modal .field-list .info-note p {
         margin: 0;
-        color: #1e40af;
+        color: #9f1239;
         font-size: 0.93rem;
         line-height: 1.6;
         font-weight: 500;
     }
 
     .validation-modal .field-list .info-note strong {
-        color: #1e40af;
+        color: #9f1239;
         font-weight: 700;
     }
 
@@ -1467,7 +1557,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     /* Polished header for confirmation modal */
     .confirmation-modal .modal-header {
-        background: linear-gradient(90deg, #1e40af, #06b6d4);
+        background: linear-gradient(90deg, #9f1239, #06b6d4);
         color: white;
         padding: 14px 18px;
         display: flex;
@@ -1588,7 +1678,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         padding: 48px 44px !important;
         border-radius: 28px !important;
         box-shadow:
-            0 32px 64px -12px rgba(30, 64, 175, 0.25),
+            0 32px 64px -12px rgba(219, 39, 119, 0.25),
             inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
         max-width: 480px !important;
         width: 92% !important;
@@ -1607,7 +1697,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 25%, #60a5fa 50%, #3182ce 75%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #9f1239 0%, #db2777 25%, #ec4899 50%, #db2777 75%, #9f1239 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -1630,13 +1720,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     #logoutModal .modal-header {
         margin-bottom: 32px !important;
-        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%) !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
-        border: 2px solid #bfdbfe !important;
+        border: 2px solid #fbcfe8 !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(49, 130, 206, 0.15) !important;
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.15) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -1646,7 +1736,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #1e40af 0%, #3182ce 50%, #60a5fa 100%) !important;
+        background: linear-gradient(90deg, #9f1239 0%, #db2777 50%, #ec4899 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -1657,7 +1747,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(255, 161, 195, 0.05) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -1665,7 +1755,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%) !important;
         /* Orange to Red */
         border-radius: 50% !important;
         display: flex !important;
@@ -1675,9 +1765,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         color: white !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(30, 64, 175, 0.4),
+            0 20px 40px rgba(219, 39, 119, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(49, 130, 206, 0.2) !important;
+            0 0 0 6px rgba(236, 72, 153, 0.2) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -1688,17 +1778,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         0%,
         100% {
             box-shadow:
-                0 20px 40px rgba(30, 64, 175, 0.4),
+                0 20px 40px rgba(219, 39, 119, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(49, 130, 206, 0.2);
+                0 0 0 6px rgba(236, 72, 153, 0.2);
             transform: scale(1);
         }
 
         50% {
             box-shadow:
-                0 25px 50px rgba(30, 64, 175, 0.6),
+                0 25px 50px rgba(219, 39, 119, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(49, 130, 206, 0.3);
+                0 0 0 8px rgba(236, 72, 153, 0.3);
             transform: scale(1.05);
         }
     }
@@ -1710,7 +1800,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #3182ce 0%, #2c5aa0 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -1730,7 +1820,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #9f1239 0%, #830034 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -1742,7 +1832,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #2563eb !important;
+        color: #830034 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -1929,7 +2019,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #9f1239 0%, #db2777 50%, #830034 100%) !important;
         color: #ffffff !important;
         border: none !important;
         outline: none !important;
@@ -1954,7 +2044,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%) !important;
+        background: linear-gradient(135deg, #4F0024 0%, #9f1239 50%, #9f1239 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -1967,7 +2057,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #4F0024 0%, #9f1239 50%, #9f1239 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -2247,7 +2337,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     .validation-tip p {
         margin: 0;
-        color: #1e40af;
+        color: #9f1239;
         font-weight: 500;
         line-height: 1.5;
     }
@@ -2339,11 +2429,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         right: 0;
         height: 4px;
         background: linear-gradient(90deg,
-                #2c5aa0 0%,
-                #3182ce 25%,
+                #be185d 0%,
+                #db2777 25%,
                 #10b981 50%,
                 #059669 75%,
-                #2c5aa0 100%);
+                #be185d 100%);
         animation: gradientShift 3s ease-in-out infinite;
     }
 
@@ -2418,7 +2508,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .receipt-header {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #be185d 0%, #db2777 100%);
         color: white;
         padding: 24px 28px;
         text-align: center;
@@ -2472,7 +2562,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .receipt-section h5 i {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #be185d 0%, #db2777 100%);
         color: white;
         width: 28px;
         height: 28px;
@@ -2585,7 +2675,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     .receipt-footer i {
-        color: #3182ce;
+        color: #db2777;
         margin-right: 8px;
         font-size: 1.1rem;
     }
@@ -2792,9 +2882,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Enter student information below</p>
             </div>
 
+            <!-- Board Examinee Type Selection -->
+            <div class="examinee-type-section" style="margin-bottom: 24px; padding: 24px; background: linear-gradient(145deg, #E2DFDA 0%, #e8f5e9 100%); border-radius: 16px; border: 2px solid rgba(145, 179, 142, 0.3);">
+                <h4 style="margin-bottom: 16px; color: #1e4620; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-user-tag"></i>
+                    Board Examinee Type
+                </h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #d1e7dd; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="named">
+                        <input type="radio" name="examinee_type_radio" value="named" checked onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-graduate" style="color: #8BA49A; margin-right: 6px;"></i>
+                            Named Student
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Full personal information and exam details required</p>
+                    </label>
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #d1e7dd; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="anonymous">
+                        <input type="radio" name="examinee_type_radio" value="anonymous" onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-secret" style="color: #8BA49A; margin-right: 6px;"></i>
+                            Data Entry
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Exam data only, no personal information collected</p>
+                    </label>
+                </div>
+            </div>
+
             <!-- Tab Navigation -->
-            <div class="tab-navigation">
-                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')">
+            <div class="tab-navigation" id="tabNavigation">
+                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')" id="personalTabBtn">
                     <i class="fas fa-user"></i>
                     Personal Info
                 </button>
@@ -2805,6 +2921,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <form method="POST" action="">
+                <input type="hidden" name="examinee_type" id="examineeTypeHidden" value="named">
+                
                 <!-- Personal Information Tab -->
                 <div id="personalTab" class="tab-content active">
                     <div class="tab-header">
@@ -2911,6 +3029,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-grid">
                         <div class="form-group">
+                            <label for="course_exam">
+                                <i class="fas fa-graduation-cap"></i>Course *
+                            </label>
+                            <select id="course_exam" name="course" required>
+                                <option value="">Select Course</option>
+                                <?php foreach($courses as $course): ?>
+                                <option value="<?= htmlspecialchars($course) ?>"
+                                    <?= (isset($_POST['course']) && $_POST['course'] == $course) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($course) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group named-only-field">
                             <label for="year_graduated">
                                 <i class="fas fa-calendar"></i>Year Graduated *
                             </label>
@@ -2943,7 +3076,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 gap: 6px;
                 font-style: italic;
               ">
-                                <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+                                <i class="fas fa-info-circle" style="color: #be185d;"></i>
                                 Available dates will appear after selecting a board exam type
                             </div>
                         </div>
@@ -2964,7 +3097,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 gap: 6px;
                 font-style: italic;
               ">
-                                <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+                                <i class="fas fa-info-circle" style="color: #be185d;"></i>
                                 Date must be between January 1, 2019 and December 31, 2024
                             </div>
                         </div>
@@ -3046,13 +3179,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="tab-footer">
-                        <button type="button" onclick="prevTab()" class="btn btn-secondary">
+                        <button type="button" id="prevTabBtn" onclick="prevTab()" class="btn btn-secondary">
                             <i class="fas fa-arrow-left"></i>
                             Previous
                         </button>
                         <button type="button" id="addStudentBtn" onclick="addStudentDirect()" class="btn btn-primary">
                             <i class="fas fa-plus"></i>
-                            Add New Board Examinee
+                            <span id="submitBtnText">Add New Board Examinee</span>
                         </button>
                     </div>
                 </div>
@@ -3458,7 +3591,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             const infoDiv = boardExamDateSelect.parentElement.querySelector('div');
             if (infoDiv) {
                 infoDiv.innerHTML = `
-            <i class="fas fa-info-circle" style="color: #2c5aa0;"></i>
+            <i class="fas fa-info-circle" style="color: #be185d;"></i>
             Available dates will appear after selecting a board exam type
           `;
             }
@@ -3987,15 +4120,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     function populateConfirmationModal() {
-        // Get form values
-        const firstName = document.getElementById('first_name').value.trim();
-        const lastName = document.getElementById('last_name').value.trim();
-        const middleName = document.getElementById('middle_name').value.trim();
-        const suffix = document.getElementById('suffix').value.trim();
-        const sex = document.getElementById('sex').value;
-        const course = document.getElementById('course').value;
-        const yearGraduated = document.getElementById('year_graduated').value;
-
+        // Check if anonymous mode
+        const examineeType = document.getElementById('examineeTypeHidden').value;
+        
         // Get board exam date (from dropdown or custom input)
         const boardExamDateSelect = document.getElementById('board_exam_date');
         const customDateInput = document.getElementById('custom_board_exam_date');
@@ -4012,16 +4139,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const result = document.getElementById('result').value;
         const examType = document.getElementById('exam_type').value;
         const boardExamType = document.getElementById('board_exam_type').value;
-        const rating = document.getElementById('rating').value;
-
-        // Build full name
-        let fullName = lastName + ', ' + firstName;
-        if (middleName) {
-            fullName += ' ' + middleName;
-        }
-        if (suffix) {
-            fullName += ' ' + suffix;
-        }
 
         // Format exam date
         const examDate = new Date(boardExamDate);
@@ -4042,10 +4159,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Populate modal fields
         document.getElementById('receiptDate').textContent = currentDate;
-        document.getElementById('confirmName').textContent = fullName;
-        document.getElementById('confirmSex').textContent = sex;
-        document.getElementById('confirmCourse').textContent = course;
-        document.getElementById('confirmYear').textContent = yearGraduated;
+        
+        if (examineeType === 'anonymous') {
+            // Anonymous entry - show course and exam information
+            const course = document.getElementById('course_exam').value;
+            
+            document.getElementById('confirmName').textContent = 'Data Entry';
+            document.getElementById('confirmSex').textContent = 'N/A';
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = 'N/A';
+            
+            // Hide rating row for anonymous
+            const ratingRow = document.getElementById('ratingRow');
+            if (ratingRow) ratingRow.style.display = 'none';
+        } else {
+            // Named student - show full information
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const middleName = document.getElementById('middle_name').value.trim();
+            const suffix = document.getElementById('suffix').value.trim();
+            const sex = document.getElementById('sex').value;
+            const course = document.getElementById('course').value;
+            const yearGraduated = document.getElementById('year_graduated').value;
+            const rating = document.getElementById('rating').value;
+
+            // Build full name
+            let fullName = lastName + ', ' + firstName;
+            if (middleName) {
+                fullName += ' ' + middleName;
+            }
+            if (suffix) {
+                fullName += ' ' + suffix;
+            }
+
+            document.getElementById('confirmName').textContent = fullName;
+            document.getElementById('confirmSex').textContent = sex;
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = yearGraduated;
+            
+            // Handle rating (optional field)
+            const ratingRow = document.getElementById('ratingRow');
+            if (rating && rating.trim() !== '') {
+                document.getElementById('confirmRating').textContent = rating + '%';
+                ratingRow.style.display = 'flex';
+            } else {
+                ratingRow.style.display = 'none';
+            }
+        }
+        
         document.getElementById('confirmExamDate').textContent = formattedExamDate;
         document.getElementById('confirmResult').textContent = result;
         document.getElementById('confirmExamType').textContent = examType;
@@ -4060,15 +4221,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             resultElement.classList.add('result-failed');
         } else if (result === 'Conditional') {
             resultElement.classList.add('result-conditional');
-        }
-
-        // Handle rating (optional field)
-        const ratingRow = document.getElementById('ratingRow');
-        if (rating && rating.trim() !== '') {
-            document.getElementById('confirmRating').textContent = rating + '%';
-            ratingRow.style.display = 'flex';
-        } else {
-            ratingRow.style.display = 'none';
         }
 
         // (Subjects display removed)
@@ -4130,6 +4282,106 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
 
     // Tab navigation functions
+    function toggleExamineeFields() {
+        const examineeType = document.querySelector('input[name="examinee_type_radio"]:checked').value;
+        const personalTab = document.getElementById('personalTab');
+        const personalTabBtn = document.getElementById('personalTabBtn');
+        const tabNavigation = document.getElementById('tabNavigation');
+        const examTab = document.getElementById('examTab');
+        const hiddenInput = document.getElementById('examineeTypeHidden');
+        const prevTabBtn = document.getElementById('prevTabBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+        
+        // Update hidden input
+        if (hiddenInput) {
+            hiddenInput.value = examineeType;
+        }
+        
+        // Update label styles
+        document.querySelectorAll('.examinee-type-label').forEach(label => {
+            const type = label.getAttribute('data-type');
+            if (type === examineeType) {
+                label.style.borderColor = '#8BA49A';
+                label.style.background = 'linear-gradient(145deg, #E2DFDA 0%, #ffffff 100%)';
+                label.style.boxShadow = '0 4px 15px rgba(145, 179, 142, 0.2)';
+            } else {
+                label.style.borderColor = '#d1e7dd';
+                label.style.background = 'white';
+                label.style.boxShadow = 'none';
+            }
+        });
+        
+        if (examineeType === 'anonymous') {
+            // Hide personal tab and navigation button
+            if (personalTab) personalTab.style.display = 'none';
+            if (personalTabBtn) personalTabBtn.style.display = 'none';
+            
+            // Hide previous button in exam tab
+            if (prevTabBtn) prevTabBtn.style.display = 'none';
+            
+            // Update submit button text
+            if (submitBtnText) submitBtnText.textContent = 'Add Exam Data';
+            
+            // Show exam tab directly and make it active
+            if (examTab) {
+                examTab.style.display = 'block';
+                examTab.classList.add('active');
+            }
+            
+            // Hide named-only fields in exam tab
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = 'none';
+            });
+            
+            // Make all personal fields and named-only fields optional
+            const personalFields = personalTab ? personalTab.querySelectorAll('input[required], select[required]') : [];
+            personalFields.forEach(field => {
+                field.removeAttribute('required');
+            });
+            
+            // Remove required from year_graduated and rating (but keep course required)
+            const yearField = document.getElementById('year_graduated');
+            const ratingField = document.getElementById('rating');
+            
+            if (yearField) yearField.removeAttribute('required');
+            if (ratingField) ratingField.removeAttribute('required');
+        } else {
+            // Show personal tab button
+            if (personalTabBtn) personalTabBtn.style.display = 'flex';
+            
+            // Show previous button
+            if (prevTabBtn) prevTabBtn.style.display = '';
+            
+            // Update submit button text
+            if (submitBtnText) submitBtnText.textContent = 'Add New Board Examinee';
+            
+            // Show named-only fields
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = '';
+            });
+            
+            // Reset to personal tab
+            switchTab('personal');
+            
+            // Make personal fields required again
+            const lastNameField = document.getElementById('last_name');
+            const firstNameField = document.getElementById('first_name');
+            const sexField = document.getElementById('sex');
+            const courseField = document.getElementById('course');
+            const courseExamField = document.getElementById('course_exam');
+            const yearField = document.getElementById('year_graduated');
+            const ratingField = document.getElementById('rating');
+            
+            if (lastNameField) lastNameField.setAttribute('required', 'required');
+            if (firstNameField) firstNameField.setAttribute('required', 'required');
+            if (sexField) sexField.setAttribute('required', 'required');
+            if (courseField) courseField.setAttribute('required', 'required');
+            if (courseExamField) courseExamField.setAttribute('required', 'required');
+            if (yearField) yearField.setAttribute('required', 'required');
+            if (ratingField) ratingField.setAttribute('required', 'required');
+        }
+    }
+    
     function switchTab(tabName) {
         // Hide all tabs first
         document.querySelectorAll('.tab-content').forEach(tab => {
@@ -4365,7 +4617,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         allInputs.forEach(input => {
             input.addEventListener('blur', function() {
                 if (this.value.trim()) {
-                    this.style.borderColor = '#2c5aa0';
+                    this.style.borderColor = '#be185d';
                 } else {
                     this.style.borderColor = '#ef4444';
                 }
@@ -4373,7 +4625,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             input.addEventListener('input', function() {
                 if (this.value.trim()) {
-                    this.style.borderColor = '#2c5aa0';
+                    this.style.borderColor = '#be185d';
                 }
             });
         });

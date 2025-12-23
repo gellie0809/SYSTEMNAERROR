@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Status Checker - Board Exam Prediction System</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .api-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .api-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        
+        .api-card.checking {
+            border-color: #fbbf24;
+        }
+        
+        .api-card.online {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+        
+        .api-card.offline {
+            background: #fee2e2;
+            border-color: #ef4444;
+        }
+        
+        .api-name {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 16px;
+        }
+        
+        .api-port {
+            font-size: 13px;
+            color: #718096;
+            margin-bottom: 10px;
+        }
+        
+        .status-badge {
+            display: inline-block;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-checking {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .status-online {
+            background: #10b981;
+            color: white;
+        }
+        
+        .status-offline {
+            background: #ef4444;
+            color: white;
+        }
+        
+        .action-section {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+        
+        .action-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .instructions {
+            background: #fff;
+            border-left: 4px solid #667eea;
+            padding: 15px 20px;
+            margin-top: 20px;
+            border-radius: 4px;
+        }
+        
+        .instructions h3 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 16px;
+        }
+        
+        .instructions ol {
+            margin-left: 20px;
+            color: #4a5568;
+            line-height: 1.8;
+        }
+        
+        .refresh-info {
+            text-align: center;
+            color: #718096;
+            font-size: 13px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤖 API Status Checker</h1>
+        <p class="subtitle">Board Exam Prediction System</p>
+        
+        <div class="api-grid" id="apiGrid">
+            <!-- APIs will be loaded here -->
+        </div>
+        
+        <div class="action-section">
+            <div class="action-title">⚡ Quick Actions</div>
+            <button class="btn btn-success" onclick="checkAllAPIs()">
+                🔄 Refresh Status
+            </button>
+            <a href="START_ALL_PREDICTION_APIS.bat" class="btn btn-primary" download>
+                🚀 Download API Starter
+            </a>
+        </div>
+        
+        <div class="instructions">
+            <h3>📖 How to Start APIs:</h3>
+            <ol>
+                <li>Find and double-click <code>START_ALL_PREDICTION_APIS.bat</code> in your project folder</li>
+                <li>You'll see 5 terminal windows open - <strong>keep them open!</strong></li>
+                <li>Wait 5-10 seconds for APIs to start</li>
+                <li>Click "Refresh Status" above to verify all are online</li>
+                <li>Now you can use AI predictions in all dashboards! 🎉</li>
+            </ol>
+        </div>
+        
+        <div class="refresh-info">
+            Auto-refreshing every 5 seconds...
+        </div>
+    </div>
+    
+    <script>
+        const apis = [
+            { name: 'Engineering', port: 5000 },
+            { name: 'CCJE', port: 5001 },
+            { name: 'CBAA', port: 5002 },
+            { name: 'CAS', port: 5003 },
+            { name: 'CTE', port: 5004 }
+        ];
+        
+        async function checkAPI(api) {
+            const card = document.getElementById(`api-${api.port}`);
+            const badge = card.querySelector('.status-badge');
+            
+            card.className = 'api-card checking';
+            badge.className = 'status-badge status-checking';
+            badge.textContent = 'Checking...';
+            
+            try {
+                const response = await fetch(`http://localhost:${api.port}/api/model/info`, {
+                    method: 'GET',
+                    mode: 'cors',
+                    cache: 'no-cache'
+                });
+                
+                if (response.ok) {
+                    card.className = 'api-card online';
+                    badge.className = 'status-badge status-online';
+                    badge.textContent = '✓ Online';
+                } else {
+                    throw new Error('Not responding');
+                }
+            } catch (error) {
+                card.className = 'api-card offline';
+                badge.className = 'status-badge status-offline';
+                badge.textContent = '✗ Offline';
+            }
+        }
+        
+        function renderAPIs() {
+            const grid = document.getElementById('apiGrid');
+            grid.innerHTML = apis.map(api => `
+                <div class="api-card" id="api-${api.port}">
+                    <div class="api-name">${api.name}</div>
+                    <div class="api-port">Port ${api.port}</div>
+                    <span class="status-badge status-checking">Checking...</span>
+                </div>
+            `).join('');
+        }
+        
+        async function checkAllAPIs() {
+            for (const api of apis) {
+                await checkAPI(api);
+            }
+        }
+        
+        // Initial render and check
+        renderAPIs();
+        checkAllAPIs();
+        
+        // Auto-refresh every 5 seconds
+        setInterval(checkAllAPIs, 5000);
+    </script>
+</body>
+</html>

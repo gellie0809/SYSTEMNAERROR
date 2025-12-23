@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Arts and Sciences admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cas_admin@lspu.edu.ph') {
+// Allow CAS admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cas_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -17,8 +17,8 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-// Fetch board exam types and dates for filters (CAS only)
-$betStmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Arts and Sciences' ORDER BY exam_type_name ASC");
+// Fetch board exam types and dates for filters (CAS only) - exclude deleted records
+$betStmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Arts and Sciences' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY exam_type_name ASC");
 $betStmt->execute();
 $betRes = $betStmt->get_result();
 $boardExamTypes = [];
@@ -26,7 +26,7 @@ while ($r = $betRes->fetch_assoc()) {
     $boardExamTypes[] = $r; 
 }
 
-$bedStmt = $conn->prepare("SELECT id, exam_date, exam_description, exam_type_id FROM board_exam_dates WHERE department='Arts and Sciences' ORDER BY exam_date DESC");
+$bedStmt = $conn->prepare("SELECT id, exam_date, exam_description, exam_type_id FROM board_exam_dates WHERE department='Arts and Sciences' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY exam_date DESC");
 $bedStmt->execute();
 $bedRes = $bedStmt->get_result();
 $boardExamDates = [];
@@ -50,11 +50,11 @@ $bedStmt->close();
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-    /* Modern cyan/teal theme with animations */
+    /* Modern CAS pink/maroon theme with animations */
     :root {
-        --primary: #06b6d4;
-        --primary-dark: #0891b2;
-        --primary-darker: #0e7490;
+        --primary: #ec4899;
+        --primary-dark: #db2777;
+        --primary-darker: #be185d;
         --magenta: #f472b6;
         --muted: #64748b;
         --success: #10b981;
@@ -126,7 +126,7 @@ $bedStmt->close();
 
     body {
         font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
         margin: 0;
         color: #0f1724;
         position: relative;
@@ -140,24 +140,62 @@ $bedStmt->close();
         left: 0;
         right: 0;
         bottom: 0;
-        background: radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+        background: radial-gradient(circle at 20% 50%, rgba(236, 72, 153, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.08) 0%, transparent 50%);
         pointer-events: none;
         z-index: 0;
     }
+
+    /* Sidebar styling moved to css/sidebar.css (shared) */
+    
+    /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
+    }
+
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #FFA1C3 0%, #830034 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(131, 0, 52, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
 
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 25px rgba(6, 182, 212, 0.25);
+        box-shadow: 0 4px 25px rgba(79, 0, 36, 0.25);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         overflow: hidden;
@@ -233,8 +271,8 @@ $bedStmt->close();
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 254, 255, 0.9) 100%);
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 10px 35px rgba(6, 182, 212, 0.15);
-        border: 2px solid rgba(6, 182, 212, 0.2);
+        box-shadow: 0 10px 35px rgba(236, 72, 153, 0.15);
+        border: 2px solid rgba(236, 72, 153, 0.2);
         position: relative;
         overflow: hidden;
         backdrop-filter: blur(12px);
@@ -246,8 +284,8 @@ $bedStmt->close();
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(236, 254, 255, 0.85) 100%);
         border-radius: 20px;
         padding: 28px;
-        box-shadow: 0 14px 40px rgba(6, 182, 212, 0.2);
-        border: 2px solid rgba(6, 182, 212, 0.15);
+        box-shadow: 0 14px 40px rgba(236, 72, 153, 0.2);
+        border: 2px solid rgba(236, 72, 153, 0.15);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         animation: fadeIn 0.8s ease 0.2s both;
@@ -276,7 +314,7 @@ $bedStmt->close();
     }
 
     .step h4 i {
-        color: #06b6d4;
+        color: #ec4899;
         font-size: 1.1rem;
     }
 
@@ -290,8 +328,8 @@ $bedStmt->close();
         font-family: 'Inter', sans-serif;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         appearance: none;
-        background-image: linear-gradient(45deg, transparent 50%, #06b6d4 50%),
-            linear-gradient(135deg, #06b6d4 50%, transparent 50%);
+        background-image: linear-gradient(45deg, transparent 50%, #ec4899 50%),
+            linear-gradient(135deg, #ec4899 50%, transparent 50%);
         background-position: calc(100% - 20px) calc(1em + 4px),
             calc(100% - 14px) calc(1em + 4px);
         background-size: 6px 6px, 6px 6px;
@@ -300,14 +338,14 @@ $bedStmt->close();
     }
 
     select:hover {
-        border-color: #06b6d4;
-        background-color: #f0fdff;
+        border-color: #ec4899;
+        background-color: #fef1f8;
     }
 
     select:focus {
         outline: none;
-        border-color: #06b6d4;
-        box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.2);
+        border-color: #ec4899;
+        box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.2);
         background-color: #fff;
     }
 
@@ -322,12 +360,12 @@ $bedStmt->close();
 
     option:hover,
     option:focus {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
     }
 
     option:checked {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         font-weight: 700;
     }
@@ -358,7 +396,7 @@ $bedStmt->close();
     }
 
     .hint i {
-        color: #06b6d4;
+        color: #ec4899;
     }
 
     .filter-header {
@@ -367,7 +405,7 @@ $bedStmt->close();
         justify-content: space-between;
         padding-bottom: 16px;
         margin-bottom: 20px;
-        border-bottom: 2px solid rgba(6, 182, 212, 0.15);
+        border-bottom: 2px solid rgba(236, 72, 153, 0.15);
     }
 
     .filter-title {
@@ -382,7 +420,7 @@ $bedStmt->close();
     }
 
     .filter-title i {
-        color: #06b6d4;
+        color: #ec4899;
         font-size: 1.4rem;
         animation: pulse 2s ease-in-out infinite;
     }
@@ -392,7 +430,7 @@ $bedStmt->close();
         border-radius: 12px;
         font-size: 0.95rem;
         width: auto;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         border: none;
         display: flex;
@@ -400,13 +438,13 @@ $bedStmt->close();
         gap: 8px;
         font-weight: 600;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
     }
 
     .filter-header .print-btn:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
     }
 
     .filter-actions {
@@ -448,10 +486,10 @@ $bedStmt->close();
         font-weight: 700;
         padding: 10px 18px;
         border-radius: 999px;
-        background: linear-gradient(145deg, #fff 0%, #f0fdff 100%);
+        background: linear-gradient(145deg, #fff 0%, #fef1f8 100%);
         color: #0f1724;
-        border: 2px solid #06b6d4;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);
+        border: 2px solid #ec4899;
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);
         animation: fadeIn 0.5s ease;
     }
 
@@ -470,9 +508,9 @@ $bedStmt->close();
         align-items: center;
         justify-content: center;
         border-radius: 999px;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
-        box-shadow: 0 4px 12px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
         animation: float 3s ease-in-out infinite;
     }
 
@@ -483,16 +521,16 @@ $bedStmt->close();
         gap: 10px;
         padding: 12px 16px;
         border-radius: 14px;
-        background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%);
-        color: #0e7490;
-        border: 2px solid #67e8f9;
+        background: linear-gradient(145deg, #fdf2f8 0%, #fce7f3 100%);
+        color: #be185d;
+        border: 2px solid #FFA1C3;
         font-size: 0.92rem;
         font-weight: 600;
         animation: fadeIn 0.6s ease;
     }
 
     .tip-pill i {
-        color: #06b6d4;
+        color: #ec4899;
         font-size: 1.1rem;
     }
 
@@ -506,8 +544,8 @@ $bedStmt->close();
     .chip {
         padding: 8px 16px;
         border-radius: 999px;
-        border: 2px solid #06b6d4;
-        color: #06b6d4;
+        border: 2px solid #ec4899;
+        color: #ec4899;
         background: #fff;
         cursor: pointer;
         font-weight: 700;
@@ -516,42 +554,42 @@ $bedStmt->close();
     }
 
     .chip:hover {
-        background: #06b6d4;
+        background: #ec4899;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35);
     }
 
     .chip.active {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         border-color: transparent;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
     }
 
     .btn-secondary {
         background: #fff;
-        color: #06b6d4;
-        border: 2px solid #06b6d4;
+        color: #ec4899;
+        border: 2px solid #ec4899;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     .btn-secondary:hover {
-        background: #06b6d4;
+        background: #ec4899;
         color: #fff;
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(6, 182, 212, 0.35);
+        box-shadow: 0 6px 20px rgba(236, 72, 153, 0.35);
     }
 
     .btn-primary {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         border: none;
         padding: 12px 24px;
         border-radius: 14px;
         cursor: pointer;
         font-weight: 700;
-        box-shadow: 0 8px 24px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 8px 24px rgba(236, 72, 153, 0.3);
         display: flex;
         align-items: center;
         gap: 8px;
@@ -559,9 +597,9 @@ $bedStmt->close();
     }
 
     .btn-primary:hover {
-        background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
         transform: translateY(-2px);
-        box-shadow: 0 12px 30px rgba(6, 182, 212, 0.4);
+        box-shadow: 0 12px 30px rgba(236, 72, 153, 0.4);
     }
 
     .btn-primary i {
@@ -610,7 +648,7 @@ $bedStmt->close();
         padding: 8px 12px;
         border-radius: 8px;
         font-weight: 700;
-        box-shadow: 0 8px 20px rgba(49, 130, 206, 0.12);
+        box-shadow: 0 8px 20px rgba(236, 72, 153, 0.12);
     }
 
     .charts-grid {
@@ -621,11 +659,11 @@ $bedStmt->close();
     }
 
     .chart-card {
-        background: linear-gradient(145deg, #fff 0%, #f0fdff 100%);
+        background: linear-gradient(145deg, #fff 0%, #fef1f8 100%);
         padding: 20px;
         border-radius: 18px;
-        border: 2px solid rgba(6, 182, 212, 0.15);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.12);
+        border: 2px solid rgba(236, 72, 153, 0.15);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.12);
         display: flex;
         flex-direction: column;
         gap: 12px;
@@ -641,15 +679,15 @@ $bedStmt->close();
         left: 0;
         right: 0;
         height: 3px;
-        background: linear-gradient(90deg, #06b6d4 0%, #0891b2 50%, #22d3ee 100%);
+        background: linear-gradient(90deg, #ec4899 0%, #db2777 50%, #FFA1C3 100%);
         opacity: 0;
         transition: opacity 0.3s ease;
     }
 
     .chart-card:hover {
         transform: translateY(-4px);
-        box-shadow: 0 16px 40px rgba(6, 182, 212, 0.25);
-        border-color: rgba(6, 182, 212, 0.3);
+        box-shadow: 0 16px 40px rgba(236, 72, 153, 0.25);
+        border-color: rgba(236, 72, 153, 0.3);
     }
 
     .chart-card:hover::before {
@@ -668,7 +706,7 @@ $bedStmt->close();
     }
 
     .chart-card h4 i {
-        color: #06b6d4;
+        color: #ec4899;
     }
 
     .group-divider {
@@ -679,22 +717,22 @@ $bedStmt->close();
         padding: 16px 24px;
         border-radius: 16px;
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.95) 0%, rgba(236, 254, 255, 0.9) 100%);
-        border: 2px solid rgba(6, 182, 212, 0.2);
-        box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
+        border: 2px solid rgba(236, 72, 153, 0.2);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.15);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         animation: fadeIn 0.6s ease;
     }
 
     .group-badge {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         font-weight: 800;
         padding: 8px 16px;
         border-radius: 999px;
         letter-spacing: 0.5px;
         font-size: 0.95rem;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
     }
 
     .group-title {
@@ -760,12 +798,12 @@ $bedStmt->close();
     }
 
     .highlight {
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: #fff;
         padding: 8px 16px;
         border-radius: 10px;
         font-weight: 700;
-        box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
     }
 
     .chart-legend {
@@ -1135,7 +1173,7 @@ $bedStmt->close();
 <body>
     <?php include __DIR__ . '/includes/cas_nav.php'; ?>
     <div class="topbar">
-        <div class="dashboard-title">CAS Admin Dashboard</div>
+        <div class="dashboard-title">College of Arts and Science Admin Dashboard</div>
         <div><a class="logout-btn" href="#" onclick="confirmLogout(event)">Logout</a></div>
     </div>
 
@@ -1369,8 +1407,8 @@ $bedStmt->close();
                                 </button>
                             </div>
                             <div id="deptDescription" class="muted"
-                                style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%); border-radius: 12px; border-left: 4px solid #06b6d4;">
-                                <i class="fas fa-chart-line" style="color: #06b6d4; margin-right: 6px;"></i>
+                                style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #fdf2f8 0%, #fce7f3 100%); border-radius: 12px; border-left: 4px solid #ec4899;">
+                                <i class="fas fa-chart-line" style="color: #ec4899; margin-right: 6px;"></i>
                                 This visualization shows the overall board exam passing rate trend for the College of
                                 Arts and Sciences from 2019 to 2024.
                                 The data reflects the percentage of students who successfully passed their respective
@@ -1390,8 +1428,8 @@ $bedStmt->close();
                                 </button>
                             </div>
                             <div id="trendDescription" class="muted"
-                                style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #ecfeff 0%, #cffafe 100%); border-radius: 12px; border-left: 4px solid #06b6d4;">
-                                <i class="fas fa-chart-bar" style="color: #06b6d4; margin-right: 6px;"></i>
+                                style="display: none; margin-bottom: 16px; font-size: 0.92rem; line-height: 1.5; padding: 14px; background: linear-gradient(145deg, #fdf2f8 0%, #fce7f3 100%); border-radius: 12px; border-left: 4px solid #ec4899;">
+                                <i class="fas fa-chart-bar" style="color: #ec4899; margin-right: 6px;"></i>
                                 This bar chart displays the passing rate trends for different CAS board exam types from
                                 2019 to 2024. Each colored bar represents a specific licensure exam, making it easy to
                                 compare performance across disciplines and identify trends in teacher education,
@@ -2737,7 +2775,7 @@ $bedStmt->close();
 
     // Initialize empty charts to avoid DOM blanking when first filtering
     // color palette for charts
-    // Palette chosen to harmonize with primary teal (#06b6d4) and magenta (#f472b6)
+    // Palette chosen to harmonize with primary teal (#ec4899) and magenta (#f472b6)
     // Pastel color palette
     const PALETTE = [
         '#2dd4bf', // teal (Male / primary accent)
@@ -2821,10 +2859,10 @@ $bedStmt->close();
         function refresh() {
             const isPercent = (window.__subjectsMode === 'percent');
             // simple active styles
-            btnCounts.style.background = isPercent ? '#fff' : '#06b6d4';
-            btnCounts.style.color = isPercent ? '#06b6d4' : '#fff';
-            btnPercent.style.background = isPercent ? '#06b6d4' : '#fff';
-            btnPercent.style.color = isPercent ? '#fff' : '#06b6d4';
+            btnCounts.style.background = isPercent ? '#fff' : '#ec4899';
+            btnCounts.style.color = isPercent ? '#ec4899' : '#fff';
+            btnPercent.style.background = isPercent ? '#ec4899' : '#fff';
+            btnPercent.style.color = isPercent ? '#fff' : '#ec4899';
         }
         btnCounts.addEventListener('click', () => {
             window.__subjectsMode = 'count';
@@ -3380,10 +3418,10 @@ $bedStmt->close();
         pop.id = 'recordsPopover';
         pop.style.position = 'fixed';
         pop.style.zIndex = '22000';
-        pop.style.background = 'linear-gradient(145deg, #ffffff 0%, #f0fdff 100%)';
-        pop.style.border = '2px solid rgba(6, 182, 212, 0.2)';
+        pop.style.background = 'linear-gradient(145deg, #ffffff 0%, #fef1f8 100%)';
+        pop.style.border = '2px solid rgba(236, 72, 153, 0.2)';
         pop.style.borderRadius = '20px';
-        pop.style.boxShadow = '0 20px 60px rgba(6, 182, 212, 0.25)';
+        pop.style.boxShadow = '0 20px 60px rgba(236, 72, 153, 0.25)';
         pop.style.maxWidth = '900px';
         pop.style.maxHeight = '75vh';
         pop.style.overflow = 'hidden';
@@ -3397,7 +3435,7 @@ $bedStmt->close();
         header.style.justifyContent = 'space-between';
         header.style.gap = '16px';
         header.style.padding = '24px 32px';
-        header.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
+        header.style.background = 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)';
         header.style.color = 'white';
         header.style.borderBottom = 'none';
         header.style.borderRadius = '20px 20px 0 0';
@@ -3441,9 +3479,9 @@ $bedStmt->close();
         info.style.padding = '16px 32px';
         info.style.fontSize = '0.95rem';
         info.style.fontWeight = '600';
-        info.style.color = '#0e7490';
-        info.style.background = 'linear-gradient(135deg, #ecfeff 0%, #cffafe 100%)';
-        info.style.borderBottom = '2px solid rgba(6, 182, 212, 0.1)';
+        info.style.color = '#be185d';
+        info.style.background = 'linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%)';
+        info.style.borderBottom = '2px solid rgba(236, 72, 153, 0.1)';
         info.innerHTML =
             `<i class="fas fa-list" style="margin-right: 8px;"></i>${(typeof totalCount==='number' && totalCount>rows.length) ? `Showing ${rows.length} of ${totalCount} record(s)` : `${rows.length} record(s)`}`;
         pop.appendChild(info);
@@ -3458,26 +3496,26 @@ $bedStmt->close();
         table.style.borderSpacing = '0';
         table.style.fontSize = '0.95rem';
         table.innerHTML =
-            `<thead><tr style="background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%); position:sticky; top:0; color: white; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.2);"><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Name</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Sex</th><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Course</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Year Graduated</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Exam Date</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Result</th></tr></thead><tbody></tbody>`;
+            `<thead><tr style="background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); position:sticky; top:0; color: white; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.2);"><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Name</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Sex</th><th style="padding: 14px 12px; font-weight: 700; text-align:left; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Course</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Year Graduated</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Exam Date</th><th style="padding: 14px 12px; font-weight: 700; text-align:center; font-size: 0.9rem; border-bottom: 2px solid rgba(255, 255, 255, 0.2);">Result</th></tr></thead><tbody></tbody>`;
         const tb = table.querySelector('tbody');
         rows.forEach((r, idx) => {
             const examDate = (r.exam_date || r.board_exam_date || '') ? (r.exam_date || r.board_exam_date) : '';
             const tr = document.createElement('tr');
-            tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(6, 182, 212, 0.03)';
+            tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(236, 72, 153, 0.03)';
             tr.style.transition = 'all 0.3s ease';
             tr.onmouseover = () => {
-                tr.style.background = 'rgba(6, 182, 212, 0.08)';
+                tr.style.background = 'rgba(236, 72, 153, 0.08)';
                 tr.style.transform = 'translateX(4px)';
             };
             tr.onmouseout = () => {
-                tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(6, 182, 212, 0.03)';
+                tr.style.background = idx % 2 === 0 ? 'white' : 'rgba(236, 72, 153, 0.03)';
                 tr.style.transform = 'translateX(0)';
             };
             const resultColor = r.result === 'Passed' ? '#10b981' : '#ef4444';
             const resultBg = r.result === 'Passed' ? 'linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)' :
                 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)';
             tr.innerHTML =
-                `<td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); font-weight: 600; color: #0f1724;">${escapeHtml(r.full_name)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; color: #64748b;">${escapeHtml(r.sex)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); color: #475569; font-size: 0.9rem;">${escapeHtml(r.course)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; font-weight: 600; color: #0891b2;">${escapeHtml(r.year_graduated)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center; color: #475569;">${escapeHtml(examDate)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(6, 182, 212, 0.1); text-align:center;"><span style="padding: 6px 14px; border-radius: 999px; background: ${resultBg}; color: ${resultColor}; font-weight: 700; font-size: 0.85rem; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">${escapeHtml(r.result)}</span></td>`;
+                `<td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); font-weight: 600; color: #0f1724;">${escapeHtml(r.full_name)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); text-align:center; color: #64748b;">${escapeHtml(r.sex)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); color: #475569; font-size: 0.9rem;">${escapeHtml(r.course)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); text-align:center; font-weight: 600; color: #db2777;">${escapeHtml(r.year_graduated)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); text-align:center; color: #475569;">${escapeHtml(examDate)}</td><td style="padding: 12px; border-bottom: 1px solid rgba(236, 72, 153, 0.1); text-align:center;"><span style="padding: 6px 14px; border-radius: 999px; background: ${resultBg}; color: ${resultColor}; font-weight: 700; font-size: 0.85rem; display: inline-block; box-shadow: 0 2px 6px rgba(0,0,0,0.08);">${escapeHtml(r.result)}</span></td>`;
             tb.appendChild(tr);
         });
         body.appendChild(table);
@@ -3536,103 +3574,263 @@ $bedStmt->close();
 
         // Create modal overlay
         const overlay = document.createElement('div');
-        overlay.style.position = 'fixed';
-        overlay.style.top = '0';
-        overlay.style.left = '0';
-        overlay.style.width = '100%';
-        overlay.style.height = '100%';
-        overlay.style.background = 'rgba(0, 0, 0, 0.5)';
-        overlay.style.backdropFilter = 'blur(4px)';
-        overlay.style.zIndex = '99999';
-        overlay.style.display = 'flex';
-        overlay.style.alignItems = 'center';
-        overlay.style.justifyContent = 'center';
-        overlay.style.animation = 'fadeIn 0.3s ease';
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInOverlay 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        `;
 
-        // Create modal dialog
+        // Create modal content
         const modal = document.createElement('div');
-        modal.style.background = 'linear-gradient(145deg, #ffffff 0%, #f0fdff 100%)';
-        modal.style.borderRadius = '20px';
-        modal.style.border = '2px solid rgba(6, 182, 212, 0.2)';
-        modal.style.boxShadow = '0 20px 60px rgba(6, 182, 212, 0.3)';
-        modal.style.maxWidth = '450px';
-        modal.style.width = '90%';
-        modal.style.overflow = 'hidden';
-        modal.style.animation = 'modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        modal.style.cssText = `
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 48px 44px;
+            border-radius: 28px;
+            box-shadow: 0 32px 64px -12px rgba(191, 56, 83, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+            max-width: 480px;
+            width: 92%;
+            text-align: center;
+            animation: slideInLogout 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+            overflow: visible;
+        `;
+
+        // Add gradient border
+        const borderDiv = document.createElement('div');
+        borderDiv.style.cssText = `
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(135deg, #C75B9B 0%, #FF99CC 25%, #FEB3DD 50%, #FF99CC 75%, #C75B9B 100%);
+            border-radius: 30px;
+            z-index: -1;
+            opacity: 0.8;
+        `;
+        modal.appendChild(borderDiv);
 
         // Modal header
         const header = document.createElement('div');
-        header.style.background = 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)';
-        header.style.padding = '24px 32px';
-        header.style.color = 'white';
-        header.innerHTML =
-            '<div style="display: flex; align-items: center; gap: 12px;"><i class="fas fa-sign-out-alt" style="font-size: 1.5rem;"></i><h3 style="margin: 0; font-size: 1.3rem; font-weight: 800;">Confirm Logout</h3></div>';
+        header.style.cssText = `
+            margin-bottom: 32px;
+            background: linear-gradient(135deg, #FFF0FC 0%, #FDB3C2 100%);
+            padding: 32px 28px;
+            border-radius: 20px;
+            border: 2px solid #FF99CC;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(191, 56, 83, 0.15);
+        `;
 
-        // Modal body
-        const body = document.createElement('div');
-        body.style.padding = '32px';
-        body.innerHTML =
-            '<p style="margin: 0; font-size: 1.05rem; color: #334155; line-height: 1.6;"><i class="fas fa-question-circle" style="color: #06b6d4; margin-right: 8px;"></i>Are you sure you want to log out?</p>';
+        const headerTop = document.createElement('div');
+        headerTop.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #C75B9B 0%, #FF99CC 50%, #FEB3DD 100%);
+            border-radius: 20px 20px 0 0;
+        `;
+        header.appendChild(headerTop);
 
-        // Modal footer
-        const footer = document.createElement('div');
-        footer.style.padding = '20px 32px';
-        footer.style.background = '#f8fafc';
-        footer.style.display = 'flex';
-        footer.style.gap = '12px';
-        footer.style.justifyContent = 'flex-end';
+        const icon = document.createElement('div');
+        icon.style.cssText = `
+            width: 88px;
+            height: 88px;
+            background: linear-gradient(135deg, #C75B9B 0%, #FF99CC 50%, #FEB3DD 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            color: #4A1942;
+            font-size: 2.2rem;
+            box-shadow: 0 20px 40px rgba(191, 56, 83, 0.4), 0 0 0 4px rgba(255, 255, 255, 0.8), 0 0 0 6px rgba(191, 56, 83, 0.2);
+            position: relative;
+            z-index: 1;
+        `;
+        icon.innerHTML = '<i class="fas fa-sign-out-alt"></i>';
+        header.appendChild(icon);
+
+        const title = document.createElement('h2');
+        title.style.cssText = `
+            font-size: 1.75rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #C75B9B 0%, #4A1942 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0 0 12px 0;
+            letter-spacing: 0.5px;
+            position: relative;
+            z-index: 1;
+        `;
+        title.textContent = 'Confirm Logout';
+        header.appendChild(title);
+
+        const subtitle = document.createElement('p');
+        subtitle.style.cssText = `
+            font-size: 1.1rem;
+            color: #C75B9B;
+            margin: 0;
+            line-height: 1.6;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        `;
+        subtitle.textContent = 'Are you sure you want to sign out?';
+        header.appendChild(subtitle);
+
+        modal.appendChild(header);
+
+        // Modal text
+        const text = document.createElement('p');
+        text.style.cssText = `
+            font-size: 1rem;
+            color: #334155;
+            margin-bottom: 36px;
+            line-height: 1.7;
+            padding: 24px;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        `;
+        text.textContent = 'You will be redirected to the login page and any unsaved changes will be lost.';
+        
+        const warning = document.createElement('div');
+        warning.style.cssText = `
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        `;
+        warning.textContent = '⚠️';
+        text.appendChild(warning);
+        
+        modal.appendChild(text);
+
+        // Buttons container
+        const buttons = document.createElement('div');
+        buttons.style.cssText = `
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+        `;
+
+        // Yes button
+        const yesBtn = document.createElement('button');
+        yesBtn.style.cssText = `
+            padding: 16px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+            background: linear-gradient(135deg, #C75B9B 0%, #FF99CC 50%, #FEB3DD 100%);
+            color: #4A1942;
+            position: relative;
+            overflow: hidden;
+        `;
+        yesBtn.innerHTML = '<i class="fas fa-check"></i><span>Yes, Logout</span>';
+        yesBtn.onmouseover = () => {
+            yesBtn.style.transform = 'translateY(-3px) scale(1.05)';
+            yesBtn.style.background = 'linear-gradient(135deg, #FEB3DD 0%, #FF99CC 50%, #C75B9B 100%)';
+        };
+        yesBtn.onmouseout = () => {
+            yesBtn.style.transform = 'translateY(0) scale(1)';
+            yesBtn.style.background = 'linear-gradient(135deg, #C75B9B 0%, #FF99CC 50%, #FEB3DD 100%)';
+        };
+        yesBtn.onclick = () => {
+            yesBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Logging out...</span>';
+            setTimeout(() => window.location.href = 'logout.php', 800);
+        };
 
         // Cancel button
         const cancelBtn = document.createElement('button');
-        cancelBtn.textContent = 'Cancel';
-        cancelBtn.style.padding = '10px 24px';
-        cancelBtn.style.borderRadius = '12px';
-        cancelBtn.style.border = '2px solid #cbd5e1';
-        cancelBtn.style.background = 'white';
-        cancelBtn.style.color = '#475569';
-        cancelBtn.style.fontWeight = '600';
-        cancelBtn.style.cursor = 'pointer';
-        cancelBtn.style.transition = 'all 0.3s ease';
+        cancelBtn.style.cssText = `
+            padding: 16px 32px;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+            justify-content: center;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            color: #64748b;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        `;
+        cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
         cancelBtn.onmouseover = () => {
-            cancelBtn.style.background = '#f1f5f9';
-            cancelBtn.style.borderColor = '#94a3b8';
+            cancelBtn.style.transform = 'translateY(-2px) scale(1.05)';
+            cancelBtn.style.background = 'linear-gradient(135deg, #e2e8f0 0%, #cbd5e0 100%)';
+            cancelBtn.style.color = '#475569';
         };
         cancelBtn.onmouseout = () => {
-            cancelBtn.style.background = 'white';
-            cancelBtn.style.borderColor = '#cbd5e1';
+            cancelBtn.style.transform = 'translateY(0) scale(1)';
+            cancelBtn.style.background = 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)';
+            cancelBtn.style.color = '#64748b';
         };
         cancelBtn.onclick = () => overlay.remove();
 
-        // Logout button
-        const logoutBtn = document.createElement('button');
-        logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt" style="margin-right: 6px;"></i>Logout';
-        logoutBtn.style.padding = '10px 24px';
-        logoutBtn.style.borderRadius = '12px';
-        logoutBtn.style.border = 'none';
-        logoutBtn.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-        logoutBtn.style.color = 'white';
-        logoutBtn.style.fontWeight = '600';
-        logoutBtn.style.cursor = 'pointer';
-        logoutBtn.style.transition = 'all 0.3s ease';
-        logoutBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
-        logoutBtn.onmouseover = () => {
-            logoutBtn.style.transform = 'translateY(-2px)';
-            logoutBtn.style.boxShadow = '0 6px 20px rgba(239, 68, 68, 0.4)';
-        };
-        logoutBtn.onmouseout = () => {
-            logoutBtn.style.transform = 'translateY(0)';
-            logoutBtn.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.3)';
-        };
-        logoutBtn.onclick = () => window.location.href = 'logout.php';
+        buttons.appendChild(yesBtn);
+        buttons.appendChild(cancelBtn);
+        modal.appendChild(buttons);
 
-        footer.appendChild(cancelBtn);
-        footer.appendChild(logoutBtn);
-
-        modal.appendChild(header);
-        modal.appendChild(body);
-        modal.appendChild(footer);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
+
+        // Add CSS animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes fadeInOverlay {
+                from { opacity: 0; backdrop-filter: blur(0px); }
+                to { opacity: 1; backdrop-filter: blur(16px); }
+            }
+            @keyframes slideInLogout {
+                from { opacity: 0; transform: translateY(-40px) scale(0.9); filter: blur(4px); }
+                to { opacity: 1; transform: translateY(0) scale(1); filter: blur(0px); }
+            }
+        `;
+        document.head.appendChild(style);
 
         // Close on backdrop click
         overlay.addEventListener('click', (e) => {
@@ -3921,10 +4119,10 @@ $bedStmt->close();
 
         function applyButtons() {
             const isCounts = (window.__overallSubjectsMode === 'counts');
-            btnC.style.background = isCounts ? '#06b6d4' : '#fff';
-            btnC.style.color = isCounts ? '#fff' : '#06b6d4';
-            btnP.style.background = isCounts ? '#fff' : '#06b6d4';
-            btnP.style.color = isCounts ? '#06b6d4' : '#fff';
+            btnC.style.background = isCounts ? '#ec4899' : '#fff';
+            btnC.style.color = isCounts ? '#fff' : '#ec4899';
+            btnP.style.background = isCounts ? '#fff' : '#ec4899';
+            btnP.style.color = isCounts ? '#ec4899' : '#fff';
         }
 
         function applyMode() {
@@ -4577,10 +4775,10 @@ $bedStmt->close();
 
         function applyButtons() {
             const isPercent = (window.__compositionMode !== 'counts');
-            btnP.style.background = isPercent ? '#06b6d4' : '#fff';
-            btnP.style.color = isPercent ? '#fff' : '#06b6d4';
-            btnC.style.background = isPercent ? '#fff' : '#06b6d4';
-            btnC.style.color = isPercent ? '#06b6d4' : '#fff';
+            btnP.style.background = isPercent ? '#ec4899' : '#fff';
+            btnP.style.color = isPercent ? '#fff' : '#ec4899';
+            btnC.style.background = isPercent ? '#fff' : '#ec4899';
+            btnC.style.color = isPercent ? '#ec4899' : '#fff';
         }
         btnP.addEventListener('click', () => {
             window.__compositionMode = 'percent';

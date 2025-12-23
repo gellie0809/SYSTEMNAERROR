@@ -1436,30 +1436,10 @@ if ($selected_exam_type_id > 0) {
     function showCustomConfirm(message, callback, icon) {
         const modal = document.getElementById('customConfirmModal');
         const messageEl = document.getElementById('confirmMessage');
-        const iconEl = document.querySelector('.confirm-icon');
         const okBtn = document.getElementById('confirmOkBtn');
         const cancelBtn = document.getElementById('confirmCancelBtn');
 
         messageEl.textContent = message;
-
-        // Set icon based on action type (default warning)
-        if (icon) {
-            iconEl.textContent = icon;
-            if (icon === '➕') {
-                iconEl.style.background = 'linear-gradient(135deg, #8BA49A 0%, #3B6255 100%)';
-                iconEl.style.boxShadow = '0 12px 35px rgba(145,179,142,0.5)';
-            } else if (icon === '🗑️') {
-                iconEl.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
-                iconEl.style.boxShadow = '0 12px 35px rgba(239,68,68,0.5)';
-            } else {
-                iconEl.style.background = 'linear-gradient(135deg, #8BA49A 0%, #3B6255 100%)';
-                iconEl.style.boxShadow = '0 12px 35px rgba(145,179,142,0.5)';
-            }
-        } else {
-            iconEl.textContent = '⚠️';
-            iconEl.style.background = 'linear-gradient(135deg, #8BA49A 0%, #3B6255 100%)';
-            iconEl.style.boxShadow = '0 12px 35px rgba(145,179,142,0.5)';
-        }
 
         modal.style.display = 'flex';
         confirmCallback = callback;

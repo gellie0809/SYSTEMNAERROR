@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Criminal Justice Education admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph') {
+// Allow CCJE admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'ccje_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -1127,7 +1127,7 @@ while ($r = $bedRes->fetch_assoc()) {
         }
     }
 
-    /* CCJE Sidebar Color Overrides - Highest Priority */
+    /* CCJE-specific sidebar color overrides for red theme */
     html body .sidebar {
         background: #ffffff !important;
         box-shadow: 0 2px 8px rgba(211, 47, 47, 0.08) !important;

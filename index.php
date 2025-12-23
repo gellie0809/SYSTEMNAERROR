@@ -14,30 +14,175 @@ session_start();
     <link href="https://fonts.googleapis.com/css?family=Poppins:400,500,600,700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:wght@700;800&display=swap" rel="stylesheet">
     <style>
+    /* =====================================================
+       LANDING PAGE RESET - Override style.css body centering
+       ===================================================== */
+    body {
+        display: block !important;
+        justify-content: initial !important;
+        align-items: initial !important;
+        min-height: auto !important;
+        background: #0f172a !important;
+        margin: 0;
+        padding: 0;
+    }
+    
+    main {
+        display: block;
+        width: 100%;
+    }
+    
+    /* =====================================================
+       LOGIN MODAL CUSTOM STYLING
+       ===================================================== */
+    .wrapper {
+        background: rgba(255, 255, 255, 0.98) !important;
+        border: none !important;
+        border-radius: 24px !important;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.3) !important;
+    }
+    
+    .wrapper .icon-close {
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary)) !important;
+        border-radius: 0 24px 0 16px !important;
+    }
+    
+    .wrapper .form-box h2 {
+        background: linear-gradient(135deg, #0f172a, #334155) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        font-weight: 800 !important;
+    }
+    
+    .wrapper .input-box {
+        border-bottom: 2px solid #e2e8f0 !important;
+    }
+    
+    .wrapper .input-box:focus-within {
+        border-bottom: 2px solid var(--cte-primary) !important;
+    }
+    
+    .wrapper .input-box label {
+        color: #64748b !important;
+    }
+    
+    .wrapper .input-box input:focus ~ label,
+    .wrapper .input-box input:not(:placeholder-shown) ~ label {
+        color: var(--cte-primary) !important;
+    }
+    
+    .wrapper .input-box .icon {
+        color: #94a3b8 !important;
+    }
+    
+    .wrapper .btn {
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%) !important;
+        border-radius: 14px !important;
+        height: 50px !important;
+        font-weight: 700 !important;
+        font-size: 1rem !important;
+        letter-spacing: 0.5px !important;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.4) !important;
+        border: 1px solid rgba(255,255,255,0.1) !important;
+        position: relative !important;
+        overflow: hidden !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .wrapper .btn::before {
+        content: "" !important;
+        position: absolute !important;
+        inset: 0 !important;
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary)) !important;
+        opacity: 0 !important;
+        transition: opacity 0.3s ease !important;
+    }
+    
+    .wrapper .btn:hover {
+        transform: translateY(-3px) !important;
+        box-shadow: 0 12px 32px rgba(15, 23, 42, 0.5) !important;
+    }
+    
+    .wrapper .btn:hover::before {
+        opacity: 1 !important;
+    }
+    
+    .wrapper .btn span,
+    .wrapper .btn {
+        position: relative !important;
+        z-index: 1 !important;
+    }
+    
+    .overlay.active {
+        background: rgba(15, 23, 42, 0.6) !important;
+        backdrop-filter: blur(8px) !important;
+    }
+    
+    /* =====================================================
+       DEPARTMENT THEME COLORS
+       - Engineering: Green
+       - CAS (Arts & Science): Pink/Rose
+       - CBAA (Business Admin): Golden/Yellow
+       - CCJE (Criminal Justice): Maroon/Crimson  
+       - CTE (Teacher Education): Blue
+       ===================================================== */
+    :root {
+        /* Engineering - Green */
+        --eng-primary: #16a34a;
+        --eng-secondary: #22c55e;
+        --eng-light: #dcfce7;
+        --eng-gradient: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
+        
+        /* CAS - Pink/Rose */
+        --cas-primary: #BF3853;
+        --cas-secondary: #E56D85;
+        --cas-light: #FDB3C2;
+        --cas-gradient: linear-gradient(135deg, #A41F39 0%, #E56D85 50%, #FDB3C2 100%);
+        
+        /* CBAA - Golden/Yellow */
+        --cbaa-primary: #d97706;
+        --cbaa-secondary: #f59e0b;
+        --cbaa-light: #fef3c7;
+        --cbaa-gradient: linear-gradient(135deg, #b45309 0%, #f59e0b 100%);
+        
+        /* CCJE - Maroon/Crimson */
+        --ccje-primary: #7f1d1d;
+        --ccje-secondary: #b91c1c;
+        --ccje-light: #fecaca;
+        --ccje-gradient: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%);
+        
+        /* CTE - Blue */
+        --cte-primary: #1d4ed8;
+        --cte-secondary: #3b82f6;
+        --cte-light: #dbeafe;
+        --cte-gradient: linear-gradient(135deg, #1d4ed8 0%, #60a5fa 100%);
+        
+        /* Universal Accent */
+        --accent-teal: #14b8a6;
+    }
+
     /* Top Navigation Bar */
     header {
-        position: sticky;
+        position: fixed !important;
         top: 0;
-        z-index: 50;
+        left: 0;
+        right: 0;
+        width: 100%;
+        z-index: 1000;
         font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-        backdrop-filter: saturate(1.1);
-    }
-
-    header {
-        background: linear-gradient(90deg, #1f4ea3 0%, #2a6fbe 50%, #0ea5e9 100%);
-        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.18);
-    }
-
-    header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 12px 20px;
+        backdrop-filter: saturate(1.1) blur(10px);
+        background: linear-gradient(90deg, #0f172a 0%, #1e293b 50%, #334155 100%) !important;
+        box-shadow: 0 6px 18px rgba(2, 6, 23, 0.28);
+        padding: 12px 20px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: space-between !important;
     }
 
     @media (min-width: 900px) {
         header {
-            padding: 14px 32px;
+            padding: 14px 32px !important;
         }
     }
 
@@ -94,7 +239,7 @@ session_start();
 
     .navigation a {
         position: relative;
-        color: #e6f6ff;
+        color: #cbd5e1;
         text-decoration: none;
         font-weight: 600;
         letter-spacing: .2px;
@@ -112,7 +257,7 @@ session_start();
         height: 2px;
         width: 70%;
         border-radius: 999px;
-        background: #a5e8ff;
+        background: linear-gradient(90deg, var(--eng-secondary), var(--cas-secondary), var(--cbaa-secondary), var(--ccje-secondary), var(--cte-secondary));
         transition: transform .18s ease;
     }
 
@@ -137,20 +282,22 @@ session_start();
 
     /* Login CTA */
     .btnLogin-popup {
-        border: 2px solid #e0f2fe;
-        color: #e0f2fe;
-        background: transparent;
+        border: 2px solid transparent;
+        color: #ffffff;
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary));
         padding: 8px 16px;
         border-radius: 12px;
         font-weight: 700;
         cursor: pointer;
-        transition: background-color .18s ease, color .18s ease, transform .12s ease;
+        transition: all .25s ease;
+        box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
     }
 
     .btnLogin-popup:hover {
-        background: #e0f2fe;
-        color: #075985;
-        transform: translateY(-1px);
+        background: linear-gradient(135deg, var(--eng-secondary), var(--cte-secondary));
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.4);
     }
 
     .btnLogin-popup:active {
@@ -454,30 +601,35 @@ session_start();
         opacity: .55;
     }
 
-    /* Theme colors */
+    /* Theme colors - Updated for 5 departments */
     .theme-green {
+        /* Engineering */
         --main: #16a34a;
         --accent: #22c55e;
     }
 
     .theme-pink {
-        --main: #ec4899;
-        --accent: #f472b6;
+        /* CAS - Arts and Science */
+        --main: #BF3853;
+        --accent: #E56D85;
     }
 
     .theme-yellow {
-        --main: #eab308;
+        /* CBAA - Business Administration */
+        --main: #d97706;
         --accent: #f59e0b;
     }
 
     .theme-red {
-        --main: #ef4444;
-        --accent: #f87171;
+        /* CCJE - Criminal Justice Education */
+        --main: #7f1d1d;
+        --accent: #b91c1c;
     }
 
     .theme-blue {
-        --main: #3b82f6;
-        --accent: #60a5fa;
+        /* CTE - Teacher Education */
+        --main: #1d4ed8;
+        --accent: #3b82f6;
     }
 
     /* Department chip uses its theme color (green/pink/yellow/red/blue) */
@@ -782,40 +934,10 @@ session_start();
         background: #cff1ff;
     }
 
-    /* About section layout */
-    .about-section {
-        padding: 60px 40px;
-        background: linear-gradient(180deg, #f8fbfc 0%, #eef7f9 100%);
-        position: relative;
-        overflow: hidden;
-    }
-
-    .about-section::before,
-    .about-section::after {
-        content: "";
-        position: absolute;
-        width: 520px;
-        height: 520px;
-        border-radius: 50%;
-        filter: blur(60px);
-        opacity: .18;
-        pointer-events: none;
-    }
-
-    .about-section::before {
-        background: radial-gradient(circle at 30% 30%, rgba(14, 165, 233, .65), rgba(20, 184, 166, .15));
-        top: -180px;
-        left: -160px;
-    }
-
-    .about-section::after {
-        background: radial-gradient(circle at 70% 70%, rgba(20, 184, 166, .55), rgba(14, 165, 233, .12));
-        bottom: -200px;
-        right: -180px;
-    }
+    /* OLD About section layout - REMOVED (using simplified version below) */
 
     .about-container {
-        /* max-width: 1100px; */
+        max-width: 1200px;
         margin: 0 auto;
         display: grid;
         grid-template-columns: 1fr;
@@ -827,6 +949,25 @@ session_start();
         .about-container {
             grid-template-columns: 1.2fr .8fr;
         }
+    }
+
+    .about-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-size: 13px;
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--eng-primary), var(--cte-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 8px;
+    }
+
+    .about-title {
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 20px;
     }
 
     .about-grid {
@@ -869,8 +1010,13 @@ session_start();
     }
 
     .about-link {
-        color: #0ea5e9;
+        color: var(--cte-primary);
         text-decoration: none;
+        transition: color 0.2s ease;
+    }
+    
+    .about-link:hover {
+        color: var(--eng-primary);
     }
 
     .about-link:hover {
@@ -913,6 +1059,7 @@ session_start();
         background: linear-gradient(135deg, var(--sky), var(--teal));
         -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
         -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
         mask-composite: exclude;
         opacity: 0;
         transition: opacity .25s ease;
@@ -1000,119 +1147,7 @@ session_start();
         text-align: left;
         background:
             radial-gradient(120% 80% at 50% 10%, rgba(14, 165, 233, .08), rgba(20, 184, 166, .04) 50%, transparent 65%),
-            linear-gradient(180deg, #ffffff, #f7fbfd);
-    }
-
-    .flip-back h3 {
-        margin: 6px 0 10px 0;
-        color: #0ea5e9;
-        font-size: 20px;
-        text-align: center;
-        width: 100%;
-        font-weight: 800;
-    }
-
-    .flip-back p {
-        margin: 0 auto;
-        color: #334155;
-        line-height: 1.7;
-        max-width: 52ch;
-        text-align: center;
-        font-size: 16px;
-    }
-
-    .flip-back .back-actions {
-        margin-top: 10px;
-    }
-
-    .flip-back .back-actions a {
-        color: #0ea5e9;
-        text-decoration: none;
-        font-size: 13px;
-    }
-
-    .flip-back .back-actions a:hover {
-        text-decoration: underline;
-    }
-
-    /* Teal theme & hover polish */
-    .theme-teal .flip-face {
-        border-color: #cfeff2;
-        box-shadow: 0 16px 30px rgba(20, 184, 166, 0.08);
-    }
-
-    .theme-teal:hover .flip-face {
-        box-shadow: 0 20px 38px rgba(20, 184, 166, 0.12);
-    }
-
-    .flip-card:hover .flip-front h3 {
-        color: #0ea5e9;
-    }
-
-    /* Icon styles */
-    .flip-icon {
-        width: 64px;
-        height: 64px;
-        border-radius: 18px;
-        display: grid;
-        place-items: center;
-        background: linear-gradient(135deg, #0ea5e9, #14b8a6);
-        box-shadow: 0 14px 28px rgba(14, 165, 233, 0.25);
-    }
-
-    .flip-icon svg {
-        width: 28px;
-        height: 28px;
-        color: #ffffff;
-    }
-
-    @keyframes floaty {
-        0% {
-            transform: translateY(0);
-        }
-
-        50% {
-            transform: translateY(-6px);
-        }
-
-        100% {
-            transform: translateY(0);
-        }
-    }
-
-    .flip-icon {
-        animation: floaty 3s ease-in-out infinite;
-    }
-
-    /* Ripple effect */
-    .ripple {
-        position: absolute;
-        border-radius: 50%;
-        transform: scale(0);
-        opacity: .35;
-        pointer-events: none;
-        background: radial-gradient(circle, rgba(14, 165, 233, .35) 0%, rgba(14, 165, 233, .22) 45%, rgba(14, 165, 233, 0) 60%);
-        animation: ripple .6s ease-out forwards;
-    }
-
-    @keyframes ripple {
-        to {
-            transform: scale(4);
-            opacity: 0;
-        }
-    }
-
-    /* Reveal animation */
-    @keyframes riseIn {
-        from {
-            opacity: 0;
-            transform: translateY(8px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+          
     }
 
     .about-grid .flip-card {
@@ -1592,6 +1627,7 @@ session_start();
         animation: borderflow 8s linear infinite;
         -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
         -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
         mask-composite: exclude;
         pointer-events: none;
     }
@@ -1705,41 +1741,78 @@ session_start();
         color: #0f172a;
     }
 
-    /* Services: Teal Focus Ring + premium card styling */
+    /* Services: Multi-Department Focus Ring + premium card styling */
+    .services-section {
+        background: linear-gradient(180deg, #f1f5f9 0%, #e2e8f0 100%);
+        padding: 80px 40px;
+        position: relative;
+    }
+    
     .services-section h2 {
-        color: #0ea5e9;
+        text-align: center;
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 40px;
     }
 
     .services-section .services-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
     }
 
     .services-section .service-card {
-        background: linear-gradient(180deg, #ffffff, #fdfdfd);
-        border: 1px solid #e6eef8;
+        background: linear-gradient(180deg, #ffffff, #f8fafc);
+        border: 1px solid #e2e8f0;
         border-radius: 20px;
         padding: 30px 24px;
         text-align: center;
-        box-shadow: 0 10px 24px rgba(2, 6, 23, .06), 0 12px 28px rgba(14, 165, 233, .06);
-        transition: box-shadow .22s ease, transform .18s ease;
+        box-shadow: 0 10px 24px rgba(2, 6, 23, .06);
+        transition: all .3s cubic-bezier(0.34, 1.56, 0.64, 1);
         cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .services-section .service-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 2px;
+        background: linear-gradient(135deg, var(--eng-primary), var(--cas-primary), var(--cbaa-primary), var(--ccje-primary), var(--cte-primary));
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .services-section .service-card:hover::before {
+        opacity: 1;
     }
 
     .services-section .service-card:hover {
-        box-shadow: 0 18px 40px rgba(14, 165, 233, .22), 0 10px 24px rgba(2, 6, 23, .08);
-        transform: translateY(-2px) scale(1.015);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, .12);
+        transform: translateY(-8px);
     }
 
     .services-section .service-card h3 {
         margin: 10px 0 8px;
         font-weight: 800;
+        color: #0f172a;
     }
 
     .services-section .service-card p {
         margin: 0;
-        color: #667085;
+        color: #64748b;
     }
 
     .services-section .service-icon {
@@ -1749,10 +1822,14 @@ session_start();
         display: grid;
         place-items: center;
         border-radius: 18px;
-        background: linear-gradient(135deg, #0ea5e9, #14b8a6);
         color: #fff;
         position: relative;
-        box-shadow: 0 10px 20px rgba(2, 6, 23, .12);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, .15);
+        transition: transform 0.3s ease;
+    }
+    
+    .services-section .service-card:hover .service-icon {
+        transform: scale(1.1) rotate(5deg);
     }
 
     .services-section .service-icon i {
@@ -1765,7 +1842,7 @@ session_start();
         position: absolute;
         inset: 0;
         border-radius: inherit;
-        box-shadow: 0 0 0 0 rgba(14, 165, 233, .45);
+        box-shadow: 0 0 0 0 currentColor;
         opacity: 0;
         pointer-events: none;
     }
@@ -1777,322 +1854,776 @@ session_start();
     @keyframes focusRing {
         0% {
             opacity: .85;
-            box-shadow: 0 0 0 0 rgba(14, 165, 233, .45);
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, .45);
         }
 
         70% {
             opacity: .3;
-            box-shadow: 0 0 0 14px rgba(14, 165, 233, .25);
+            box-shadow: 0 0 0 14px rgba(22, 163, 74, .25);
         }
 
         100% {
             opacity: 0;
-            box-shadow: 0 0 0 20px rgba(14, 165, 233, 0);
+            box-shadow: 0 0 0 20px rgba(22, 163, 74, 0);
         }
     }
 
-    /* Icon background gradients by type */
+    /* Icon background gradients by type - using department colors */
     .services-section .service-icon.statistics-icon {
-        background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+        background: var(--eng-gradient);
     }
 
     .services-section .service-icon.search-icon {
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: var(--cas-gradient);
     }
 
     .services-section .service-icon.reports-icon {
-        background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+        background: var(--cbaa-gradient);
     }
 
     .services-section .service-icon.compare-icon {
-        background: linear-gradient(135deg, #14b8a6, #06b6d4);
+        background: var(--cte-gradient);
     }
 
     /* Title color matching icon accent (icon + immediate h3 sibling) */
     .services-section .service-icon.statistics-icon+h3 {
-        color: #0ea5e9;
+        color: var(--eng-primary);
     }
 
     .services-section .service-icon.search-icon+h3 {
-        color: #7c3aed;
+        color: var(--cas-primary);
     }
 
     .services-section .service-icon.reports-icon+h3 {
-        color: #0ea5e9;
+        color: var(--cbaa-primary);
     }
 
     .services-section .service-icon.compare-icon+h3 {
-        color: #14b8a6;
+        color: var(--cte-primary);
     }
 
-    /* Hero (landing) enhancements */
+    /* =====================================================
+       HERO SECTION - Multi-Department Theme Design
+       ===================================================== */
     .hero-section {
         position: relative;
-        background: linear-gradient(180deg, #edf6fb 0%, #eaf7f7 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
+        min-height: auto;
+        padding: 120px 0 60px; /* Added top padding for fixed header */
+        overflow: hidden;
     }
 
     .hero-container {
-        max-width: 1100px;
+        max-width: 1200px;
         margin: 0 auto;
-        padding: 60px 20px;
+        padding: 40px 20px;
         display: grid;
-        grid-template-columns: 1.1fr .9fr;
+        grid-template-columns: 1fr;
         align-items: center;
-        gap: 24px;
+        gap: 40px;
+        position: relative;
+        z-index: 2;
     }
 
-    /* animated breathing gradient */
+    @media (min-width: 900px) {
+        .hero-container {
+            grid-template-columns: 1.2fr 0.8fr;
+            padding: 60px 40px;
+        }
+    }
+
+    /* Animated multi-color gradient background */
     .hero-section::before {
         content: "";
         position: absolute;
         inset: 0;
         pointer-events: none;
         background:
-            radial-gradient(120% 80% at 20% 20%, rgba(14, 165, 233, .12), transparent 60%),
-            radial-gradient(120% 80% at 80% 80%, rgba(20, 184, 166, .10), transparent 60%);
-        animation: heroBreath 16s ease-in-out infinite;
+            radial-gradient(ellipse 80% 50% at 10% 20%, rgba(22, 163, 74, 0.15), transparent 50%),
+            radial-gradient(ellipse 80% 50% at 90% 30%, rgba(191, 56, 83, 0.12), transparent 50%),
+            radial-gradient(ellipse 60% 40% at 50% 80%, rgba(29, 78, 216, 0.1), transparent 50%),
+            radial-gradient(ellipse 70% 45% at 30% 60%, rgba(217, 119, 6, 0.08), transparent 50%),
+            radial-gradient(ellipse 70% 45% at 70% 70%, rgba(127, 29, 29, 0.08), transparent 50%);
+        animation: heroGradientPulse 12s ease-in-out infinite;
         will-change: transform, opacity;
     }
 
-    /* dotted texture over text area */
+    @keyframes heroGradientPulse {
+        0%, 100% { opacity: 0.8; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.05); }
+    }
+
+    /* Floating department color orbs */
+    .hero-section .floating-orbs {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        pointer-events: none;
+    }
+
+    .hero-section .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.4;
+        animation: floatOrb 20s ease-in-out infinite;
+    }
+
+    .hero-section .orb-eng {
+        width: 300px;
+        height: 300px;
+        background: var(--eng-primary);
+        top: 10%;
+        left: 5%;
+        animation-delay: 0s;
+    }
+
+    .hero-section .orb-cas {
+        width: 250px;
+        height: 250px;
+        background: var(--cas-primary);
+        top: 60%;
+        right: 10%;
+        animation-delay: -4s;
+    }
+
+    .hero-section .orb-cbaa {
+        width: 200px;
+        height: 200px;
+        background: var(--cbaa-primary);
+        bottom: 20%;
+        left: 30%;
+        animation-delay: -8s;
+    }
+
+    .hero-section .orb-ccje {
+        width: 180px;
+        height: 180px;
+        background: var(--ccje-primary);
+        top: 30%;
+        right: 25%;
+        animation-delay: -12s;
+    }
+
+    .hero-section .orb-cte {
+        width: 220px;
+        height: 220px;
+        background: var(--cte-primary);
+        bottom: 10%;
+        right: 5%;
+        animation-delay: -16s;
+    }
+
+    @keyframes floatOrb {
+        0%, 100% { transform: translate(0, 0) scale(1); }
+        25% { transform: translate(30px, -20px) scale(1.1); }
+        50% { transform: translate(-20px, 30px) scale(0.95); }
+        75% { transform: translate(-30px, -10px) scale(1.05); }
+    }
+
+    /* Grid pattern overlay */
     .hero-section::after {
         content: "";
         position: absolute;
-        left: 0;
-        top: 0;
-        width: 55%;
-        height: 100%;
+        inset: 0;
         pointer-events: none;
-        background-image: radial-gradient(rgba(14, 165, 233, .12) 1px, transparent 1px);
-        background-size: 18px 18px;
-        opacity: .5;
+        background-image: 
+            linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+        background-size: 50px 50px;
+        opacity: 0.5;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 3;
     }
 
     .hero-content h1 {
-        color: #0ea5e9;
+        font-size: clamp(2.5rem, 6vw, 4rem);
         font-weight: 800;
-        line-height: 1.05;
-        margin: 0 0 12px 0;
+        line-height: 1.1;
+        margin: 0 0 20px 0;
+        background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #94a3b8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
     }
 
     .hero-content p {
-        color: #667085;
-        font-size: 16px;
+        color: #94a3b8;
+        font-size: 18px;
+        line-height: 1.7;
+        margin-bottom: 30px;
     }
 
     .hero-eyebrow {
         text-transform: uppercase;
-        letter-spacing: .18em;
+        letter-spacing: .2em;
         font-weight: 600;
-        font-size: 12px;
-        color: #64748b;
-        margin-bottom: 6px;
+        font-size: 13px;
+        background: linear-gradient(90deg, var(--eng-secondary), var(--cas-secondary), var(--cbaa-secondary), var(--ccje-secondary), var(--cte-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 12px;
         display: block;
+        animation: shimmer 3s ease-in-out infinite;
     }
 
+    @keyframes shimmer {
+        0%, 100% { opacity: 0.8; }
+        50% { opacity: 1; }
+    }
+
+    /* CTA Button with gradient animation */
     #btn_explore {
-        background: #0ea5e9;
+        position: relative;
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary));
         color: #fff;
         border: 0;
-        border-radius: 12px;
-        padding: 12px 18px;
-        box-shadow: 0 10px 22px rgba(14, 165, 233, .25), 0 6px 12px rgba(2, 6, 23, .08);
-        transition: background-color .15s ease, box-shadow .2s ease, transform .12s ease;
-        animation: breatheBtn 3.6s ease-in-out infinite;
+        border-radius: 16px;
+        padding: 16px 32px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 
+            0 10px 30px rgba(22, 163, 74, 0.3),
+            0 0 0 1px rgba(255,255,255,0.1) inset;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+
+    #btn_explore::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, var(--cte-primary), var(--cas-primary), var(--eng-primary));
+        opacity: 0;
+        transition: opacity 0.3s ease;
     }
 
     #btn_explore:hover {
-        background: #0284c7;
-        box-shadow: 0 16px 32px rgba(14, 165, 233, .35), 0 8px 16px rgba(2, 6, 23, .12);
-        transform: translateY(-1px);
+        transform: translateY(-3px);
+        box-shadow: 
+            0 20px 40px rgba(22, 163, 74, 0.4),
+            0 0 0 1px rgba(255,255,255,0.2) inset;
+    }
+
+    #btn_explore:hover::before {
+        opacity: 1;
+    }
+
+    #btn_explore span {
+        position: relative;
+        z-index: 1;
     }
 
     #btn_explore:active {
-        transform: translateY(0);
-        box-shadow: 0 8px 18px rgba(14, 165, 233, .25), 0 6px 12px rgba(2, 6, 23, .12);
+        transform: translateY(-1px);
     }
 
+    /* Hero illustration - Department cards showcase */
     .hero-illustration {
         display: grid;
         place-items: center;
         position: relative;
+        z-index: 3;
     }
 
     .dashboard-mockup {
-        width: clamp(300px, 40vw, 440px);
-        height: clamp(180px, 24vw, 260px);
-        background: #fff;
-        border: 1px solid #e2eef3;
-        border-radius: 18px;
-        box-shadow: 0 12px 28px rgba(2, 6, 23, .08);
+        width: clamp(280px, 45vw, 420px);
+        height: clamp(200px, 30vw, 320px);
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 24px;
+        box-shadow: 
+            0 25px 50px rgba(0, 0, 0, 0.3),
+            0 0 0 1px rgba(255,255,255,0.05) inset;
         position: relative;
-        padding: 16px;
+        padding: 20px;
+        overflow: hidden;
     }
 
     .mockup-header {
-        height: 12px;
-        border-radius: 6px;
-        background: linear-gradient(90deg, #0284c7, #38bdf8);
-        opacity: .9;
+        height: 14px;
+        border-radius: 7px;
+        background: linear-gradient(90deg, 
+            var(--eng-primary), 
+            var(--cas-primary), 
+            var(--cbaa-primary), 
+            var(--ccje-primary), 
+            var(--cte-primary));
+        background-size: 200% 100%;
+        animation: gradientSlide 4s ease-in-out infinite;
+    }
+
+    @keyframes gradientSlide {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
     }
 
     .mockup-charts {
         position: absolute;
-        inset: auto 16px 16px 16px;
+        inset: auto 20px 20px 20px;
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
         align-items: end;
-        gap: 10px;
+        gap: 8px;
     }
 
     .chart-bar {
         position: relative;
-        height: 44px;
+        height: 40px;
         border-radius: 8px;
-        background: linear-gradient(180deg, #93c5fd, #6366f1);
-        box-shadow: 0 6px 12px rgba(2, 6, 23, .08);
-        transition: transform .3s ease, height .3s ease;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        cursor: pointer;
     }
 
-    .chart-bar::after {
-        content: "";
-        position: absolute;
-        left: 0;
-        right: 0;
-        top: -2px;
-        height: 6px;
-        border-radius: 8px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, .8), rgba(255, 255, 255, 0));
-        opacity: .15;
-        animation: barFlicker 3s ease-in-out infinite;
+    .chart-bar:nth-child(1) {
+        background: var(--eng-gradient);
+        height: 70px;
+        animation: barPulse 2s ease-in-out infinite;
+        animation-delay: 0s;
     }
 
     .chart-bar:nth-child(2) {
-        height: 72px;
+        background: var(--cas-gradient);
+        height: 55px;
+        animation: barPulse 2s ease-in-out infinite;
+        animation-delay: 0.2s;
     }
 
     .chart-bar:nth-child(3) {
-        height: 60px;
+        background: var(--cbaa-gradient);
+        height: 85px;
+        animation: barPulse 2s ease-in-out infinite;
+        animation-delay: 0.4s;
     }
 
+    .chart-bar:nth-child(4) {
+        background: var(--ccje-gradient);
+        height: 45px;
+        animation: barPulse 2s ease-in-out infinite;
+        animation-delay: 0.6s;
+    }
+
+    .chart-bar:nth-child(5) {
+        background: var(--cte-gradient);
+        height: 65px;
+        animation: barPulse 2s ease-in-out infinite;
+        animation-delay: 0.8s;
+    }
+
+    @keyframes barPulse {
+        0%, 100% { transform: scaleY(1); }
+        50% { transform: scaleY(1.1); }
+    }
+
+    .chart-bar:hover {
+        transform: scaleY(1.2) translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    /* Remove old chart-pie styling, replace with department icons */
     .chart-pie {
-        grid-column: 4 / 5;
-        width: 54px;
-        height: 54px;
-        border-radius: 50%;
-        justify-self: end;
-        background: conic-gradient(#0ea5e9 0 42%, #3b82f6 42% 70%, #a78bfa 70% 100%);
-        filter: drop-shadow(0 6px 12px rgba(2, 6, 23, .12));
-        position: relative;
-        transition: transform .3s ease;
-    }
-
-    .chart-pie::after {
-        content: "";
-        position: absolute;
-        inset: 10% 10%;
-        background: #fff;
-        border-radius: 50%;
-    }
-
-    .chart-pie::before {
-        content: "";
-        position: absolute;
-        inset: -2px;
-        border-radius: 50%;
-        box-shadow: 0 0 0 0 rgba(14, 165, 233, .35);
-        animation: pulseRing 3.2s ease-out infinite;
-    }
-
-    /* hover micro-animations */
-    .hero-section:hover .chart-bar:nth-child(1) {
-        height: 56px;
-        transform: translateY(-2px);
-    }
-
-    .hero-section:hover .chart-bar:nth-child(2) {
-        height: 84px;
-        transform: translateY(-2px);
-    }
-
-    .hero-section:hover .chart-bar:nth-child(3) {
-        height: 74px;
-        transform: translateY(-2px);
-    }
-
-    .hero-section:hover .chart-pie {
-        transform: translateY(-2px) scale(1.05);
+        display: none;
     }
 
     .user-avatar {
         position: absolute;
-        right: -36px;
-        bottom: 10px;
-        width: 64px;
-        height: 64px;
+        right: -30px;
+        bottom: 20px;
+        width: 70px;
+        height: 70px;
         border-radius: 50%;
         display: grid;
         place-items: center;
-        background: radial-gradient(circle at 50% 50%, #0ea5e9 0 55%, #e6f9ff 56% 100%);
-        box-shadow: 0 8px 18px rgba(14, 165, 233, .28);
+        background: linear-gradient(135deg, var(--eng-primary), var(--cte-primary));
+        box-shadow: 0 10px 30px rgba(22, 163, 74, 0.4);
+        animation: avatarFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes avatarFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+
+    .user-avatar::before {
+        content: "📊";
+        font-size: 28px;
     }
 
     .user-avatar::after {
         content: "";
         position: absolute;
-        inset: -6px;
+        inset: -8px;
         border-radius: inherit;
-        box-shadow: 0 0 0 0 rgba(14, 165, 233, .35);
-        animation: pulseRing 2.4s ease-out infinite;
+        box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
+        animation: pulseRing 2.5s ease-out infinite;
     }
 
     @keyframes pulseRing {
         0% {
-            box-shadow: 0 0 0 0 rgba(14, 165, 233, .35);
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, 0.4);
         }
-
         70% {
-            box-shadow: 0 0 0 16px rgba(14, 165, 233, 0);
+            box-shadow: 0 0 0 20px rgba(22, 163, 74, 0);
         }
-
         100% {
-            box-shadow: 0 0 0 0 rgba(14, 165, 233, 0);
+            box-shadow: 0 0 0 0 rgba(22, 163, 74, 0);
         }
     }
 
-    @keyframes heroBreath {
+    /* =====================================================
+       DEPARTMENT SHOWCASE CARDS - Below Hero
+       ===================================================== */
+    .departments-showcase {
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        padding: 60px 20px 80px;
+        position: relative;
+    }
 
-        0%,
-        100% {
-            transform: translateY(0);
-            opacity: .95;
-        }
+    .departments-showcase::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(90deg, 
+            transparent, 
+            var(--eng-primary), 
+            var(--cas-primary), 
+            var(--cbaa-primary), 
+            var(--ccje-primary), 
+            var(--cte-primary), 
+            transparent);
+    }
 
-        50% {
-            transform: translateY(-8px);
-            opacity: 1;
+    .showcase-title {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .showcase-title h2 {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 10px;
+    }
+
+    .showcase-title p {
+        color: #94a3b8;
+        font-size: 16px;
+    }
+
+    .dept-cards-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    @media (min-width: 1100px) {
+        .dept-cards-grid {
+            grid-template-columns: repeat(5, 1fr);
         }
     }
 
-    @keyframes barFlicker {
+    .dept-showcase-card {
+        position: relative;
+        background: rgba(30, 41, 59, 0.6);
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        padding: 24px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.05);
+    }
 
-        0%,
-        100% {
-            opacity: .12;
+    .dept-showcase-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 2px;
+        background: var(--card-gradient);
+        -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+        mask-composite: exclude;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .dept-showcase-card:hover::before {
+        opacity: 1;
+    }
+
+    .dept-showcase-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .dept-showcase-card.card-eng { --card-gradient: var(--eng-gradient); --card-color: var(--eng-primary); }
+    .dept-showcase-card.card-cas { --card-gradient: var(--cas-gradient); --card-color: var(--cas-primary); }
+    .dept-showcase-card.card-cbaa { --card-gradient: var(--cbaa-gradient); --card-color: var(--cbaa-primary); }
+    .dept-showcase-card.card-ccje { --card-gradient: var(--ccje-gradient); --card-color: var(--ccje-primary); }
+    .dept-showcase-card.card-cte { --card-gradient: var(--cte-gradient); --card-color: var(--cte-primary); }
+
+    .dept-showcase-card .card-icon {
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        margin: 0 auto 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: var(--card-gradient);
+        font-size: 28px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        transition: transform 0.3s ease;
+    }
+
+    .dept-showcase-card:hover .card-icon {
+        transform: scale(1.1) rotate(5deg);
+    }
+
+    .dept-showcase-card h3 {
+        color: #ffffff;
+        font-size: 14px;
+        font-weight: 700;
+        margin: 8px 0 0 0;
+        line-height: 1.3;
+    }
+
+    .dept-showcase-card .card-abbrev {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        color: var(--card-color);
+        background: rgba(255,255,255,0.1);
+        margin-bottom: 8px;
+    }
+
+    /* =====================================================
+       SIMPLIFIED ABOUT SECTION - Override all old styles
+       ===================================================== */
+    .about-section {
+        padding: 50px 20px !important;
+        background: #f8fafc !important;
+        text-align: center !important;
+        position: relative !important;
+        overflow: visible !important;
+        min-height: auto !important;
+    }
+    
+    .about-section::before,
+    .about-section::after {
+        display: none !important;
+    }
+
+    .about-container-simple {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .about-eyebrow {
+        text-transform: uppercase;
+        letter-spacing: 0.15em;
+        font-size: 12px;
+        font-weight: 700;
+        background: linear-gradient(90deg, var(--eng-primary), var(--cte-primary)) !important;
+        -webkit-background-clip: text !important;
+        -webkit-text-fill-color: transparent !important;
+        background-clip: text !important;
+        margin-bottom: 8px !important;
+    }
+
+    .about-title {
+        font-family: 'Poppins', sans-serif !important;
+        font-size: 2rem !important;
+        font-weight: 800 !important;
+        color: #0f172a !important;
+        -webkit-text-fill-color: #0f172a !important;
+        margin: 0 0 16px 0 !important;
+        position: relative !important;
+        display: inline-block !important;
+        line-height: 1.3 !important;
+    }
+    
+    .about-title::after {
+        content: "" !important;
+        position: absolute !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        bottom: -8px !important;
+        width: 60px !important;
+        height: 4px !important;
+        background: linear-gradient(90deg, var(--eng-primary), var(--cte-primary)) !important;
+        border-radius: 4px !important;
+        margin: 0 !important;
+        opacity: 1 !important;
+        display: block !important;
+    }
+
+    .about-brief {
+        color: #64748b !important;
+        font-size: 15px !important;
+        line-height: 1.6 !important;
+        margin-bottom: 24px !important;
+        margin-top: 16px !important;
+    }
+
+    .about-quick-info {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .quick-info-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #475569;
+        font-size: 14px;
+    }
+
+    .info-icon {
+        font-size: 18px;
+    }
+
+    /* =====================================================
+       SIMPLIFIED SERVICES SECTION
+       ===================================================== */
+    .services-section {
+        padding: 50px 20px;
+        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+    }
+
+    .services-container {
+        max-width: 900px;
+        margin: 0 auto;
+        text-align: center;
+    }
+
+    .services-section h2 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #ffffff;
+        margin-bottom: 30px;
+        background: linear-gradient(90deg, var(--eng-secondary), var(--cas-secondary), var(--cbaa-secondary), var(--ccje-secondary), var(--cte-secondary));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .services-grid-simple {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+    }
+
+    .service-item {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 16px;
+        padding: 24px 16px;
+        transition: all 0.3s ease;
+    }
+
+    .service-item:hover {
+        background: rgba(255,255,255,0.1);
+        transform: translateY(-4px);
+    }
+
+    .service-emoji {
+        font-size: 32px;
+        display: block;
+        margin-bottom: 12px;
+    }
+
+    .service-item h4 {
+        color: #ffffff;
+        font-size: 13px;
+        font-weight: 600;
+        margin: 0;
+    }
+
+    /* Mobile responsive for simplified sections */
+    @media (max-width: 768px) {
+        .about-quick-info {
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
         }
+        
+        .services-grid-simple {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .dept-cards-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .dept-showcase-card {
+            padding: 16px 12px;
+        }
+        
+        .dept-showcase-card .card-icon {
+            width: 48px;
+            height: 48px;
+            font-size: 22px;
+            margin-bottom: 10px;
+        }
+        
+        .dept-showcase-card h3 {
+            font-size: 12px;
+        }
+        
+        .dept-showcase-card .card-abbrev {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+    }
 
-        50% {
-            opacity: .32;
+    @media (max-width: 480px) {
+        .services-grid-simple {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+        
+        .service-item {
+            padding: 16px 10px;
+        }
+        
+        .service-emoji {
+            font-size: 24px;
+        }
+        
+        .service-item h4 {
+            font-size: 11px;
+        }
+        
+        .departments-showcase {
+            padding: 40px 16px 60px;
         }
     }
 
     @keyframes breatheBtn {
-
         0%,
         100% {
             transform: translateY(0);
         }
-
         50% {
             transform: translateY(-0.6px);
         }
@@ -2147,6 +2678,295 @@ session_start();
         }
     }
 
+    /* =====================================================
+       COMPREHENSIVE MOBILE RESPONSIVENESS
+       ===================================================== */
+    
+    /* Tablet */
+    @media (max-width: 991px) {
+        .hero-container {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding: 60px 20px 40px;
+        }
+        
+        .hero-content {
+            order: 1;
+        }
+        
+        .hero-illustration {
+            order: 2;
+        }
+        
+        .hero-content h1 {
+            font-size: 2.5rem;
+        }
+        
+        .hero-content p {
+            font-size: 16px;
+        }
+        
+        .dashboard-mockup {
+            width: 320px;
+            height: 200px;
+        }
+        
+        .user-avatar {
+            right: -10px;
+            bottom: 10px;
+            width: 50px;
+            height: 50px;
+        }
+        
+        .user-avatar::before {
+            font-size: 20px;
+        }
+        
+        .about-section {
+            padding: 60px 20px;
+        }
+        
+        .services-section {
+            padding: 60px 20px;
+        }
+    }
+    
+    /* Mobile */
+    @media (max-width: 767px) {
+        header {
+            padding: 10px 16px;
+        }
+        
+        .logo .brand-abbrev {
+            font-size: 16px;
+            padding: 4px 8px;
+        }
+        
+        .hero-section {
+            min-height: auto;
+            padding-bottom: 40px;
+        }
+        
+        .hero-container {
+            padding: 40px 16px 30px;
+            gap: 30px;
+        }
+        
+        .hero-content h1 {
+            font-size: 1.8rem;
+            line-height: 1.2;
+        }
+        
+        .hero-eyebrow {
+            font-size: 10px;
+            letter-spacing: 0.1em;
+        }
+        
+        .hero-content p {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        #btn_explore {
+            padding: 12px 24px;
+            font-size: 14px;
+            border-radius: 12px;
+        }
+        
+        .dashboard-mockup {
+            width: 280px;
+            height: 180px;
+            padding: 14px;
+        }
+        
+        .mockup-charts {
+            gap: 5px;
+        }
+        
+        .chart-bar:nth-child(1) { height: 50px; }
+        .chart-bar:nth-child(2) { height: 40px; }
+        .chart-bar:nth-child(3) { height: 60px; }
+        .chart-bar:nth-child(4) { height: 35px; }
+        .chart-bar:nth-child(5) { height: 45px; }
+        
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            right: -5px;
+            bottom: 5px;
+        }
+        
+        .user-avatar::before {
+            font-size: 18px;
+        }
+        
+        .departments-showcase {
+            padding: 40px 16px 50px;
+        }
+        
+        .showcase-title h2 {
+            font-size: 1.5rem;
+        }
+        
+        .showcase-title p {
+            font-size: 14px;
+        }
+        
+        .dept-cards-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .dept-showcase-card {
+            padding: 16px 12px;
+        }
+        
+        .dept-showcase-card .card-icon {
+            width: 50px;
+            height: 50px;
+            font-size: 22px;
+            margin-bottom: 12px;
+        }
+        
+        .dept-showcase-card h3 {
+            font-size: 12px;
+        }
+        
+        .dept-showcase-card .card-abbrev {
+            font-size: 10px;
+            padding: 3px 8px;
+        }
+        
+        .dept-showcase-card p {
+            display: none; /* Hide description on small screens */
+        }
+        
+        .dept-showcase-card .card-stats {
+            margin-top: 12px;
+            padding-top: 12px;
+            gap: 12px;
+        }
+        
+        .dept-showcase-card .stat-value {
+            font-size: 16px;
+        }
+        
+        .dept-showcase-card .stat-label {
+            font-size: 9px;
+        }
+        
+        .about-section {
+            padding: 50px 16px;
+        }
+        
+        .about-title {
+            font-size: 1.8rem;
+        }
+        
+        .values-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .value-card {
+            padding: 16px 12px;
+        }
+        
+        .services-section {
+            padding: 50px 16px;
+        }
+        
+        .services-section h2 {
+            font-size: 1.8rem;
+            margin-bottom: 30px;
+        }
+        
+        .services-section .services-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        
+        .services-section .service-card {
+            padding: 20px 12px;
+        }
+        
+        .services-section .service-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 14px;
+        }
+        
+        .services-section .service-card h3 {
+            font-size: 14px;
+        }
+        
+        .services-section .service-card p {
+            font-size: 12px;
+            display: none; /* Hide on very small screens */
+        }
+        
+        /* Hide floating orbs on mobile for performance */
+        .floating-orbs {
+            display: none;
+        }
+    }
+    
+    /* Extra small mobile */
+    @media (max-width: 480px) {
+        .hero-content h1 {
+            font-size: 1.5rem;
+        }
+        
+        .dashboard-mockup {
+            width: 240px;
+            height: 150px;
+        }
+        
+        .dept-cards-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        
+        .dept-showcase-card {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            text-align: left;
+            padding: 16px;
+            gap: 16px;
+        }
+        
+        .dept-showcase-card .card-icon {
+            margin: 0;
+            flex-shrink: 0;
+        }
+        
+        .dept-showcase-card .card-content {
+            flex: 1;
+        }
+        
+        .dept-showcase-card .card-stats {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        
+        .values-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .services-section .services-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .services-section .service-card p {
+            display: block;
+        }
+    }
+
     /* Reduced motion: disable ambient animations */
     @media (prefers-reduced-motion: reduce) {
 
@@ -2156,7 +2976,9 @@ session_start();
         .hero-container::before,
         .hero-container::after,
         .chart-pie::before,
-        .user-avatar::after {
+        .user-avatar::after,
+        .floating-orbs .orb,
+        .chart-bar {
             animation: none !important;
         }
     }
@@ -2177,6 +2999,7 @@ session_start();
             <a href="#home">Home</a>
             <a href="#about">About</a>
             <a href="#service">Service</a>
+            <a href="main_dashboard.php" style="background: linear-gradient(135deg, #0f172a, #334155); padding: 8px 16px; border-radius: 8px; color: white; font-weight: 600; box-shadow: 0 2px 8px rgba(0,0,0,0.2);">📊 Analytics</a>
             <button class="btnLogin-popup">Login</button>
         </nav>
     </header>
@@ -2216,22 +3039,32 @@ session_start();
     <main>
         <!-- Home Section -->
         <section id="home" class="hero-section">
+            <!-- Floating Orbs for visual interest -->
+            <div class="floating-orbs">
+                <div class="orb orb-eng"></div>
+                <div class="orb orb-cas"></div>
+                <div class="orb orb-cbaa"></div>
+                <div class="orb orb-ccje"></div>
+                <div class="orb orb-cte"></div>
+            </div>
+            
             <div class="hero-container">
                 <div class="hero-content">
                     <span class="hero-eyebrow">Laguna State Polytechnic University • San Pablo City Campus</span>
                     <h1>Board Performance Dashboard</h1>
-                    <p>Explore trends, pass rates, top programs, and batch performance.<br>
-                        Designed for Students, Faculty, and Public.</p>
-                    <button id="btn_explore" class="cta-button">Explore Dashboard</button>
+                    <p>Track, analyze, and predict board exam performance across all departments.<br>
+                        Empowering Students, Faculty, and the Community with data-driven insights.</p>
+                    <button id="btn_explore" class="cta-button"><span>Explore Dashboard</span></button>
                 </div>
                 <div class="hero-illustration">
                     <div class="dashboard-mockup">
                         <div class="mockup-header"></div>
                         <div class="mockup-charts">
-                            <div class="chart-bar"></div>
-                            <div class="chart-bar"></div>
-                            <div class="chart-bar"></div>
-                            <div class="chart-pie"></div>
+                            <div class="chart-bar" title="Engineering"></div>
+                            <div class="chart-bar" title="CAS"></div>
+                            <div class="chart-bar" title="CBAA"></div>
+                            <div class="chart-bar" title="CCJE"></div>
+                            <div class="chart-bar" title="CTE"></div>
                         </div>
                     </div>
                     <div class="user-avatar">
@@ -2241,396 +3074,168 @@ session_start();
             </div>
         </section>
 
-        <!-- Explore Section: Examinees by Department -->
-        <section id="explore" class="viz-section">
-            <div class="viz-container">
-                <div class="viz-header">
-                    <h2>Explore Examinees by Department</h2>
-                    <div class="viz-subtitle">Click a department to list examinees. Visible fields: Name, Board Exam
-                        Type, Board Exam Date, Take Attempts, Result.</div>
+        <!-- Department Showcase Section -->
+        <section class="departments-showcase" id="departments">
+            <div class="showcase-title">
+                <h2>Select a Department</h2>
+                <p>Click on a department card to view statistics and predictions</p>
+            </div>
+            <div class="dept-cards-grid">
+                <!-- Engineering -->
+                <div class="dept-showcase-card card-eng" onclick="window.location.href='public_dashboard_engineering.php'">
+                    <div class="card-icon">⚙️</div>
+                    <span class="card-abbrev">COE</span>
+                    <h3>Engineering</h3>
                 </div>
-                <div class="explore-buttons" id="explore_buttons">
-                    <button class="explore-btn" data-dept="Engineering"><span class="dot"
-                            style="background:#16a34a"></span> College of Engineering</button>
-                    <button class="explore-btn" data-dept="Arts and Science"><span class="dot"
-                            style="background:#ec4899"></span> College of Arts and Science</button>
-                    <button class="explore-btn" data-dept="Business Administration and Accountancy"><span class="dot"
-                            style="background:#eab308"></span> College of Business Administration and
-                        Accountancy</button>
-                    <button class="explore-btn" data-dept="Criminal Justice Education"><span class="dot"
-                            style="background:#ef4444"></span> College of Criminal Justice Education</button>
-                    <button class="explore-btn" data-dept="Teacher Education"><span class="dot"
-                            style="background:#3b82f6"></span> College of Teacher Education</button>
+                
+                <!-- CAS -->
+                <div class="dept-showcase-card card-cas" onclick="window.location.href='public_dashboard_cas.php'">
+                    <div class="card-icon">🔬</div>
+                    <span class="card-abbrev">CAS</span>
+                    <h3>Arts & Sciences</h3>
                 </div>
-                <div id="explore_legends" class="legend" style="margin-top:2px"></div>
-                <div class="chart-box">
-                    <div class="explore-toolbar">
-                        <div class="explore-search"><input id="explore_q" type="text"
-                                placeholder="Search name or exam type..." /></div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <label for="explore_limit">Rows:</label>
-                            <select id="explore_limit"
-                                style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:8px;">
-                                <option>25</option>
-                                <option selected>50</option>
-                                <option>100</option>
-                            </select>
-                            <button id="explore_csv" class="btn-secondary"
-                                style="padding:6px 10px;border-radius:8px;">CSV</button>
-                            <button id="explore_xlsx" class="btn-secondary"
-                                style="padding:6px 10px;border-radius:8px;">XLSX</button>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table id="explore_table" class="explore-table">
-                            <thead>
-                                <tr>
-                                    <th data-sort="name">Full Name</th>
-                                    <th data-sort="board_exam_type">Board Exam Type</th>
-                                    <th data-sort="board_exam_date">Board Exam Date</th>
-                                    <th data-sort="exam_type">Take Attempts</th>
-                                    <th data-sort="result">Result</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
-                    <div class="pager">
-                        <span id="explore_info" style="margin-right:auto;color:#64748b;font-size:12px;"></span>
-                        <button id="explore_prev">Prev</button>
-                        <button id="explore_next">Next</button>
-                    </div>
+                
+                <!-- CBAA -->
+                <div class="dept-showcase-card card-cbaa" onclick="window.location.href='public_dashboard_cbaa.php'">
+                    <div class="card-icon">💼</div>
+                    <span class="card-abbrev">CBAA</span>
+                    <h3>Business Administration</h3>
+                </div>
+                
+                <!-- CCJE -->
+                <div class="dept-showcase-card card-ccje" onclick="window.location.href='public_dashboard_ccje.php'">
+                    <div class="card-icon">⚖️</div>
+                    <span class="card-abbrev">CCJE</span>
+                    <h3>Criminal Justice</h3>
+                </div>
+                
+                <!-- CTE -->
+                <div class="dept-showcase-card card-cte" onclick="window.location.href='public_dashboard_cte.php'">
+                    <div class="card-icon">📚</div>
+                    <span class="card-abbrev">CTE</span>
+                    <h3>Teacher Education</h3>
                 </div>
             </div>
         </section>
 
-        <!-- About Section -->
+        <!-- About Section - Simplified -->
         <section id="about" class="about-section">
-            <div class="about-hero"
-                style="background-image: linear-gradient(180deg, rgba(14,165,233,.12), rgba(20,184,166,.12)), url('assets/about-hero.jpg');">
-            </div>
-            <div class="about-container">
-                <div class="about-content">
-                    <div class="about-eyebrow">Laguna State Polytechnic University</div>
-                    <h2 class="about-title">About Us</h2>
-                    <div class="mission-callout">
-                        <p>We provide quality, efficient, and effective services through responsive instruction,
-                            distinctive research, and sustainable community engagement.</p>
+            <div class="about-container-simple">
+                <div class="about-eyebrow">Laguna State Polytechnic University</div>
+                <h2 class="about-title">About Us</h2>
+                <p class="about-brief">We provide quality, efficient, and effective services through responsive instruction, distinctive research, and sustainable community engagement.</p>
+                
+                <div class="about-quick-info">
+                    <div class="quick-info-item">
+                        <span class="info-icon">📍</span>
+                        <span>Del Remedio, San Pablo City, Laguna</span>
                     </div>
-
-                    <div class="values-grid" role="list">
-                        <div class="value-card" role="listitem">
-                            <div class="value-icon" aria-hidden="true">
-                                <!-- Quality: Star/Diamond -->
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path
-                                        d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27Z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <h4>Quality</h4>
-                            <p>We maintain the highest standards in instruction and service delivery to ensure academic
-                                excellence.</p>
-                        </div>
-                        <div class="value-card" role="listitem">
-                            <div class="value-icon" aria-hidden="true">
-                                <!-- Research: Flask/Atom -->
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M9 3h6M10 3v6l-4 7a3 3 0 0 0 3 4h6a3 3 0 0 0 3-4l-4-7V3"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <h4>Research</h4>
-                            <p>We pursue distinctive and responsive research and development that drives innovation and
-                                societal progress.</p>
-                        </div>
-                        <div class="value-card" role="listitem">
-                            <div class="value-icon" aria-hidden="true">
-                                <!-- Community: People/Handshake -->
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M7 11a5 5 0 0 1 10 0v1h1a3 3 0 0 1 0 6H6a3 3 0 0 1 0-6h1v-1Z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <h4>Community</h4>
-                            <p>We engage in sustainable extension and community services to foster local development and
-                                impact.</p>
-                        </div>
-                        <div class="value-card" role="listitem">
-                            <div class="value-icon" aria-hidden="true">
-                                <!-- Integrity: Shield/Check -->
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4Z" stroke="currentColor"
-                                        stroke-width="2" />
-                                    <path d="M8.5 12.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </div>
-                            <h4>Integrity</h4>
-                            <p>We operate with utmost professionalism, transparency, and ethical accountability in all
-                                institutional endeavors.</p>
-                        </div>
+                    <div class="quick-info-item">
+                        <span class="info-icon">📞</span>
+                        <span>(049) 554-9910</span>
                     </div>
-
-                    <div class="contact-card about-contact">
-                        <h3>Contact Us</h3>
-                        <div><strong>San Pablo City Campus</strong></div>
-                        <div class="meta-list">
-                            <div class="meta-item">
-                                <div class="icon-circle" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M2 5a3 3 0 0 1 3-3h1a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5s.5 2 3 4 4 3 4 3v-1a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v1a3 3 0 0 1-3 3c-6.627 0-12-5.373-12-12Z"
-                                            stroke="currentColor" stroke-width="1.8" />
-                                    </svg>
-                                </div>
-                                <div class="meta-text">
-                                    <strong>Phone:</strong> <a href="tel:+63495549910"
-                                        class="about-link">(049)554-9910</a>
-                                    <button type="button" class="copy-btn" data-copy="+63495549910">Copy</button>
-                                </div>
-                            </div>
-                            <div class="meta-item">
-                                <div class="icon-circle" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M4 6h16v12H4V6Zm0 0 8 6 8-6" stroke="currentColor"
-                                            stroke-width="1.8" />
-                                    </svg>
-                                </div>
-                                <div class="meta-text">
-                                    <strong>Email:</strong> <a href="mailto:info@lspu.edu.ph"
-                                        class="about-link">info@lspu.edu.ph</a>
-                                    <button type="button" class="copy-btn" data-copy="info@lspu.edu.ph">Copy</button>
-                                </div>
-                            </div>
-                            <div class="meta-item">
-                                <div class="icon-circle" aria-hidden="true">
-                                    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M12 22s7-5.686 7-12a7 7 0 1 0-14 0c0 6.314 7 12 7 12Zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
-                                            stroke="currentColor" stroke-width="1.8" />
-                                    </svg>
-                                </div>
-                                <div class="meta-text"><strong>Address:</strong> Del Remedio, San Pablo City, Laguna
-                                </div>
-                            </div>
-                        </div>
-                        <div class="about-maps">
-                            <span class="icon-circle" style="width:28px;height:28px;border-radius:8px;box-shadow:none;"
-                                aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                    style="width:16px;height:16px;">
-                                    <path
-                                        d="M12 22s7-5.686 7-12a7 7 0 1 0-14 0c0 6.314 7 12 7 12Zm0-9a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
-                                        stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </span>
-                            <a href="https://www.google.com/maps?q=Del+Remedio,+San+Pablo+City,+Laguna" target="_blank"
-                                rel="noopener" class="about-link">View on Google Maps</a>
-                            <span class="sep">•</span>
-                            <span class="icon-circle" style="width:28px;height:28px;border-radius:8px;box-shadow:none;"
-                                aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
-                                    style="width:16px;height:16px;">
-                                    <path d="M3 5h18v14H3V5Zm6 3h6" stroke="currentColor" stroke-width="2" />
-                                </svg>
-                            </span>
-                            <a href="https://www.openstreetmap.org/search?query=Del%20Remedio%2C%20San%20Pablo%20City%2C%20Laguna"
-                                target="_blank" rel="noopener" class="about-link">OpenStreetMap</a>
-                        </div>
-                    </div>
-
-                    <div class="about-grid">
-                        <div class="flip-card theme-teal" role="button" tabindex="0" aria-label="View Vision"
-                            aria-expanded="false">
-                            <div class="flip-inner">
-                                <div class="flip-face flip-front">
-                                    <div class="flip-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M1.5 12s3.5-6.5 10.5-6.5S22.5 12 22.5 12 19 18.5 12 18.5 1.5 12 1.5 12Z"
-                                                stroke="currentColor" stroke-width="2" />
-                                            <circle cx="12" cy="12" r="3.5" stroke="currentColor" stroke-width="2" />
-                                        </svg>
-                                    </div>
-                                    <h3>Vision</h3>
-                                    <div class="flip-hint">Click to read</div>
-                                </div>
-                                <div class="flip-face flip-back">
-                                    <h3>Our Vision</h3>
-                                    <p>LSPU is a center of technological innovation that promotes interdisciplinary
-                                        learning, sustainable utilization of resources, collaboration and partnership
-                                        with the community and stakeholders.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flip-card theme-teal" role="button" tabindex="0" aria-label="View Mission"
-                            aria-expanded="false">
-                            <div class="flip-inner">
-                                <div class="flip-face flip-front">
-                                    <div class="flip-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" />
-                                            <circle cx="12" cy="12" r="3" fill="currentColor" />
-                                        </svg>
-                                    </div>
-                                    <h3>Mission</h3>
-                                    <div class="flip-hint">Click to read</div>
-                                </div>
-                                <div class="flip-face flip-back">
-                                    <h3>Our Mission</h3>
-                                    <p>LSPU, driven by progressive leadership, is a premier institution providing
-                                        technology-mediated agriculture, fisheries and other related and emerging
-                                        disciplines significantly contributing to the growth and development of the
-                                        region and nation.</p>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="flip-card theme-teal" role="button" tabindex="0" aria-label="View Quality Policy"
-                            aria-expanded="false">
-                            <div class="flip-inner">
-                                <div class="flip-face flip-front">
-                                    <div class="flip-icon" aria-hidden="true">
-                                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path d="M12 2l8 4v6c0 5-3.5 9-8 10-4.5-1-8-5-8-10V6l8-4Z"
-                                                stroke="currentColor" stroke-width="2" />
-                                            <path d="M8.5 12.5l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="2" />
-                                        </svg>
-                                    </div>
-                                    <h3>Quality Policy</h3>
-                                    <div class="flip-hint">Click to read</div>
-                                </div>
-                                <div class="flip-face flip-back">
-                                    <h3>Our Quality Policy</h3>
-                                    <p>We deliver quality education and continuously improve through responsive
-                                        instruction, distinctive research, and sustainable extension and production
-                                        services.</p>
-                                    <div class="back-actions"><a href="#" class="open-policy"
-                                            data-source="#policy-quality-full" data-title="Quality Policy">Read the full
-                                            policy</a></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="policy-quality-full" style="display:none">LSPU delivers quality education through
-                        responsive instruction, distinctive research, sustainable extension and production services.
-                        Thus, we commit to continually improve to meet applicable requirements to provide quality,
-                        efficient and effective services to the university stakeholder's highest level of satisfaction
-                        through an excellent management system imbued with utmost integrity, professionalism and
-                        innovation.</div>
-                </div>
-                <div class="about-illustration">
-                    <div class="analytics-chart">
-                        <div class="chart-element bar-chart"></div>
-                        <div class="chart-element pie-chart"></div>
+                    <div class="quick-info-item">
+                        <span class="info-icon">✉️</span>
+                        <span>info@lspu.edu.ph</span>
                     </div>
                 </div>
             </div>
         </section>
 
-        <!-- Services Section -->
+        <!-- Services Section - Simplified -->
         <section id="service" class="services-section">
             <div class="services-container">
-                <h2>Services</h2>
-                <div class="services-grid">
-                    <div class="service-card" data-target="#visual" role="button" tabindex="0"
-                        aria-label="View Statistics - jump to charts">
-                        <div class="service-icon statistics-icon">
-                            <i class="icon-chart"></i>
-                        </div>
-                        <h3>View Statistics</h3>
-                        <p>Analyze passing rates across programs and years.</p>
+                <h2>Our Services</h2>
+                <div class="services-grid-simple">
+                    <div class="service-item">
+                        <span class="service-emoji">📊</span>
+                        <h4>View Statistics</h4>
                     </div>
-                    <div class="service-card" data-target="#explore" role="button" tabindex="0"
-                        aria-label="Search Records - jump to Explore">
-                        <div class="service-icon search-icon">
-                            <i class="icon-search"></i>
-                        </div>
-                        <h3>Search Records</h3>
-                        <p>Find board passer information by name or program.</p>
+                    <div class="service-item">
+                        <span class="service-emoji">🔍</span>
+                        <h4>Search Records</h4>
                     </div>
-                    <div class="service-card" data-target="#visual" role="button" tabindex="0"
-                        aria-label="Performance Reports - jump to charts">
-                        <div class="service-icon reports-icon">
-                            <i class="icon-report"></i>
-                        </div>
-                        <h3>Performance Reports</h3>
-                        <p>Access detailed performance analytics and trends.</p>
+                    <div class="service-item">
+                        <span class="service-emoji">📈</span>
+                        <h4>Performance Reports</h4>
                     </div>
-                    <div class="service-card" data-target="#visual" role="button" tabindex="0"
-                        aria-label="Compare Programs - jump to charts">
-                        <div class="service-icon compare-icon">
-                            <i class="icon-compare"></i>
-                        </div>
-                        <h3>Compare Programs</h3>
-                        <p>Compare passing rates between different programs.</p>
+                    <div class="service-item">
+                        <span class="service-emoji">🤖</span>
+                        <h4>Predictions</h4>
                     </div>
                 </div>
-            </div>
-        </section>
-
-        <!-- Public Data Visualization Section -->
-        <section id="visual" class="viz-section">
-            <div class="viz-container">
-                <div class="viz-header">
-                    <h2>Overall Board Performance by Department</h2>
-                    <div class="viz-subtitle">Interactive, clickable charts. Aggregated only — no personal information
-                        displayed.</div>
-                </div>
-                <!-- Overview: one line per department -->
-                <div class="overview-card">
-                    <div class="dept-head">
-                        <div class="dept-left">
-                            <div class="dept-badge" style="background:linear-gradient(135deg,#06b6d4,#22d3ee)">All
-                                Departments</div>
-                            <div>
-                                <div class="dept-title">Passing Rate by Department (2019–2024)</div>
-                                <div class="dept-desc">One line per department</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="line-accent" style="background:linear-gradient(90deg,#06b6d4,#22d3ee);"></div>
-                    <div class="chart-box">
-                        <canvas id="dept_overall_line"></canvas>
-                    </div>
-                    <div class="ctl-row" id="ctl_overall"
-                        style="display:flex;align-items:center;gap:8px;justify-content:flex-end;margin:6px 0;">
-                        <button class="btn-outline-teal" id="btn_overall_pdf"
-                            style="padding:6px 10px;border-radius:10px;line-height:1;">⎙ Print to PDF</button>
-                        <button class="btn-secondary" id="btn_overall_png"
-                            style="padding:4px 8px;border-radius:8px;line-height:1;">PNG</button>
-                        <button class="btn-secondary" id="btn_overall_csv"
-                            style="padding:4px 8px;border-radius:8px;line-height:1;">CSV</button>
-                    </div>
-                    <div id="dept_overall_legend" class="legend"></div>
-                </div>
-                <!-- Overall takers (all departments combined) -->
-                <div class="overview-card">
-                    <div class="dept-head">
-                        <div class="dept-left">
-                            <div class="dept-badge" style="background:linear-gradient(135deg,#0ea5e9,#22d3ee)">All
-                                Departments</div>
-                            <div>
-                                <div class="dept-title">Overall Board Takers by Year (2019–2024)</div>
-                                <div class="dept-desc">Count of exam sittings across all departments</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="line-accent" style="background:linear-gradient(90deg,#0ea5e9,#22d3ee);"></div>
-                    <div class="chart-box">
-                        <canvas id="overall_takers"></canvas>
-                    </div>
-                    <div class="ctl-row" id="ctl_overall_takers"
-                        style="display:flex;align-items:center;gap:8px;justify-content:flex-end;margin:6px 0;">
-                        <button class="btn-secondary" id="btn_overall_takers_png"
-                            style="padding:4px 8px;border-radius:8px;line-height:1;">PNG</button>
-                        <button class="btn-secondary" id="btn_overall_takers_csv"
-                            style="padding:4px 8px;border-radius:8px;line-height:1;">CSV</button>
-                    </div>
-                </div>
-                <div id="deptGrid" class="dept-grid"></div>
             </div>
         </section>
     </main>
+
+    <!-- FOOTER -->
+    <footer class="site-footer">
+        <div class="footer-gradient-line"></div>
+        <div class="footer-simple">
+            <div class="footer-dept-dots">
+                <span class="dot dot-eng" title="Engineering"></span>
+                <span class="dot dot-cas" title="CAS"></span>
+                <span class="dot dot-cbaa" title="CBAA"></span>
+                <span class="dot dot-ccje" title="CCJE"></span>
+                <span class="dot dot-cte" title="CTE"></span>
+            </div>
+            <p class="footer-text">© 2024 LSPU San Pablo City Campus • Board Performance Dashboard</p>
+        </div>
+    </footer>
+
+    <style>
+    /* Footer Styling - Simplified */
+    .site-footer {
+        background: #0f172a;
+        color: #94a3b8;
+        padding-top: 0;
+    }
+    
+    .footer-gradient-line {
+        height: 4px;
+        background: linear-gradient(90deg, 
+            var(--eng-primary), 
+            var(--cas-primary), 
+            var(--cbaa-primary), 
+            var(--ccje-primary), 
+            var(--cte-primary));
+    }
+    
+    .footer-simple {
+        padding: 24px 20px;
+        text-align: center;
+    }
+    
+    .footer-dept-dots {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 12px;
+    }
+    
+    .footer-dept-dots .dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+    }
+    
+    .footer-dept-dots .dot:hover {
+        transform: scale(1.3);
+    }
+    
+    .dot-eng { background: var(--eng-primary); }
+    .dot-cas { background: var(--cas-primary); }
+    .dot-cbaa { background: var(--cbaa-primary); }
+    .dot-ccje { background: var(--ccje-primary); }
+    .dot-cte { background: var(--cte-primary); }
+    
+    .footer-text {
+        font-size: 13px;
+        color: #64748b;
+        margin: 0;
+    }
+    </style>
 
     <!-- SCRIPTS -->
     <div id="login-toast"
@@ -3209,14 +3814,7 @@ session_start();
         const exploreBtn = document.getElementById('btn_explore');
         if (exploreBtn) {
             exploreBtn.addEventListener('click', () => {
-                const sec = document.getElementById('explore');
-                if (sec) sec.scrollIntoView({
-                    behavior: 'smooth'
-                });
-                const firstBtn = document.querySelector('#explore_buttons .explore-btn');
-                if (firstBtn && !EXPLORE.dept) {
-                    firstBtn.click();
-                }
+                window.location.href = 'main_dashboard.php';
             });
         }
 
@@ -3273,13 +3871,13 @@ session_start();
             },
         ];
 
-        // Colors for overview (one line per department)
+        // Colors for overview (one line per department) - Updated to match CSS variables
         const deptColors = {
-            'Engineering': '#16a34a',
-            'Arts and Science': '#ec4899',
-            'Business Administration and Accountancy': '#eab308',
-            'Criminal Justice Education': '#ef4444',
-            'Teacher Education': '#3b82f6'
+            'Engineering': '#16a34a',           // Green
+            'Arts and Science': '#BF3853',       // Rose/Pink (CAS)
+            'Business Administration and Accountancy': '#d97706', // Golden (CBAA)
+            'Criminal Justice Education': '#7f1d1d', // Maroon (CCJE)
+            'Teacher Education': '#1d4ed8'       // Blue (CTE)
         };
 
         // Render placeholders

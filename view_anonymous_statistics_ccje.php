@@ -995,6 +995,40 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
             width: 100% !important;
         }
     }
+
+    /* CCJE-specific sidebar color overrides for red theme */
+    html body .sidebar {
+        background: #ffffff !important;
+        box-shadow: 0 2px 8px rgba(211, 47, 47, 0.08) !important;
+        border-right: 1px solid rgba(211, 47, 47, 0.1) !important;
+    }
+
+    html body .sidebar .logo {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a {
+        color: #800020 !important;
+    }
+
+    html body .sidebar-nav i,
+    html body .sidebar-nav ion-icon {
+        color: #D32F2F !important;
+    }
+
+    html body .sidebar-nav a.active,
+    html body .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #D32F2F 0%, #800020 100%) !important;
+        color: #fff !important;
+        box-shadow: 0 8px 25px rgba(211, 47, 47, 0.25) !important;
+    }
+
+    html body .sidebar-nav a.active i,
+    html body .sidebar-nav a.active ion-icon,
+    html body .sidebar-nav a:hover i,
+    html body .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
+    }
     </style>
 </head>
 <body>
@@ -3022,8 +3056,8 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
             
             modal.innerHTML = `
                 <div style="background: white; border-radius: 20px; padding: 40px; max-width: 700px; max-height: 85vh; overflow-y: auto; box-shadow: 0 25px 80px rgba(0,0,0,0.4); animation: slideUp 0.3s ease;">
-                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 3px solid #91b38e;">
-                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #91b38e 0%, #5a855f 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(145, 179, 142, 0.4);">
+                    <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 3px solid #D32F2F;">
+                        <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #D32F2F 0%, #800020 100%); border-radius: 15px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(211, 47, 47, 0.4);">
                             <i class="fas ${info.icon}" style="font-size: 28px; color: white;"></i>
                         </div>
                         <div style="flex: 1;">
@@ -3038,27 +3072,27 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
                         </button>
                     </div>
                     
-                    <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #f0f9f0 0%, #e8f5e8 100%); border-radius: 12px; border-left: 4px solid #91b38e;">
+                    <div style="margin-bottom: 24px; padding: 20px; background: linear-gradient(135deg, #FFF5F5 0%, #FFE8E8 100%); border-radius: 12px; border-left: 4px solid #D32F2F;">
                         <h3 style="margin: 0 0 12px 0; color: #0f1724; font-size: 1.2rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-bullseye" style="color: #91b38e;"></i> Purpose
+                            <i class="fas fa-bullseye" style="color: #D32F2F;"></i> Purpose
                         </h3>
                         <p style="margin: 0; color: #334155; font-size: 1.05rem; font-weight: 600; line-height: 1.6;">${info.purpose}</p>
                     </div>
 
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 12px 0; color: #0f1724; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-align-left" style="color: #91b38e;"></i> Description
+                            <i class="fas fa-align-left" style="color: #D32F2F;"></i> Description
                         </h3>
                         <p style="margin: 0; color: #475569; line-height: 1.8; font-size: 0.95rem;">${info.description}</p>
                     </div>
 
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 16px 0; color: #0f1724; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-star" style="color: #91b38e;"></i> Key Features
+                            <i class="fas fa-star" style="color: #D32F2F;"></i> Key Features
                         </h3>
                         <ul style="margin: 0; padding-left: 0; list-style: none;">
                             ${info.features.map(feature => `
-                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #91b38e; color: #334155; font-size: 0.95rem;">
+                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #f8fafc; border-radius: 8px; border-left: 3px solid #D32F2F; color: #334155; font-size: 0.95rem;">
                                     <i class="fas fa-check-circle" style="color: #D32F2F; margin-right: 8px;"></i>${feature}
                                 </li>
                             `).join('')}
@@ -3067,18 +3101,18 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
 
                     <div style="margin-bottom: 24px;">
                         <h3 style="margin: 0 0 16px 0; color: #0f1724; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
-                            <i class="fas fa-lightbulb" style="color: #f59e0b;"></i> Insights You Can Gain
+                            <i class="fas fa-lightbulb" style="color: #FAD6A5;"></i> Insights You Can Gain
                         </h3>
                         <ul style="margin: 0; padding-left: 0; list-style: none;">
                             ${info.insights.map(insight => `
-                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #fffbeb; border-radius: 8px; border-left: 3px solid #f59e0b; color: #334155; font-size: 0.95rem;">
-                                    <i class="fas fa-arrow-right" style="color: #f59e0b; margin-right: 8px;"></i>${insight}
+                                <li style="margin-bottom: 10px; padding: 12px 16px; background: #FFFBF0; border-radius: 8px; border-left: 3px solid #FAD6A5; color: #334155; font-size: 0.95rem;">
+                                    <i class="fas fa-arrow-right" style="color: #D97706; margin-right: 8px;"></i>${insight}
                                 </li>
                             `).join('')}
                         </ul>
                     </div>
 
-                    <div style="padding: 20px; background: linear-gradient(135deg, #91b38e 0%, #5a855f 100%); border-radius: 12px; color: white;">
+                    <div style="padding: 20px; background: linear-gradient(135deg, #D32F2F 0%, #800020 100%); border-radius: 12px; color: white;">
                         <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-chart-line"></i> How to Use This Chart
                         </h3>
@@ -3086,9 +3120,9 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
                     </div>
 
                     <button onclick="this.closest('div[style*=fixed]').remove()" 
-                        style="width: 100%; margin-top: 24px; padding: 14px; background: #91b38e; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
-                        onmouseover="this.style.background='#5a855f'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(145,179,142,0.4)'"
-                        onmouseout="this.style.background='#91b38e'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                        style="width: 100%; margin-top: 24px; padding: 14px; background: #D32F2F; color: white; border: none; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 1.05rem; transition: all 0.3s;"
+                        onmouseover="this.style.background='#800020'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(211,47,47,0.4)'"
+                        onmouseout="this.style.background='#D32F2F'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                         <i class="fas fa-times-circle"></i> Close
                     </button>
                 </div>
@@ -3273,7 +3307,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
                 pdf.setTextColor(15, 23, 36);
                 pdf.setFontSize(18);
                 pdf.setFont(undefined, 'bold');
-                pdf.text('Anonymous Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
+                pdf.text('Board Exam Statistics Report', pageWidth / 2, currentY, { align: 'center' });
                 
                 currentY += 10;
                 pdf.setFontSize(10);
@@ -3344,7 +3378,7 @@ if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'ccje_admin@lspu.edu.ph
                     pdf.setFontSize(8);
                     pdf.setTextColor(148, 163, 184);
                     pdf.text(
-                        `Page ${i} of ${pageCount} | LSPU College of Criminal Justice Education - Anonymous Statistics`,
+                        `Page ${i} of ${pageCount} | LSPU College of Criminal Justice Education - Statistics`,
                         pageWidth / 2,
                         pageHeight - 10,
                         { align: 'center' }

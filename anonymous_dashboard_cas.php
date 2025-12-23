@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Only allow College of Engineering admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cas_admin@lspu.edu.ph') {
+// Allow CAS admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cas_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -158,9 +158,9 @@ $conn->close();
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary: #FF99CC;
-            --primary-dark: #C75B9B;
-            --success: #FF99CC;
+            --primary: #F891A5;
+            --primary-dark: #BF3853;
+            --success: #F891A5;
             --danger: #64748b;
             --warning: #a8c5a5;
         }
@@ -173,31 +173,112 @@ $conn->close();
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #FDFDF9 0%, #FEB3DD 100%);
+            background: linear-gradient(135deg, #FDB3C2 0%, #F891A5 50%, #E56D85 100%);
             color: #0f1724;
             min-height: 100vh;
         }
 
-        .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+           /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #fff;
-            font-weight: 700;
-        }
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(191, 56, 83, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
+
+
+         body {
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
+        /* Pink gradient background */
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
+    }
+
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 161, 195, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(131, 0, 52, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(79, 0, 36, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+        /* topbar */
+        .topbar {
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #BF3853 0%, #A41F39 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 25px rgba(191, 56, 83, 0.25);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
+
+    .topbar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 4s infinite;
+        z-index: 1;
+    }
+
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+    }
 
         .logout-btn {
             background: rgba(255, 255, 255, 0.15);
@@ -208,14 +289,17 @@ $conn->close();
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
 
         .logout-btn:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
+
 
         .main {
             margin-left: 260px;
@@ -237,7 +321,7 @@ $conn->close();
         }
 
         .add-data-btn {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
             color: #fff;
             border: none;
             border-radius: 12px;
@@ -254,7 +338,34 @@ $conn->close();
 
         .add-data-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(254, 227, 43, 0.4);
+            box-shadow: 0 8px 25px rgba(229, 109, 133, 0.4);
+        }
+
+        .ai-prediction-btn {
+            background: linear-gradient(135deg, #E56D85 0%, #9f1239 100%);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            padding: 12px 24px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .ai-prediction-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(248, 145, 165, 0.4);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
         }
 
         .stats-grid {
@@ -269,8 +380,8 @@ $conn->close();
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 251, 245, 0.95) 100%);
             border-radius: 18px;
             padding: 28px;
-            box-shadow: 0 6px 20px rgba(254, 227, 43, 0.1);
-            border: 2px solid rgba(254, 227, 43, 0.2);
+            box-shadow: 0 6px 20px rgba(229, 109, 133, 0.1);
+            border: 2px solid rgba(229, 109, 133, 0.2);
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -284,15 +395,15 @@ $conn->close();
             left: 0;
             right: 0;
             height: 3px;
-            background: linear-gradient(90deg, #FF99CC, #C75B9B);
+            background: linear-gradient(90deg, #F891A5, #BF3853);
             opacity: 0;
             transition: opacity 0.3s;
         }
 
         .stat-card:hover {
             transform: translateY(-6px);
-            box-shadow: 0 12px 35px rgba(254, 227, 43, 0.25);
-            border-color: rgba(254, 227, 43, 0.35);
+            box-shadow: 0 12px 35px rgba(229, 109, 133, 0.25);
+            border-color: rgba(229, 109, 133, 0.35);
         }
 
         .stat-card:hover::before {
@@ -311,22 +422,22 @@ $conn->close();
         }
 
         .stat-card.total .icon {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
             color: #fff;
         }
 
         .stat-card.passed .icon {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: #fff;
         }
 
         .stat-card.failed .icon {
-            background: linear-gradient(135deg, #7a9d77 0%, #64748b 100%);
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
             color: #fff;
         }
 
         .stat-card.conditional .icon {
-            background: linear-gradient(135deg, #a8c5a5 0%, #8b9c88 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             color: #fff;
         }
 
@@ -345,7 +456,7 @@ $conn->close();
 
         .stat-card .percentage {
             font-size: 0.9rem;
-            color: #10b981;
+            color: #BF3853;
             font-weight: 600;
             margin-top: 4px;
         }
@@ -354,8 +465,8 @@ $conn->close();
             background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 251, 245, 0.95) 100%);
             border-radius: 20px;
             padding: 32px;
-            box-shadow: 0 8px 30px rgba(254, 227, 43, 0.12);
-            border: 2px solid rgba(254, 227, 43, 0.25);
+            box-shadow: 0 8px 30px rgba(229, 109, 133, 0.12);
+            border: 2px solid rgba(229, 109, 133, 0.25);
             margin-top: 8px;
         }
 
@@ -365,7 +476,7 @@ $conn->close();
             align-items: center;
             margin-bottom: 24px;
             padding-bottom: 20px;
-            border-bottom: 2px solid rgba(254, 227, 43, 0.15);
+            border-bottom: 2px solid rgba(229, 109, 133, 0.15);
         }
 
         .table-header h3 {
@@ -383,7 +494,7 @@ $conn->close();
         }
 
         thead {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
         }
 
         thead th {
@@ -404,12 +515,12 @@ $conn->close();
         }
 
         tbody tr {
-            border-bottom: 1px solid rgba(254, 227, 43, 0.1);
+            border-bottom: 1px solid rgba(229, 109, 133, 0.1);
             transition: all 0.2s;
         }
 
         tbody tr:hover {
-            background: rgba(254, 227, 43, 0.05);
+            background: rgba(229, 109, 133, 0.05);
         }
 
         tbody td {
@@ -438,7 +549,7 @@ $conn->close();
 
         .badge.conditional {
             background: linear-gradient(135deg, #e8f5e9 0%, #d1e7dd 100%);
-            color: #C75B9B;
+            color: #BF3853;
         }
 
         .action-buttons {
@@ -578,13 +689,13 @@ $conn->close();
         }
 
         .btn-modal-save {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
             color: white;
         }
 
         .btn-modal-save:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(254, 227, 43, 0.4);
+            box-shadow: 0 4px 12px rgba(229, 109, 133, 0.4);
         }
 
         .form-group-modal {
@@ -609,8 +720,8 @@ $conn->close();
 
         .form-group-modal select:focus {
             outline: none;
-            border-color: #FF99CC;
-            box-shadow: 0 0 0 4px rgba(254, 227, 43, 0.15);
+            border-color: #F891A5;
+            box-shadow: 0 0 0 4px rgba(229, 109, 133, 0.15);
         }
 
         /* Legend Modal Styles */
@@ -632,7 +743,7 @@ $conn->close();
             font-size: 1.1rem;
             margin-bottom: 12px;
             padding-bottom: 8px;
-            border-bottom: 2px solid rgba(254, 227, 43, 0.2);
+            border-bottom: 2px solid rgba(229, 109, 133, 0.2);
             display: flex;
             align-items: center;
             gap: 8px;
@@ -646,7 +757,7 @@ $conn->close();
             background: #f8faf9;
             border-radius: 10px;
             margin-bottom: 8px;
-            border-left: 4px solid #FF99CC;
+            border-left: 4px solid #F891A5;
         }
 
         .legend-item-date {
@@ -688,7 +799,7 @@ $conn->close();
         }
 
         .legend-count {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
             color: white;
             padding: 4px 12px;
             border-radius: 999px;
@@ -698,7 +809,7 @@ $conn->close();
 
         .legend-total {
             background: linear-gradient(135deg, #e8f5e9 0%, #d1e7dd 100%);
-            border: 2px solid #FF99CC;
+            border: 2px solid #F891A5;
             padding: 16px;
             border-radius: 12px;
             margin-top: 16px;
@@ -714,7 +825,7 @@ $conn->close();
         }
 
         .legend-total-value {
-            background: linear-gradient(135deg, #FF99CC 0%, #C75B9B 100%);
+            background: linear-gradient(135deg, #F891A5 0%, #BF3853 100%);
             color: white;
             padding: 8px 20px;
             border-radius: 999px;
@@ -821,10 +932,15 @@ $conn->close();
 
     <div class="main">
         <div class="page-header">
-            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Anonymous Data Dashboard</h2>
-            <a href="testing_anonymous_data_cas.php" class="add-data-btn">
-                <i class="fas fa-plus-circle"></i> Add Anonymous Data
-            </a>
+            <h2><i class="fas fa-chart-pie" style="margin-right: 12px;"></i>Data Dashboard</h2>
+            <div style="display: flex; gap: 12px;">
+                <a href="prediction_cas_anonymous.php" class="add-data-btn" style="background: linear-gradient(135deg, #9f1239 0%, #4F0024 100%);">
+                    <i class="fas fa-brain"></i> Predictions
+                </a>
+                <a href="testing_anonymous_data_cas.php" class="add-data-btn">
+                    <i class="fas fa-plus-circle"></i> Add Data
+                </a>
+            </div>
         </div>
 
         <!-- Statistics Grid -->
@@ -884,7 +1000,7 @@ $conn->close();
         <!-- Data Table -->
         <div class="table-card">
             <div class="table-header">
-                <h3><i class="fas fa-table"></i> Anonymous Data Records</h3>
+                <h3><i class="fas fa-table"></i> Data Records</h3>
                 <span style="color: #64748b; font-size: 0.9rem;">
                     <?php echo number_format($total_records); ?> total records
                 </span>
@@ -946,8 +1062,8 @@ $conn->close();
             <?php else: ?>
                 <div class="empty-state">
                     <i class="fas fa-inbox"></i>
-                    <h3>No Anonymous Data Yet</h3>
-                    <p>Start by adding anonymous board examinee data using the form.</p>
+                    <h3>No Data Yet</h3>
+                    <p>Start by adding board examinee data using the form.</p>
                     <br>
                     <a href="testing_anonymous_data_cas.php" class="add-data-btn">
                         <i class="fas fa-plus-circle"></i> Add First Record
@@ -961,7 +1077,7 @@ $conn->close();
     <div id="editModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-edit"></i> Edit Anonymous Record</h3>
+                <h3><i class="fas fa-edit"></i> Edit Record</h3>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
             </div>
             <form method="POST" action="">
@@ -1139,7 +1255,7 @@ $conn->close();
         }
 
         function confirmDelete(id) {
-            if (confirm('Are you sure you want to delete this anonymous record? This action cannot be undone.')) {
+            if (confirm('Are you sure you want to delete this record? This action cannot be undone.')) {
                 document.getElementById('delete_id').value = id;
                 document.getElementById('deleteForm').submit();
             }
@@ -1175,6 +1291,8 @@ $conn->close();
     </script>
 </body>
 </html>
+
+
 
 
 

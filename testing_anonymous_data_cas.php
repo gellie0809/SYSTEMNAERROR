@@ -169,6 +169,43 @@ $conn->close();
             margin: 0;
             padding: 0;
         }
+        
+        /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
+    }
+
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #FFA1C3 0%, #830034 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(131, 0, 52, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
+
 
         body {
             font-family: 'Inter', sans-serif;
@@ -177,44 +214,67 @@ $conn->close();
             position: relative;
             min-height: 100vh;
         }
-
+        /* topbar */
         .topbar {
-            position: fixed;
-            top: 0;
-            left: 260px;
-            right: 0;
-            background: #FF99CC;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 40px;
-            box-shadow: 0 4px 25px rgba(254, 227, 43, 0.25);
-            z-index: 50;
-        }
+        position: fixed;
+        top: 0;
+        left: 260px;
+        right: 0;
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
+        height: 70px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 40px;
+        box-shadow: 0 4px 25px rgba(79, 0, 36, 0.25);
+        z-index: 50;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+    }
 
-        .dashboard-title {
-            font-size: 1.4rem;
-            color: #4A1942;
-            font-weight: 700;
-        }
+    .topbar::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 200%;
+        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+        animation: shimmer 4s infinite;
+        z-index: 1;
+    }
+
+    .dashboard-title {
+        font-size: 1.4rem;
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        margin: 0;
+        position: relative;
+        z-index: 2;
+    }
 
         .logout-btn {
-            background: rgba(135, 121, 40, 0.15);
-            color: #4A1942;
-            border: 2px solid rgba(135, 121, 40, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            border: 2px solid rgba(255, 255, 255, 0.3);
             border-radius: 12px;
             padding: 12px 24px;
             font-size: 0.95rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 100;
+            display: inline-block;
         }
 
         .logout-btn:hover {
-            background: rgba(135, 121, 40, 0.25);
+            background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         .main {
@@ -915,7 +975,7 @@ $conn->close();
     <?php include __DIR__ . '/includes/CAS_nav.php'; ?>
     
     <div class="topbar">
-        <div class="dashboard-title">Arts and Sciences Admin Dashboard</div>
+        <div class="dashboard-title">College of Arts and Science Admin Dashboard</div>
         <div><a class="logout-btn" href="#" onclick="confirmLogout(event)">Logout</a></div>
     </div>
 
@@ -1036,7 +1096,7 @@ $conn->close();
                         <i class="fas fa-eraser"></i> Clear Form
                     </button>
                     <button type="submit" name="add_anonymous" class="btn-primary">
-                        <i class="fas fa-plus-circle"></i> Add Anonymous Data
+                        <i class="fas fa-plus-circle"></i> Add Data
                     </button>
                 </div>
             </form>

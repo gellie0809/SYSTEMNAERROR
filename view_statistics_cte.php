@@ -1,8 +1,8 @@
 <?php
 session_start();
 
-// Security check — palitan mo na lang kung iba ang admin email mo
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cte_admin@lspu.edu.ph') {
+// Allow CTE admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cte_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
@@ -136,26 +136,28 @@ $conn->close();
         padding: 0;
     }
 
-    body {
-        font-family: 'Inter', sans-serif;
-        background: linear-gradient(135deg, #ecfeff 0%, #cffafe 100%);
-        margin: 0;
-        color: #0f1724;
-        position: relative;
-        min-height: 100vh;
+     /* CTE-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4663ac !important;
     }
-
-    body::before {
-        content: '';
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: radial-gradient(circle at 20% 50%, rgba(6, 182, 212, 0.1) 0%, transparent 50%),
-            radial-gradient(circle at 80% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
-        pointer-events: none;
-        z-index: 0;
+    .sidebar-nav a {
+        color: #c1d8f0 !important;
+    }
+    .sidebar-nav i,
+    .sidebar-nav ion-icon {
+        color: #4663ac !important;
+    }
+    .sidebar-nav a.active,
+    .sidebar-nav a:hover {
+        background: linear-gradient(90deg, #4663ac 0%, #c1d8f0 100%) !important;
+        color: #fff !important;
+    }
+    
+    .sidebar-nav a.active i,
+    .sidebar-nav a.active ion-icon,
+    .sidebar-nav a:hover i,
+    .sidebar-nav a:hover ion-icon {
+        color: #fff !important;
     }
 
     .topbar {
@@ -163,42 +165,27 @@ $conn->close();
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+        background: linear-gradient(135deg, #4663ac 0%, #c1d8f0 100%);
         height: 70px;
         display: flex;
         align-items: center;
         justify-content: space-between;
         padding: 0 40px;
-        box-shadow: 0 4px 25px rgba(6, 182, 212, 0.25);
+        box-shadow: 0 4px 20px rgba(22, 41, 56, 0.1);
         z-index: 50;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        overflow: hidden;
-    }
-
-    .topbar::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -50%;
-        width: 100%;
-        height: 200%;
-        background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-        animation: shimmer 4s infinite;
-        z-index: 1;
     }
 
     .dashboard-title {
         font-size: 1.4rem;
         color: #fff;
         font-weight: 700;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
         margin: 0;
-        position: relative;
-        z-index: 2;
     }
 
     .logout-btn {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.1);
         color: #fff;
         border: 2px solid rgba(255, 255, 255, 0.3);
         border-radius: 12px;
@@ -207,22 +194,21 @@ $conn->close();
         font-weight: 600;
         font-family: 'Inter', sans-serif;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.3s ease;
         text-decoration: none;
         display: flex;
         align-items: center;
         gap: 8px;
         backdrop-filter: blur(10px);
-        position: relative;
-        z-index: 2;
     }
 
     .logout-btn:hover {
-        background: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.2);
         border-color: rgba(255, 255, 255, 0.5);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
     }
+
 
     .main {
         margin-left: 260px;

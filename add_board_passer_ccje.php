@@ -17,7 +17,7 @@ if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
     
 // Load courses for dropdown (Criminal Justice Education)
 $courses = [];
-$course_stmt = $conn->prepare("SELECT course_name FROM courses WHERE department='Criminal Justice Education' ORDER BY course_name");
+$course_stmt = $conn->prepare("SELECT course_name FROM courses WHERE department='Criminal Justice Education' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY course_name");
 if ($course_stmt && $course_stmt->execute()) {
   $course_result = $course_stmt->get_result();
   while ($row = $course_result->fetch_assoc()) {
@@ -34,7 +34,7 @@ if (empty($courses)) {
 
 // Load board exam types (Criminal Justice Education)
 $board_exam_types = [];
-$type_stmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Criminal Justice Education' ORDER BY exam_type_name");
+$type_stmt = $conn->prepare("SELECT id, exam_type_name FROM board_exam_types WHERE department='Criminal Justice Education' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY exam_type_name");
 if ($type_stmt && $type_stmt->execute()) {
   $type_result = $type_stmt->get_result();
   while ($row = $type_result->fetch_assoc()) {
@@ -48,7 +48,8 @@ $exam_dates_by_type = [];
 $dates_sql = "SELECT d.exam_date, d.exam_description, d.exam_type_id
         FROM board_exam_dates d
         JOIN board_exam_types t ON t.id = d.exam_type_id
-        WHERE d.department='Criminal Justice Education' AND YEAR(d.exam_date) BETWEEN 2019 AND 2024
+        WHERE d.department='Criminal Justice Education' AND YEAR(d.exam_date) BETWEEN 2019 AND 2024 
+        AND (d.is_deleted = 0 OR d.is_deleted IS NULL) AND (t.is_deleted = 0 OR t.is_deleted IS NULL)
         ORDER BY d.exam_date DESC";
 $dates_result = $conn->query($dates_sql);
 if ($dates_result) {
@@ -78,16 +79,42 @@ if ($selected_exam_type > 0) {
   $sql = "SELECT DISTINCT s.id, TRIM(s.subject_name) as subject_name, COALESCE(s.total_items,50) as total_items
           FROM subjects s
           LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-          WHERE s.department='Criminal Justice Education' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
+          WHERE s.department='Criminal Justice Education' AND TRIM(s.subject_name) != '' 
+          AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+          AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($selected_exam_type) . ")
           ORDER BY s.subject_name ASC";
   $sub_q = $conn->query($sql);
 } else {
-  $sub_q = $conn->query("SELECT id, TRIM(subject_name) AS subject_name, COALESCE(total_items,50) AS total_items FROM subjects WHERE department='Criminal Justice Education' AND TRIM(subject_name) != '' ORDER BY subject_name ASC");
+  $sub_q = $conn->query("SELECT id, TRIM(subject_name) AS subject_name, COALESCE(total_items,50) AS total_items FROM subjects WHERE department='Criminal Justice Education' AND TRIM(subject_name) != '' AND (is_deleted = 0 OR is_deleted IS NULL) ORDER BY subject_name ASC");
 }
 if ($sub_q) {
   while ($r = $sub_q->fetch_assoc()) {
     $subjects[] = $r;
   }
+}
+
+// Create anonymous_board_passers table if it doesn't exist
+$create_table_sql = "CREATE TABLE IF NOT EXISTS anonymous_board_passers (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    course VARCHAR(255) NOT NULL,
+    board_exam_type VARCHAR(255) NOT NULL,
+    board_exam_date DATE NOT NULL,
+    exam_type VARCHAR(100) NOT NULL COMMENT 'First Timer or Repeater',
+    result VARCHAR(50) NOT NULL,
+    department VARCHAR(100) DEFAULT 'Criminal Justice Education',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_dept (department),
+    INDEX idx_course (course),
+    INDEX idx_exam_type (board_exam_type),
+    INDEX idx_result (result),
+    INDEX idx_date (board_exam_date)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+$conn->query($create_table_sql);
+
+// Add course column if it doesn't exist (for existing tables)
+$check_course_col = $conn->query("SHOW COLUMNS FROM anonymous_board_passers LIKE 'course'");
+if ($check_course_col && $check_course_col->num_rows === 0) {
+    $conn->query("ALTER TABLE anonymous_board_passers ADD COLUMN course VARCHAR(255) NOT NULL AFTER id");
 }
 
 // Messages
@@ -96,6 +123,9 @@ $error_message = '';
 
 // Handle form submission
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+  // Check examinee type
+  $examinee_type = $_POST['examinee_type'] ?? 'named';
+  
   // Collect input
   $first_name = trim($_POST['first_name'] ?? '');
   $last_name = trim($_POST['last_name'] ?? '');
@@ -119,26 +149,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
   // Validation
   $errors = [];
-  if (empty($first_name)) {
-    $errors[] = 'First name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
-    $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($last_name)) {
-    $errors[] = 'Last name is required';
-  } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
-    $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
-    $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
-    $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
-  }
-  if (empty($sex)) { $errors[] = 'Sex is required'; }
-  if (empty($course)) { $errors[] = 'Course is required'; }
-  if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
-    $errors[] = 'Year must be between 1950 and ' . date('Y');
+  
+  // For anonymous entries, skip personal information validation but require course
+  if ($examinee_type === 'named') {
+    if (empty($first_name)) {
+      $errors[] = 'First name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $first_name)) {
+      $errors[] = 'First name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($last_name)) {
+      $errors[] = 'Last name is required';
+    } elseif (!preg_match('/^[a-zA-Z\s,.-]+$/', $last_name)) {
+      $errors[] = 'Last name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($middle_name) && !preg_match('/^[a-zA-Z\s,.-]+$/', $middle_name)) {
+      $errors[] = 'Middle name can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (!empty($suffix) && !preg_match('/^[a-zA-Z\s,.-]+$/', $suffix)) {
+      $errors[] = 'Suffix can only contain letters, spaces, commas, periods, and hyphens';
+    }
+    if (empty($sex)) { $errors[] = 'Sex is required'; }
+    if (empty($course)) { $errors[] = 'Course is required'; }
+    if ($year_graduated < 1950 || $year_graduated > intval(date('Y'))) {
+      $errors[] = 'Year must be between 1950 and ' . date('Y');
+    }
+  } else {
+    // Anonymous entries still need course
+    if (empty($course)) { $errors[] = 'Course is required'; }
   }
   if (empty($board_exam_date)) {
     $errors[] = 'Board exam date is required';
@@ -157,8 +194,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
   if (empty($exam_type)) { $errors[] = 'Take attempts is required'; }
   if (empty($board_exam_type)) { $errors[] = 'Board exam type is required'; }
 
-  // Resolve board_exam_type name to ID for subject filtering
-  if (empty($errors)) {
+  // Handle anonymous entry
+  if (empty($errors) && $examinee_type === 'anonymous') {
+    $stmt = $conn->prepare("INSERT INTO anonymous_board_passers (course, board_exam_type, board_exam_date, exam_type, result, department) VALUES (?, ?, ?, ?, ?, 'Criminal Justice Education')");
+    if ($stmt) {
+      $stmt->bind_param('sssss', $course, $board_exam_type, $board_exam_date, $exam_type, $result);
+      if ($stmt->execute()) {
+        $success_message = 'Exam data added successfully!';
+        $_POST = []; // Clear form
+      } else {
+        $error_message = 'Error adding exam data: ' . $stmt->error;
+      }
+      $stmt->close();
+    } else {
+      $error_message = 'Database error: ' . $conn->error;
+    }
+  }
+  // Resolve board_exam_type name to ID for subject filtering (for named students)
+  elseif (empty($errors) && $examinee_type === 'named') {
     $posted_board_exam_type_name = $board_exam_type;
     $posted_board_exam_type_id = 0;
     if (!empty($posted_board_exam_type_name)) {
@@ -180,7 +233,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       $sql = "SELECT s.id, TRIM(s.subject_name) as subject_name, COALESCE(s.total_items,50) as total_items
         FROM subjects s
         LEFT JOIN subject_exam_types m ON m.subject_id = s.id
-        WHERE s.department='Criminal Justice Education' AND TRIM(s.subject_name) != '' AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
+        WHERE s.department='Criminal Justice Education' AND TRIM(s.subject_name) != '' 
+        AND (s.is_deleted = 0 OR s.is_deleted IS NULL)
+        AND (m.exam_type_id IS NULL OR m.exam_type_id = " . intval($posted_board_exam_type_id) . ")
         GROUP BY s.id
         ORDER BY subject_name ASC";
       $sub_q = $conn->query($sql);
@@ -2820,9 +2875,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <p>Enter student information below</p>
             </div>
 
+            <!-- Board Examinee Type Selection -->
+            <div class="examinee-type-section" style="margin-bottom: 24px; padding: 24px; background: linear-gradient(145deg, #FEE2E2 0%, #FECACA 100%); border-radius: 16px; border: 2px solid rgba(220, 38, 38, 0.3);">
+                <h4 style="margin-bottom: 16px; color: #7F1D1D; font-size: 1.1rem; display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-user-tag"></i>
+                    Board Examinee Type
+                </h4>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #FECACA; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="named">
+                        <input type="radio" name="examinee_type_radio" value="named" checked onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-graduate" style="color: #DC2626; margin-right: 6px;"></i>
+                            Named Student
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Full personal information and exam details required</p>
+                    </label>
+                    <label style="flex: 1; min-width: 250px; cursor: pointer; padding: 16px; background: white; border: 2px solid #FECACA; border-radius: 12px; transition: all 0.3s;" class="examinee-type-label" data-type="anonymous">
+                        <input type="radio" name="examinee_type_radio" value="anonymous" onchange="toggleExamineeFields()" style="margin-right: 8px;">
+                        <span style="font-weight: 600; color: #334155; font-size: 1rem;">
+                            <i class="fas fa-user-secret" style="color: #DC2626; margin-right: 6px;"></i>
+                            Data Entry
+                        </span>
+                        <p style="font-size: 0.85rem; color: #64748b; margin: 8px 0 0 28px; line-height: 1.4;">Exam data only, no personal information collected</p>
+                    </label>
+                </div>
+            </div>
+
             <!-- Tab Navigation -->
-            <div class="tab-navigation">
-                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')">
+            <div class="tab-navigation" id="tabNavigation">
+                <button class="tab-btn active" data-tab="personal" onclick="switchTab('personal')" id="personalTabBtn">
                     <i class="fas fa-user"></i>
                     Personal Info
                 </button>
@@ -2833,6 +2914,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <form method="POST" action="">
+                <input type="hidden" name="examinee_type" id="examineeTypeHidden" value="named">
+                
                 <!-- Personal Information Tab -->
                 <div id="personalTab" class="tab-content active">
                     <div class="tab-header">
@@ -2844,7 +2927,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="form-grid">
-                        <div class="form-group">
+                        <div class="form-group named-only-field">
                             <label for="last_name">
                                 <i class="fas fa-user"></i>Last Name *
                             </label>
@@ -2854,7 +2937,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 title="Only letters, spaces, commas, periods, and hyphens allowed">
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group named-only-field">
                             <label for="first_name">
                                 <i class="fas fa-user"></i>First Name *
                             </label>
@@ -2864,7 +2947,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 title="Only letters, spaces, commas, periods, and hyphens allowed">
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group named-only-field">
                             <label for="middle_name">
                                 <i class="fas fa-user"></i>Middle Name
                             </label>
@@ -2874,7 +2957,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 title="Only letters, spaces, commas, periods, and hyphens allowed">
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group named-only-field">
                             <label for="suffix">
                                 <i class="fas fa-award"></i>Suffix
                             </label>
@@ -2884,7 +2967,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 title="Only letters, spaces, commas, periods, and hyphens allowed">
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group named-only-field">
                             <label for="sex">
                                 <i class="fas fa-venus-mars"></i>Sex *
                             </label>
@@ -2939,6 +3022,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div class="form-grid">
                         <div class="form-group">
+                            <label for="course_exam">
+                                <i class="fas fa-graduation-cap"></i>Course *
+                            </label>
+                            <select id="course_exam" name="course" required>
+                                <option value="">Select Course</option>
+                                <?php foreach($courses as $course_item): ?>
+                                <option value="<?= htmlspecialchars($course_item) ?>"
+                                    <?= (isset($_POST['course']) && $_POST['course'] == $course_item) ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($course_item) ?>
+                                </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <div class="form-group named-only-field">
                             <label for="year_graduated">
                                 <i class="fas fa-calendar"></i>Year Graduated *
                             </label>
@@ -3074,13 +3172,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <div class="tab-footer">
-                        <button type="button" onclick="prevTab()" class="btn btn-secondary">
+                        <button type="button" onclick="prevTab()" class="btn btn-secondary" id="prevTabBtn">
                             <i class="fas fa-arrow-left"></i>
                             Previous
                         </button>
                         <button type="button" id="addStudentBtn" onclick="addStudentDirect()" class="btn btn-primary">
                             <i class="fas fa-plus"></i>
-                            Add New Board Examinee
+                            <span id="submitBtnText">Add New Board Examinee</span>
                         </button>
                     </div>
                 </div>
@@ -4015,15 +4113,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     function populateConfirmationModal() {
-        // Get form values
-        const firstName = document.getElementById('first_name').value.trim();
-        const lastName = document.getElementById('last_name').value.trim();
-        const middleName = document.getElementById('middle_name').value.trim();
-        const suffix = document.getElementById('suffix').value.trim();
-        const sex = document.getElementById('sex').value;
-        const course = document.getElementById('course').value;
-        const yearGraduated = document.getElementById('year_graduated').value;
-
+        // Check if anonymous mode
+        const examineeType = document.getElementById('examineeTypeHidden').value;
+        
         // Get board exam date (from dropdown or custom input)
         const boardExamDateSelect = document.getElementById('board_exam_date');
         const customDateInput = document.getElementById('custom_board_exam_date');
@@ -4040,16 +4132,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         const result = document.getElementById('result').value;
         const examType = document.getElementById('exam_type').value;
         const boardExamType = document.getElementById('board_exam_type').value;
-        const rating = document.getElementById('rating').value;
-
-        // Build full name
-        let fullName = lastName + ', ' + firstName;
-        if (middleName) {
-            fullName += ' ' + middleName;
-        }
-        if (suffix) {
-            fullName += ' ' + suffix;
-        }
 
         // Format exam date
         const examDate = new Date(boardExamDate);
@@ -4070,10 +4152,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Populate modal fields
         document.getElementById('receiptDate').textContent = currentDate;
-        document.getElementById('confirmName').textContent = fullName;
-        document.getElementById('confirmSex').textContent = sex;
-        document.getElementById('confirmCourse').textContent = course;
-        document.getElementById('confirmYear').textContent = yearGraduated;
+        
+        if (examineeType === 'anonymous') {
+            // Anonymous entry - show course and exam information
+            const course = document.getElementById('course_exam').value;
+            
+            document.getElementById('confirmName').textContent = 'Data Entry';
+            document.getElementById('confirmSex').textContent = 'N/A';
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = 'N/A';
+            
+            // Hide rating row for anonymous
+            const ratingRow = document.getElementById('ratingRow');
+            if (ratingRow) ratingRow.style.display = 'none';
+        } else {
+            // Named student - show full information
+            const firstName = document.getElementById('first_name').value.trim();
+            const lastName = document.getElementById('last_name').value.trim();
+            const middleName = document.getElementById('middle_name').value.trim();
+            const suffix = document.getElementById('suffix').value.trim();
+            const sex = document.getElementById('sex').value;
+            const course = document.getElementById('course').value;
+            const yearGraduated = document.getElementById('year_graduated').value;
+            const rating = document.getElementById('rating').value;
+
+            // Build full name
+            let fullName = lastName + ', ' + firstName;
+            if (middleName) {
+                fullName += ' ' + middleName;
+            }
+            if (suffix) {
+                fullName += ' ' + suffix;
+            }
+
+            document.getElementById('confirmName').textContent = fullName;
+            document.getElementById('confirmSex').textContent = sex;
+            document.getElementById('confirmCourse').textContent = course;
+            document.getElementById('confirmYear').textContent = yearGraduated;
+            
+            // Handle rating (optional field)
+            const ratingRow = document.getElementById('ratingRow');
+            if (rating && rating.trim() !== '') {
+                document.getElementById('confirmRating').textContent = rating + '%';
+                ratingRow.style.display = 'flex';
+            } else {
+                ratingRow.style.display = 'none';
+            }
+        }
+        
         document.getElementById('confirmExamDate').textContent = formattedExamDate;
         document.getElementById('confirmResult').textContent = result;
         document.getElementById('confirmExamType').textContent = examType;
@@ -4088,15 +4214,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             resultElement.classList.add('result-failed');
         } else if (result === 'Conditional') {
             resultElement.classList.add('result-conditional');
-        }
-
-        // Handle rating (optional field)
-        const ratingRow = document.getElementById('ratingRow');
-        if (rating && rating.trim() !== '') {
-            document.getElementById('confirmRating').textContent = rating + '%';
-            ratingRow.style.display = 'flex';
-        } else {
-            ratingRow.style.display = 'none';
         }
 
         // (Subjects display removed)
@@ -4158,6 +4275,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     };
 
     // Tab navigation functions
+    function toggleExamineeFields() {
+        const examineeType = document.querySelector('input[name="examinee_type_radio"]:checked').value;
+        const personalTab = document.getElementById('personalTab');
+        const personalTabBtn = document.getElementById('personalTabBtn');
+        const tabNavigation = document.getElementById('tabNavigation');
+        const examTab = document.getElementById('examTab');
+        const hiddenInput = document.getElementById('examineeTypeHidden');
+        const prevTabBtn = document.getElementById('prevTabBtn');
+        const submitBtnText = document.getElementById('submitBtnText');
+        
+        // Update hidden input
+        if (hiddenInput) {
+            hiddenInput.value = examineeType;
+        }
+        
+        // Update label styles (CCJE red theme)
+        document.querySelectorAll('.examinee-type-label').forEach(label => {
+            const type = label.getAttribute('data-type');
+            if (type === examineeType) {
+                label.style.borderColor = '#DC2626';
+                label.style.background = 'linear-gradient(145deg, #FEE2E2 0%, #ffffff 100%)';
+                label.style.boxShadow = '0 4px 15px rgba(220, 38, 38, 0.2)';
+            } else {
+                label.style.borderColor = '#FECACA';
+                label.style.background = 'white';
+                label.style.boxShadow = 'none';
+            }
+        });
+        
+        if (examineeType === 'anonymous') {
+            // Hide personal tab and navigation button
+            if (personalTab) personalTab.style.display = 'none';
+            if (personalTabBtn) personalTabBtn.style.display = 'none';
+            
+            // Hide previous button in exam tab
+            if (prevTabBtn) prevTabBtn.style.display = 'none';
+            
+            // Update submit button text
+            if (submitBtnText) submitBtnText.textContent = 'Add Exam Data';
+            
+            // Show exam tab directly and make it active
+            if (examTab) {
+                examTab.style.display = 'block';
+                examTab.classList.add('active');
+            }
+            
+            // Hide named-only fields in exam tab
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = 'none';
+            });
+            
+            // Make all personal fields and named-only fields optional
+            const personalFields = personalTab ? personalTab.querySelectorAll('input[required], select[required]') : [];
+            personalFields.forEach(field => {
+                field.removeAttribute('required');
+            });
+            
+            // Remove required from year_graduated (but keep course required)
+            const yearField = document.getElementById('year_graduated');
+            
+            if (yearField) yearField.removeAttribute('required');
+        } else {
+            // Show personal tab button
+            if (personalTabBtn) personalTabBtn.style.display = 'flex';
+            
+            // Show previous button
+            if (prevTabBtn) prevTabBtn.style.display = '';
+            
+            // Update submit button text
+            if (submitBtnText) submitBtnText.textContent = 'Add New Board Examinee';
+            
+            // Show named-only fields
+            document.querySelectorAll('.named-only-field').forEach(field => {
+                field.style.display = '';
+            });
+            
+            // Reset to personal tab
+            switchTab('personal');
+            
+            // Make personal fields required again
+            const lastNameField = document.getElementById('last_name');
+            const firstNameField = document.getElementById('first_name');
+            const sexField = document.getElementById('sex');
+            const courseField = document.getElementById('course');
+            const courseExamField = document.getElementById('course_exam');
+            const yearField = document.getElementById('year_graduated');
+            
+            if (lastNameField) lastNameField.setAttribute('required', 'required');
+            if (firstNameField) firstNameField.setAttribute('required', 'required');
+            if (sexField) sexField.setAttribute('required', 'required');
+            if (courseField) courseField.setAttribute('required', 'required');
+            if (courseExamField) courseExamField.setAttribute('required', 'required');
+            if (yearField) yearField.setAttribute('required', 'required');
+        }
+    }
+
     function switchTab(tabName) {
         // Hide all tabs first
         document.querySelectorAll('.tab-content').forEach(tab => {

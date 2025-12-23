@@ -1060,7 +1060,7 @@ $conn->close();
         }
     }
 
-    /* CCJE Sidebar Color Overrides - Highest Priority */
+    /* CCJE-specific sidebar color overrides for red theme */
     html body .sidebar {
         background: #ffffff !important;
         box-shadow: 0 2px 8px rgba(211, 47, 47, 0.08) !important;

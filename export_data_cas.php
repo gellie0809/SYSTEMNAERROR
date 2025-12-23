@@ -114,21 +114,76 @@ $conn->close();
         box-sizing: border-box;
     }
 
-    body {
-        background: linear-gradient(120deg, #e0e7ef 0%, #f7fafc 100%);
+     body {
+        background: linear-gradient(135deg, #FFF0FC 0%, #FFA1C3 100%);
+        /* Pink gradient background */
         margin: 0;
         font-family: 'Inter', sans-serif;
         min-height: 100vh;
+        position: relative;
+        overflow-x: hidden;
     }
 
+    body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background:
+            radial-gradient(circle at 20% 20%, rgba(255, 161, 195, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 60%, rgba(131, 0, 52, 0.08) 0%, transparent 50%),
+            radial-gradient(circle at 40% 80%, rgba(79, 0, 36, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+        z-index: 0;
+    }
+
+
     /* Sidebar styling moved to css/sidebar.css (shared) */
+    
+    /* CAS-specific sidebar color overrides */
+    .sidebar .logo {
+        color: #4F0024;
+        font-weight: 800;
+    }
+
+    .sidebar-nav a {
+        color: #830034;
+    }
+
+    .sidebar-nav a i {
+        color: #830034;
+    }
+
+    .sidebar-nav a:hover {
+        background: linear-gradient(135deg, rgba(255, 161, 195, 0.2) 0%, rgba(131, 0, 52, 0.2) 100%);
+        color: #4F0024;
+        border-left-color: #830034;
+    }
+
+    .sidebar-nav a:hover i {
+        color: #4F0024;
+    }
+
+    .sidebar-nav a.active {
+        background: linear-gradient(135deg, #FFA1C3 0%, #830034 100%);
+        color: #fff;
+        border-left-color: #4F0024;
+        box-shadow: 0 4px 12px rgba(131, 0, 52, 0.3);
+    }
+
+    .sidebar-nav a.active i {
+        color: #fff;
+    }
+
 
     .topbar {
         position: fixed;
         top: 0;
         left: 260px;
         right: 0;
-        background: linear-gradient(135deg, #06b6d4 0%, #0593b4 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         height: 70px;
         display: flex;
         align-items: center;
@@ -195,10 +250,10 @@ $conn->close();
         font-weight: 700;
         margin-bottom: 40px;
         color: #fff;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #4F0024 0%, #830034 100%);
         padding: 24px 40px;
         border-radius: 16px;
-        box-shadow: 0 12px 40px rgba(44, 90, 160, 0.3);
+        box-shadow: 0 12px 40px rgba(79, 0, 36, 0.3);
         text-align: center;
         letter-spacing: 1.2px;
         text-transform: uppercase;
@@ -221,7 +276,7 @@ $conn->close();
     /* Export Page Styles */
     .card-header {
         padding: 40px 50px;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
         color: white;
         position: relative;
         overflow: hidden;
@@ -316,14 +371,14 @@ $conn->close();
         width: 80px;
         height: 80px;
         margin: 0 auto 20px;
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 100%);
         border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 2rem;
         color: white;
-        box-shadow: 0 10px 25px rgba(44, 90, 160, 0.3);
+        box-shadow: 0 10px 25px rgba(219, 39, 119, 0.3);
     }
 
     .export-title {
@@ -341,7 +396,7 @@ $conn->close();
     }
 
     .export-btn {
-        background: linear-gradient(135deg, #2c5aa0 0%, #3182ce 100%);
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 100%);
         color: white;
         border: none;
         border-radius: 12px;
@@ -354,30 +409,30 @@ $conn->close();
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3);
     }
 
     .export-btn:hover {
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%);
         transform: translateY(-2px);
-        box-shadow: 0 8px 25px rgba(44, 90, 160, 0.4);
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4);
     }
 
     .export-csv {
-        background: linear-gradient(135deg, #059669 0%, #10b981 100%) !important;
-        box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3) !important;
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 100%) !important;
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.3) !important;
     }
 
     .export-csv:hover {
-        background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
-        box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4) !important;
+        background: linear-gradient(135deg, #db2777 0%, #be185d 100%) !important;
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.4) !important;
     }
 
     .export-info {
         background: linear-gradient(145deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.8) 100%);
         border-radius: 16px;
         padding: 30px;
-        border: 2px solid rgba(44, 90, 160, 0.1);
+        border: 2px solid rgba(236, 72, 153, 0.1);
     }
 
     .info-card h4 {
@@ -509,7 +564,7 @@ $conn->close();
         left: -2px !important;
         right: -2px !important;
         bottom: -2px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 25%, #60a5fa 50%, #3182ce 75%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 25%, #FFA1C3 50%, #ec4899 75%, #db2777 100%) !important;
         border-radius: 30px !important;
         z-index: -1 !important;
         opacity: 0.8 !important;
@@ -532,13 +587,13 @@ $conn->close();
 
     #logoutModal .modal-header {
         margin-bottom: 32px !important;
-        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%) !important;
+        background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%) !important;
         padding: 32px 28px !important;
         border-radius: 20px !important;
-        border: 2px solid #bfdbfe !important;
+        border: 2px solid #fbcfe8 !important;
         position: relative !important;
         overflow: hidden !important;
-        box-shadow: 0 8px 25px rgba(49, 130, 206, 0.15) !important;
+        box-shadow: 0 8px 25px rgba(236, 72, 153, 0.15) !important;
     }
 
     #logoutModal .modal-header::before {
@@ -548,7 +603,7 @@ $conn->close();
         left: 0 !important;
         right: 0 !important;
         height: 4px !important;
-        background: linear-gradient(90deg, #1e40af 0%, #3182ce 50%, #60a5fa 100%) !important;
+        background: linear-gradient(90deg, #db2777 0%, #ec4899 50%, #FFA1C3 100%) !important;
         border-radius: 20px 20px 0 0 !important;
     }
 
@@ -559,7 +614,7 @@ $conn->close();
         right: -50px !important;
         width: 120px !important;
         height: 120px !important;
-        background: linear-gradient(135deg, rgba(49, 130, 206, 0.1) 0%, rgba(96, 165, 250, 0.05) 100%) !important;
+        background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(255, 161, 195, 0.05) 100%) !important;
         border-radius: 50% !important;
         z-index: 0 !important;
     }
@@ -567,7 +622,7 @@ $conn->close();
     #logoutModal .modal-icon {
         width: 88px !important;
         height: 88px !important;
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #FFA1C3 100%) !important;
         border-radius: 50% !important;
         display: flex !important;
         align-items: center !important;
@@ -576,9 +631,9 @@ $conn->close();
         color: white !important;
         font-size: 2.2rem !important;
         box-shadow:
-            0 20px 40px rgba(30, 64, 175, 0.4),
+            0 20px 40px rgba(219, 39, 119, 0.4),
             0 0 0 4px rgba(255, 255, 255, 0.8),
-            0 0 0 6px rgba(49, 130, 206, 0.2) !important;
+            0 0 0 6px rgba(236, 72, 153, 0.2) !important;
         position: relative !important;
         z-index: 1 !important;
         animation: iconPulse 3s ease-in-out infinite !important;
@@ -589,17 +644,17 @@ $conn->close();
         0%,
         100% {
             box-shadow:
-                0 20px 40px rgba(30, 64, 175, 0.4),
+                0 20px 40px rgba(219, 39, 119, 0.4),
                 0 0 0 4px rgba(255, 255, 255, 0.8),
-                0 0 0 6px rgba(49, 130, 206, 0.2);
+                0 0 0 6px rgba(236, 72, 153, 0.2);
             transform: scale(1);
         }
 
         50% {
             box-shadow:
-                0 25px 50px rgba(30, 64, 175, 0.6),
+                0 25px 50px rgba(219, 39, 119, 0.6),
                 0 0 0 6px rgba(255, 255, 255, 0.9),
-                0 0 0 8px rgba(49, 130, 206, 0.3);
+                0 0 0 8px rgba(236, 72, 153, 0.3);
             transform: scale(1.05);
         }
     }
@@ -611,7 +666,7 @@ $conn->close();
         left: -4px !important;
         right: -4px !important;
         bottom: -4px !important;
-        background: linear-gradient(135deg, #60a5fa, #3182ce, #1e40af, #2563eb) !important;
+        background: linear-gradient(135deg, #FFA1C3, #ec4899, #db2777, #be185d) !important;
         border-radius: 50% !important;
         z-index: -1 !important;
         opacity: 0.6 !important;
@@ -631,7 +686,7 @@ $conn->close();
     #logoutModal .modal-title {
         font-size: 1.75rem !important;
         font-weight: 800 !important;
-        background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 100%) !important;
         -webkit-background-clip: text !important;
         -webkit-text-fill-color: transparent !important;
         background-clip: text !important;
@@ -643,7 +698,7 @@ $conn->close();
 
     #logoutModal .modal-subtitle {
         font-size: 1.1rem !important;
-        color: #2563eb !important;
+        color: #db2777 !important;
         margin: 0 !important;
         line-height: 1.6 !important;
         font-weight: 500 !important;
@@ -830,7 +885,7 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm {
-        background: linear-gradient(135deg, #1e40af 0%, #3182ce 50%, #2563eb 100%) !important;
+        background: linear-gradient(135deg, #db2777 0%, #ec4899 50%, #FFA1C3 100%) !important;
         color: #ffffff !important;
         border: none !important;
         outline: none !important;
@@ -855,7 +910,7 @@ $conn->close();
     }
 
     #logoutModal .modal-btn.logout-confirm:hover {
-        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #1d4ed8 100%) !important;
+        background: linear-gradient(135deg, #be185d 0%, #db2777 50%, #ec4899 100%) !important;
         transform: translateY(-3px) scale(1.05) !important;
         box-shadow: none !important;
     }
@@ -868,7 +923,7 @@ $conn->close();
 
     #logoutModal .modal-btn.logout-confirm:active {
         transform: translateY(-1px) scale(1.02) !important;
-        background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 50%, #1e40af 100%) !important;
+        background: linear-gradient(135deg, #9f1239 0%, #be185d 50%, #db2777 100%) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm:active::after {
@@ -902,9 +957,9 @@ $conn->close();
 
     /* Success state for logout button */
     #logoutModal .modal-btn.logout-confirm.success {
-        background: linear-gradient(135deg, #10b981 0%, #059669 50%, #047857 100%) !important;
+        background: linear-gradient(135deg, #ec4899 0%, #db2777 50%, #be185d 100%) !important;
         transform: translateY(-2px) scale(1.05) !important;
-        box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4) !important;
+        box-shadow: 0 12px 30px rgba(236, 72, 153, 0.4) !important;
     }
 
     #logoutModal .modal-btn.logout-confirm.success .btn-text {
@@ -1287,11 +1342,11 @@ $conn->close();
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+          background: linear-gradient(135deg, #ec4899 0%, #db2777 100%);
           color: white;
           padding: 20px 32px;
           border-radius: 16px;
-          box-shadow: 0 16px 40px rgba(16, 185, 129, 0.4);
+          box-shadow: 0 16px 40px rgba(236, 72, 153, 0.4);
           z-index: 10002;
           font-family: 'Inter', sans-serif;
           font-weight: 700;

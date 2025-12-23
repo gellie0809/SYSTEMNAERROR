@@ -5,11 +5,14 @@ session_start();
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_NOTICE);
 ini_set('display_errors', 0);
 
-// Only allow College of Teacher Education admin
-if (!isset($_SESSION["users"]) || $_SESSION["users"] !== 'cte_admin@lspu.edu.ph') {
+// Allow College of Teacher Education admin or ICTS admin
+if (!isset($_SESSION["users"]) || ($_SESSION["users"] !== 'cte_admin@lspu.edu.ph' && $_SESSION["users"] !== 'icts_admin@lspu.edu.ph')) {
     header("Location: index.php");
     exit();
 }
+
+// Check if user is ICTS admin
+$is_icts_admin = ($_SESSION["users"] === 'icts_admin@lspu.edu.ph');
 
 // Database connection
 $servername = "localhost";
@@ -19,8 +22,8 @@ $dbname     = "project_db";
 $conn = new mysqli($servername, $username, $password, $dbname);
 if ($conn->connect_error) { die("Connection failed: " . $conn->connect_error); }
 
-// Fetch board passers sorted alphabetically by name
-$passers = $conn->query("SELECT *, CONCAT(first_name, ' ', IFNULL(middle_name, ''), ' ', last_name) as full_name FROM board_passers WHERE department='Teacher Education' ORDER BY first_name ASC");
+// Fetch anonymous board data (exclude soft-deleted records)
+$passers = $conn->query("SELECT * FROM anonymous_board_passers WHERE department='Teacher Education' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY id DESC");
 $total_records = $passers->num_rows;
 // Reset the result set for table display
 $passers->data_seek(0);
@@ -208,6 +211,30 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         border-color: rgba(255, 255, 255, 0.5);
         transform: translateY(-2px);
         box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    }
+
+    .icts-back-btn {
+        background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%);
+        color: #fff;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        font-family: 'Inter', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        backdrop-filter: blur(10px);
+    }
+
+    .icts-back-btn:hover {
+        background: linear-gradient(135deg, #6d28d9 0%, #5b21b6 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
     }
 
     .main-content {
@@ -522,17 +549,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     .status-passed {
         background: linear-gradient(135deg, #c1d8f0 0%, #e1f1fd 100%);
         /* Emerald Green */
-        color: #ffffff;
+        color: #23caebff;
         border-color: #10b981;
         box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
     .status-failed {
-        background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
-        /* Coral Red */
-        color: #ffffff;
-        border-color: #f87171;
-        box-shadow: 0 2px 8px rgba(248, 113, 113, 0.3);
+        background: linear-gradient(135deg, #c1d8f0 0%, #e1f1fd 100%);
+        /* Emerald Green */
+        color: #e32020ff;
+        border-color: #10b981;
+        box-shadow: 0 2px 8px rgba(214, 80, 7, 0.3);
     }
 
     .status-cond {
@@ -544,11 +571,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .exam-first-timer {
-        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #19bcf3ff 0%, #25befbff 100%);
         /* Purple */
-        color: #ffffff;
-        border-color: #8b5cf6;
-        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+        color: #dbf5fdff;
+        border-color: #1e7496ff;
+        box-shadow: 0 2px 8px rgba(90, 187, 240, 0.3);
     }
 
     .exam-repeater {
@@ -618,15 +645,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     .delete-btn {
-        background: #ef4444 !important;
-        /* Coral Red */
+        background: linear-gradient(135deg, #4663AC 0%, #2F4780 100%) !important;
         color: white !important;
     }
 
     .delete-btn:hover {
-        background: #dc2626 !important;
-        /* Deeper Red */
-        box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4) !important;
+        background: linear-gradient(135deg, #2F4780 0%, #1E2F5B 100%) !important;
+        box-shadow: 0 6px 20px rgba(70, 99, 172, 0.4) !important;
     }
 
     .save-btn {
@@ -3253,12 +3278,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         backdrop-filter: blur(16px) !important;
         -webkit-backdrop-filter: blur(16px) !important;
         z-index: 9998 !important;
-        display: none !important;
+        display: none;
         justify-content: center !important;
         align-items: center !important;
         animation: fadeInOverlay 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
     }
 
+    #logoutModal.modal.show,
     #logoutModal.modal[style*="flex"] {
         display: flex !important;
     }
@@ -4700,11 +4726,17 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     <div class="topbar">
         <h1 class="dashboard-title">College of Teacher Education Admin Dashboard</h1>
         <div style="display: flex; align-items: center; gap: 12px;">
+            <?php if ($is_icts_admin): ?>
+            <a href="dashboard_icts.php?dept=CTE" class="icts-back-btn" title="Back to ICTS Dashboard">
+                <i class="fas fa-arrow-left"></i>
+                Back to ICTS Dashboard
+            </a>
+            <?php endif; ?>
             <button onclick="showKeyboardShortcutsHelp()" class="shortcuts-btn" title="Ctrl + H">
                 <i class="fas fa-keyboard"></i>
                 <span>Shortcuts</span>
             </button>
-            <a href="logout.php" class="logout-btn" onclick="return confirmLogout(event)">
+            <a href="javascript:void(0)" class="logout-btn" onclick="var m=document.getElementById('logoutModal');if(m){m.style.cssText='display:flex!important;position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(15,23,42,0.85);backdrop-filter:blur(10px);z-index:999999;justify-content:center;align-items:center;';}return false;">
                 <i class="fas fa-sign-out-alt"></i>
                 Logout
             </a>
@@ -4719,12 +4751,14 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
                 <div class="stat-content">
                     <h3><?= $total_records ?></h3>
-                    <p>Total Board Passers</p>
+                    <p>Total Examinees</p>
                     <?php
-          // Get records added this month
+          // Get records added this month (exclude soft-deleted records)
           $current_month = date('Y-m');
-          $this_month_query = $conn->query("SELECT COUNT(*) as month_count FROM board_passers 
-            WHERE department='Teacher Education' AND DATE_FORMAT(board_exam_date, '%Y-%m') = '$current_month'");
+          $this_month_query = $conn->query("SELECT COUNT(*) as month_count FROM anonymous_board_passers 
+            WHERE department='Teacher Education' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND DATE_FORMAT(board_exam_date, '%Y-%m') = '$current_month'");
           $this_month_data = $this_month_query->fetch_assoc();
           $this_month_count = $this_month_data ? $this_month_data['month_count'] : 0;
           ?>
@@ -4741,41 +4775,75 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
                 <div class="stat-content">
                     <?php
+          // Calculate passing rate (exclude soft-deleted records)
           $passing_rate_query = $conn->query("SELECT 
             COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
             COUNT(*) as total_count
-            FROM board_passers WHERE department='Teacher Education'");
+            FROM anonymous_board_passers WHERE department='Teacher Education' AND (is_deleted IS NULL OR is_deleted = 0)");
           $rate_data = $passing_rate_query->fetch_assoc();
           
           $passing_rate = 0;
           if ($rate_data && $rate_data['total_count'] > 0) {
             $passing_rate = ($rate_data['passed_count'] * 100.0) / $rate_data['total_count'];
           }
+          
+          // Calculate last year's passing rate for comparison
+          $last_year = date('Y') - 1;
+          $last_year_query = $conn->query("SELECT 
+            COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
+            COUNT(*) as total_count
+            FROM anonymous_board_passers 
+            WHERE department='Teacher Education' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND YEAR(board_exam_date) = $last_year");
+          $last_year_data = $last_year_query->fetch_assoc();
+          
+          $last_year_rate = 0;
+          if ($last_year_data && $last_year_data['total_count'] > 0) {
+            $last_year_rate = ($last_year_data['passed_count'] * 100.0) / $last_year_data['total_count'];
+          }
+          
+          $rate_change = $passing_rate - $last_year_rate;
+          $change_type = $rate_change > 0 ? 'positive' : ($rate_change < 0 ? 'negative' : 'neutral');
+          $change_icon = $rate_change > 0 ? 'arrow-up' : ($rate_change < 0 ? 'arrow-down' : 'minus');
           ?>
                     <h3><?= number_format($passing_rate, 1) ?>%</h3>
                     <p>Passing Rate</p>
-                    <span class="stat-change positive">
-                        <i class="fas fa-arrow-up"></i> +2.3% vs last year
-                    </span>
+                    <?php if ($rate_data && $rate_data['total_count'] > 0): ?>
+                        <span class="stat-change <?= $change_type ?>">
+                            <i class="fas fa-<?= $change_icon ?>"></i> 
+                            <?= $rate_change != 0 ? ($rate_change > 0 ? '+' : '') . number_format(abs($rate_change), 1) . '% vs last year' : 'No change vs last year' ?>
+                        </span>
+                    <?php else: ?>
+                        <span class="stat-change neutral">
+                            <i class="fas fa-info-circle"></i> No records yet
+                        </span>
+                    <?php endif; ?>
                 </div>
             </div>
 
             <div class="stat-card">
-                <div class="stat-icon" style="background: linear-gradient(135deg, #4663ac 0%, #d2deeb 100%);">
-                    <i class="fas fa-graduation-cap"></i>
+                <div class="stat-icon" style="background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);">
+                    <i class="fas fa-times-circle"></i>
                 </div>
                 <div class="stat-content">
                     <?php
-          $current_year = date('Y');
-          $recent_passers = $conn->query("SELECT COUNT(*) as recent_count FROM board_passers 
-            WHERE department='Teacher Education' AND year_graduated >= $current_year - 1");
-          $recent_data = $recent_passers->fetch_assoc();
-          $recent_count = $recent_data ? $recent_data['recent_count'] : 0;
+          // Calculate failed rate (exclude soft-deleted records)
+          $failed_rate_query = $conn->query("SELECT 
+            COUNT(CASE WHEN result = 'Failed' THEN 1 END) as failed_count,
+            COUNT(*) as total_count
+            FROM anonymous_board_passers WHERE department='Teacher Education' AND (is_deleted IS NULL OR is_deleted = 0)");
+          $failed_data = $failed_rate_query->fetch_assoc();
+          
+          $failed_rate = 0;
+          if ($failed_data && $failed_data['total_count'] > 0) {
+            $failed_rate = ($failed_data['failed_count'] * 100.0) / $failed_data['total_count'];
+          }
           ?>
-                    <h3><?= $recent_count ?></h3>
-                    <p>Recent Graduates</p>
+                    <h3><?= number_format($failed_rate, 1) ?>%</h3>
+                    <p>Failed Rate</p>
                     <span class="stat-change neutral">
-                        <i class="fas fa-calendar"></i> Last 2 years
+                        <i class="fas fa-info-circle"></i> <?= $failed_data ? $failed_data['failed_count'] : 0 ?> failed
                     </span>
                 </div>
             </div>
@@ -4786,39 +4854,41 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
                 <div class="stat-content">
                     <?php
-          $top_course_query = $conn->query("SELECT course, COUNT(*) as count FROM board_passers 
-            WHERE department='Teacher Education' AND result='Passed' 
-            GROUP BY course ORDER BY count DESC LIMIT 1");
-          $top_course = $top_course_query->fetch_assoc();
+          // Get best course passing rate by board_exam_type (exclude soft-deleted records)
+          $best_course_query = $conn->query("SELECT board_exam_type,
+            COUNT(CASE WHEN result = 'Passed' THEN 1 END) as passed_count,
+            COUNT(*) as total_count,
+            (COUNT(CASE WHEN result = 'Passed' THEN 1 END) * 100.0 / COUNT(*)) as pass_rate
+            FROM anonymous_board_passers 
+            WHERE department='Teacher Education' 
+            AND (is_deleted IS NULL OR is_deleted = 0) 
+            AND board_exam_type IS NOT NULL AND board_exam_type != ''
+            GROUP BY board_exam_type 
+            HAVING total_count > 0
+            ORDER BY pass_rate DESC, total_count DESC LIMIT 1");
+          $best_course = $best_course_query->fetch_assoc();
           
-          // Handle case when no data is available
-          $course_count = 0;
-          $course_name = 'N/A';
+          $best_rate = 0;
+          $best_exam_name = 'N/A';
           
-          if ($top_course && isset($top_course['count'])) {
-            $course_count = $top_course['count'];
-          }
-          
-          if ($top_course && isset($top_course['course']) && !empty($top_course['course'])) {
-            $course_name = $top_course['course'];
+          if ($best_course) {
+            $best_rate = $best_course['pass_rate'];
+            $best_exam_name = $best_course['board_exam_type'];
           }
           ?>
-                    <h3><?= $course_count ?></h3>
-                    <p>Top Course</p>
+                    <h3><?= number_format($best_rate, 1) ?>%</h3>
+                    <p>Best Course Passing Rate</p>
                     <span class="stat-change neutral">
                         <i class="fas fa-star"></i>
-                        <?= htmlspecialchars(substr($course_name ?? '', 0, 15)) ?><?= strlen($course_name ?? '') > 15 ? '...' : '' ?>
+                        <?= htmlspecialchars(substr($best_exam_name ?? '', 0, 15)) ?><?= strlen($best_exam_name ?? '') > 15 ? '...' : '' ?>
                     </span>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="card">
-            <div style="margin-bottom: 20px;">
-                <h2>Board Passers Database</h2>
-            </div>
-
-            <!-- Filter Section -->
+    <!-- Filter Section Removed -->
+    <div style="display:none">
             <div class="filter-section">
                 <div class="filter-header">
                     <h3><i class="fas fa-filter"></i> Filter Records</h3>
@@ -4831,52 +4901,30 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 </div>
 
                 <div id="filterContainer" class="filter-container">
-                    <!-- Search Bar -->
-                    <div class="search-section">
-                        <div class="search-group">
-                            <label for="nameSearch">
-                                <i class="fas fa-search"></i> Search Student Name
-                            </label>
-                            <input type="text" id="nameSearch" class="search-input"
-                                placeholder="Type student name to search..." autocomplete="off">
-                            <div class="search-clear" id="clearSearch" title="Clear search">
-                                <i class="fas fa-times"></i>
-                            </div>
-                        </div>
-                    </div>
-
                     <div class="filter-grid">
-                        <!-- Course Filter -->
+                        <!-- Board Exam Type Filter -->
                         <div class="filter-group">
-                            <label for="courseFilter">Course <small>(Hold Ctrl/Cmd for multiple)</small></label>
-                            <select id="courseFilter" class="filter-input" multiple size="4">
-                                <?php foreach($courses as $course): ?>
-                                <option value="<?= htmlspecialchars($course) ?>"><?= htmlspecialchars($course) ?>
-                                </option>
-                                <?php endforeach; ?>
-                            </select>
-                        </div>
-
-                        <!-- Year Filter -->
-                        <div class="filter-group">
-                            <label for="yearFilter">Graduation Year <small>(Hold Ctrl/Cmd for multiple)</small></label>
-                            <select id="yearFilter" class="filter-input" multiple size="4">
+                            <label for="boardExamTypeFilter">Board Exam Type <small>(Hold Ctrl/Cmd for multiple)</small></label>
+                            <select id="boardExamTypeFilter" class="filter-input" multiple size="4">
                                 <?php 
-                $years = $conn->query("SELECT DISTINCT year_graduated FROM board_passers WHERE department='Teacher Education' ORDER BY year_graduated DESC");
-                while($year = $years->fetch_assoc()): 
-                ?>
-                                <option value="<?= htmlspecialchars($year['year_graduated']) ?>">
-                                    <?= htmlspecialchars($year['year_graduated']) ?></option>
+                                $exam_types = $conn->query("SELECT DISTINCT board_exam_type FROM anonymous_board_passers WHERE department='Teacher Education' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY board_exam_type");
+                                while($type = $exam_types->fetch_assoc()): 
+                                ?>
+                                <option value="<?= htmlspecialchars($type['board_exam_type']) ?>"><?= htmlspecialchars($type['board_exam_type']) ?></option>
                                 <?php endwhile; ?>
                             </select>
                         </div>
 
                         <!-- Board Exam Date Filter -->
                         <div class="filter-group">
-                            <label for="examDateFilter">Board Exam Date <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
-                            <select id="examDateFilter" class="filter-input" multiple size="4" disabled>
-                                <option value="" disabled>-- Select board exam type first --</option>
+                            <label for="examDateFilter">Board Exam Date <small>(Hold Ctrl/Cmd for multiple)</small></label>
+                            <select id="examDateFilter" class="filter-input" multiple size="4">
+                                <?php 
+                                $exam_dates = $conn->query("SELECT DISTINCT board_exam_date FROM anonymous_board_passers WHERE department='Teacher Education' AND (is_deleted IS NULL OR is_deleted = 0) ORDER BY board_exam_date DESC");
+                                while($date = $exam_dates->fetch_assoc()): 
+                                ?>
+                                <option value="<?= htmlspecialchars($date['board_exam_date']) ?>"><?= htmlspecialchars($date['board_exam_date']) ?></option>
+                                <?php endwhile; ?>
                             </select>
                         </div>
 
@@ -4890,26 +4938,12 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                             </select>
                         </div>
 
-                        <!-- Take Attempts Filter -->
+                        <!-- Exam Type Filter -->
                         <div class="filter-group">
-                            <label for="examTypeFilter">Take Attempts <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
+                            <label for="examTypeFilter">Exam Type <small>(Hold Ctrl/Cmd for multiple)</small></label>
                             <select id="examTypeFilter" class="filter-input" multiple size="2">
                                 <option value="First Timer">First Timer</option>
                                 <option value="Repeater">Repeater</option>
-                            </select>
-                        </div>
-
-                        <!-- Board Exam Type Filter -->
-                        <div class="filter-group">
-                            <label for="boardExamTypeFilter">Board Exam Type <small>(Hold Ctrl/Cmd for
-                                    multiple)</small></label>
-                            <select id="boardExamTypeFilter" class="filter-input" multiple size="4">
-                                <?php foreach ($board_exam_types as $exam_type): ?>
-                                <option value="<?= (int)$exam_type['id'] ?>"
-                                    data-name="<?= htmlspecialchars($exam_type['name']) ?>">
-                                    <?= htmlspecialchars($exam_type['name']) ?></option>
-                                <?php endforeach; ?>
                             </select>
                         </div>
                     </div>
@@ -4944,13 +4978,11 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 <table class="board-table">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th>Course</th>
-                            <th>Year Graduated</th>
-                            <th>Board Exam Date</th>
-                            <th>Result</th>
-                            <th>Take Attempts</th>
+                            <th>ID</th>
                             <th>Board Exam Type</th>
+                            <th>Board Exam Date</th>
+                            <th>Exam Type</th>
+                            <th>Result</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -4958,13 +4990,30 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                         <?php if ($total_records > 0): ?>
                         <?php while($row = $passers->fetch_assoc()): ?>
                         <tr data-id="<?= htmlspecialchars($row['id'] ?? '') ?>">
-                            <td class="editable" data-label="Name"><?= htmlspecialchars($row['full_name'] ?? '') ?></td>
-                            <td class="editable" data-label="Course"><?= htmlspecialchars($row['course'] ?? '') ?></td>
-                            <td class="editable" data-label="Year Graduated">
-                                <?= htmlspecialchars($row['year_graduated'] ?? '') ?></td>
-                            <td class="editable" data-label="Board Exam Date"
-                                data-date="<?= htmlspecialchars($row['board_exam_date'] ?? '') ?>">
+                            <td data-label="ID"><?= htmlspecialchars($row['id'] ?? '') ?></td>
+                            <?php 
+                $betRaw = $row['board_exam_type'] ?? '';
+                $betDisplay = 'Not specified';
+                if ($betRaw !== '' && $betRaw !== null) {
+                  if (ctype_digit((string)$betRaw)) {
+                    // lookup ID -> name using $board_exam_types
+                    $betMap = array_column($board_exam_types, 'name', 'id');
+                    $betDisplay = $betMap[$betRaw] ?? $betRaw;
+                  } else {
+                    $betDisplay = $betRaw;
+                  }
+                }
+              ?>
+                            <td data-label="Board Exam Type"><?= htmlspecialchars($betDisplay) ?></td>
+                            <td data-label="Board Exam Date">
                                 <?= htmlspecialchars($row['board_exam_date'] ?? '') ?></td>
+                            <td data-label="Exam Type">
+                                <?php 
+                $examType = $row['exam_type'] ?? 'First Timer';
+                $examBadgeClass = ($examType === 'First Timer') ? 'exam-first-timer' : 'exam-repeater';
+                ?>
+                                <span class="status-badge <?= $examBadgeClass ?>"><?= htmlspecialchars($examType) ?></span>
+                            </td>
                             <td data-label="Result">
                                 <?php 
                 $result = $row['result'];
@@ -4979,45 +5028,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 ?>
                                 <span class="status-badge <?= $badgeClass ?>"><?= htmlspecialchars($result) ?></span>
                             </td>
-                            <td data-label="Take Attempts">
-                                <?php 
-                $examType = $row['exam_type'] ?? 'First Timer';
-                $examBadgeClass = ($examType === 'First Timer') ? 'exam-first-timer' : 'exam-repeater';
-                ?>
-                                <span
-                                    class="status-badge <?= $examBadgeClass ?>"><?= htmlspecialchars($examType) ?></span>
-                            </td>
-                            <?php 
-                $betRaw = $row['board_exam_type'] ?? '';
-                $betDisplay = 'Not specified';
-                if ($betRaw !== '' && $betRaw !== null) {
-                  if (ctype_digit((string)$betRaw)) {
-                    // lookup ID -> name using $board_exam_types
-                    $betMap = array_column($board_exam_types, 'name', 'id');
-                    $betDisplay = $betMap[$betRaw] ?? $betRaw;
-                  } else {
-                    $betDisplay = $betRaw;
-                  }
-                }
-              ?>
-                            <td class="editable" data-label="Board Type"><?= htmlspecialchars($betDisplay) ?></td>
                             <td class="actions-btns" data-label="Actions">
-                                <button class="action-btn edit-btn" onclick="openEdit(this)" data-tooltip="Edit Record"
-                                    title="Edit Record">
-                                    <i class="fas fa-edit"></i>
-                                    <span style="font-size: 10px; margin-left: 2px;">Edit</span>
-                                </button>
                                 <button class="action-btn delete-btn" onclick="deleteRow(this)"
                                     data-tooltip="Delete Record" title="Delete Record">
                                     <i class="fas fa-trash"></i>
-                                    <span style="font-size: 10px; margin-left: 2px;">Del</span>
+                                    <span style="font-size: 10px; margin-left: 2px;">Delete</span>
                                 </button>
                             </td>
                         </tr>
                         <?php endwhile; ?>
                         <?php else: ?>
                         <tr class="no-records-row">
-                            <td colspan="8"
+                            <td colspan="5"
                                 style="text-align: center; padding: 60px 20px; color: #6b7280; font-size: 1.1rem;">
                                 <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
                                     <div
@@ -5025,7 +5047,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                                         <i class="fas fa-database" style="font-size: 2rem; color: #94a3b8;"></i>
                                     </div>
                                     <div>
-                                        <h3 style="color: #374151; margin: 0 0 10px 0;">No Board Passers Found</h3>
+                                        <h3 style="color: #374151; margin: 0 0 10px 0;">No Data Found</h3>
                                         <script>
                                         // Filter board exam date options based on selected Board Exam Type
                                         function filterExamDates(boardExamTypeSelectorId, examDateSelectorId) {
@@ -5227,11 +5249,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                             </td>
                         </tr>
                         <?php endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+    </div></div>
 
     <!-- Edit Student Modal (CTE - LET) -->
     <div id="editStudentModal" class="custom-modal" style="display: none;">
@@ -7987,15 +8005,13 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         }
 
         const cells = row.querySelectorAll('td');
-        const studentName = cells[0] ? cells[0].textContent.trim() : 'Unknown Student';
 
         // Extract row data for beautiful confirmation
         const rowData = {
             id: studentId,
-            name: studentName,
-            course: cells[1] ? cells[1].textContent.trim() : 'N/A',
-            year: cells[2] ? cells[2].textContent.trim() : 'N/A',
-            date: cells[3] ? cells[3].textContent.trim() : 'N/A',
+            boardExamType: cells[1] ? cells[1].textContent.trim() : 'N/A',
+            date: cells[2] ? cells[2].textContent.trim() : 'N/A',
+            examType: cells[3] ? cells[3].textContent.trim() : 'N/A',
             result: cells[4] ? (cells[4].querySelector('.status-badge') ? cells[4].querySelector('.status-badge')
                 .textContent.trim() : cells[4].textContent.trim()) : 'N/A'
         };
@@ -8007,7 +8023,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
     }
 
     function showDeleteConfirmationModal(rowData) {
-        console.log('🗑️ Showing beautiful delete confirmation modal for:', rowData.name);
+        console.log('🗑️ Showing beautiful delete confirmation modal for ID:', rowData.id);
 
         // Create beautiful delete confirmation modal
         const modal = document.createElement('div');
@@ -8035,7 +8051,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
           background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
           border-radius: 24px;
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-          border: 2px solid rgba(239, 68, 68, 0.1);
+          border: 2px solid rgba(70, 99, 172, 0.1);
           overflow: hidden;
           position: relative;
           max-width: 600px;
@@ -8048,7 +8064,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         ">
           <!-- Sticky Header -->
           <div style="
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            background: linear-gradient(135deg, #4663AC 0%, #2F4780 100%);
             padding: 32px 40px 28px;
             color: white;
             position: relative;
@@ -8105,29 +8121,29 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             max-height: 50vh;
             overflow-y: auto;
           ">
-            <div style="background: #fef2f2; padding: 24px; border-radius: 16px; border-left: 4px solid #ef4444; margin-bottom: 24px;">
-              <h4 style="color: #dc2626; margin: 0 0 16px 0; font-weight: 700; font-size: 1.1rem;">
-                <i class="fas fa-user-graduate" style="margin-right: 8px;"></i>
-                Student to be deleted:
+            <div style="background: #fef2f2; padding: 24px; border-radius: 16px; border-left: 4px solid #4663AC; margin-bottom: 24px;">
+              <h4 style="color: #2F4780; margin: 0 0 16px 0; font-weight: 700; font-size: 1.1rem;">
+                <i class="fas fa-graduation-cap" style="margin-right: 8px;"></i>
+                Record to be deleted:
               </h4>
               
-              <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #fecaca;">
+              <div style="background: white; padding: 20px; border-radius: 12px; border: 1px solid #C1D8F0;">
                 <div style="display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center;">
-                  <strong style="color: #374151;">Name:</strong>
-                  <span style="color: #111827; font-weight: 600;">${rowData.name}</span>
+                  <strong style="color: #374151;">ID:</strong>
+                  <span style="color: #111827; font-weight: 600;">${rowData.id}</span>
                   
-                  <strong style="color: #374151;">Course:</strong>
-                  <span style="color: #6b7280;">${rowData.course}</span>
+                  <strong style="color: #374151;">Board Exam Type:</strong>
+                  <span style="color: #6b7280;">${rowData.boardExamType}</span>
                   
-                  <strong style="color: #374151;">Year:</strong>
-                  <span style="color: #6b7280;">${rowData.year}</span>
-                  
-                  <strong style="color: #374151;">Board Exam:</strong>
+                  <strong style="color: #374151;">Exam Date:</strong>
                   <span style="color: #6b7280;">${rowData.date}</span>
+                  
+                  <strong style="color: #374151;">Exam Type:</strong>
+                  <span style="color: #6b7280;">${rowData.examType}</span>
                   
                   <strong style="color: #374151;">Result:</strong>
                   <span style="
-                    color: ${rowData.result === 'PASSED' ? '#059669' : '#dc2626'};
+                    color: ${rowData.result.toLowerCase().includes('passed') ? '#059669' : '#dc2626'};
                     font-weight: 600;
                     text-transform: uppercase;
                   ">${rowData.result}</span>
@@ -8141,21 +8157,21 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 <div>
                   <strong style="display: block; margin-bottom: 4px;">Warning:</strong>
                   <div style="line-height: 1.5;">
-                    This will permanently delete the student's record from the database. 
+                    This will permanently delete this exam record from the database. 
                     This action cannot be reversed and all associated data will be lost.
                   </div>
                 </div>
               </div>
             </div>
             
-            <div style="background: #fee2e2; border: 2px solid #ef4444; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
-              <div style="display: flex; align-items: flex-start; color: #dc2626;">
+            <div style="background: #E3ECF5; border: 2px solid #4663AC; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+              <div style="display: flex; align-items: flex-start; color: #2F4780;">
                 <i class="fas fa-shield-alt" style="margin-right: 12px; font-size: 1.2rem; margin-top: 2px;"></i>
                 <div>
                   <strong style="display: block; margin-bottom: 4px;">Security Notice:</strong>
                   <div style="line-height: 1.5;">
-                    You are about to permanently remove this student's academic record. 
-                    Make sure this is the correct student before proceeding. 
+                    You are about to permanently remove this exam record. 
+                    Make sure this is the correct record before proceeding. 
                     Consider backing up data if needed.
                   </div>
                 </div>
@@ -8963,22 +8979,18 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             const rows = table.querySelectorAll('tbody tr:not([style*="display: none"])');
 
             let data = [];
-            let headers = ['Name', 'Course', 'Year Graduated', 'Board Exam Date', 'Result', 'Take Attempts',
-                'Board Exam Type'
-            ];
+            let headers = ['ID', 'Board Exam Type', 'Board Exam Date', 'Exam Type', 'Result'];
 
             // Extract visible row data
             rows.forEach(row => {
                 const cells = row.querySelectorAll('td');
-                if (cells.length >= 7) {
+                if (cells.length >= 5) {
                     data.push([
                         cells[0].textContent.trim(),
                         cells[1].textContent.trim(),
                         cells[2].textContent.trim(),
                         cells[3].textContent.trim(),
-                        cells[4].textContent.trim(),
-                        cells[5].textContent.trim(),
-                        cells[6].textContent.trim()
+                        cells[4].textContent.trim()
                     ]);
                 }
             });
@@ -9379,9 +9391,9 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             modal.classList.add('show');
             console.log('Added show class to modal with beautiful animations');
 
-            // Check button visibility
-            const yesBtn = document.getElementById('logoutConfirmYes');
-            const noBtn = document.getElementById('logoutConfirmNo');
+            // Check button visibility with correct IDs
+            const yesBtn = document.getElementById('confirmLogoutBtn');
+            const noBtn = document.getElementById('cancelLogout');
             const modalButtons = modal.querySelector('.modal-buttons');
 
             console.log('Yes button found:', yesBtn);
@@ -9455,7 +9467,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         button.classList.add('loading');
 
         // Disable cancel button during logout
-        const cancelBtn = document.getElementById('logoutConfirmNo');
+        const cancelBtn = document.getElementById('cancelLogout');
         if (cancelBtn) {
             cancelBtn.style.opacity = '0.5';
             cancelBtn.style.pointerEvents = 'none';
@@ -9747,65 +9759,36 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         };
 
         const filters = {
-            nameSearch: document.getElementById('nameSearch').value.toLowerCase().trim(),
-            courses: getSelectedValues('courseFilter'),
-            years: getSelectedValues('yearFilter'),
-            examDateIds: getSelectedValues('examDateFilter'),
+            boardExamTypes: getSelectedValues('boardExamTypeFilter'),
+            examDates: getSelectedValues('examDateFilter'),
             results: getSelectedValues('resultFilter'),
-            examTypes: getSelectedValues('examTypeFilter'),
-            boardExamTypes: getSelectedValues('boardExamTypeFilter')
+            examTypes: getSelectedValues('examTypeFilter')
         };
-
-        // Get the actual date strings from the selected exam date IDs
-        let selectedExamDateStrings = [];
-        if (filters.examDateIds.length > 0) {
-            const boardExamDates = window.BOARD_EXAM_DATES || [];
-            filters.examDateIds.forEach(dateId => {
-                const selectedDate = boardExamDates.find(d => String(d.id) === String(dateId));
-                if (selectedDate) {
-                    selectedExamDateStrings.push(selectedDate.date);
-                }
-            });
-        }
 
         let visibleCount = 0;
 
         allRows.forEach(row => {
             let shouldShow = true;
 
-            // Get row data
+            // Get row data - Structure: ID, Board Exam Type, Board Exam Date, Exam Type, Result, Actions
             const cells = row.querySelectorAll('td');
             const rowData = {
-                name: cells[0].textContent.toLowerCase(),
-                course: cells[1].textContent.toLowerCase(),
-                year: cells[2].textContent,
-                examDate: cells[3].textContent.trim(),
-                result: cells[4].textContent.toLowerCase(),
-                examType: cells[5].textContent.toLowerCase(),
-                boardExamType: cells[6].textContent.toLowerCase()
+                boardExamType: cells[1].textContent.toLowerCase().trim(),
+                examDate: cells[2].textContent.trim(),
+                examType: cells[3].textContent.toLowerCase().trim(),
+                result: cells[4].textContent.toLowerCase().trim()
             };
 
-            // Apply name search filter
-            if (filters.nameSearch && !rowData.name.includes(filters.nameSearch)) {
-                shouldShow = false;
-            }
-
             // Apply multi-select filters (OR logic within each filter)
-            if (filters.courses.length > 0) {
-                const matches = filters.courses.some(course =>
-                    rowData.course.includes(course.toLowerCase())
+            if (filters.boardExamTypes.length > 0) {
+                const matches = filters.boardExamTypes.some(type =>
+                    rowData.boardExamType.includes(type.toLowerCase())
                 );
                 if (!matches) shouldShow = false;
             }
 
-            if (filters.years.length > 0) {
-                if (!filters.years.includes(rowData.year)) {
-                    shouldShow = false;
-                }
-            }
-
-            if (selectedExamDateStrings.length > 0) {
-                if (!selectedExamDateStrings.includes(rowData.examDate)) {
+            if (filters.examDates.length > 0) {
+                if (!filters.examDates.includes(rowData.examDate)) {
                     shouldShow = false;
                 }
             }
@@ -9824,18 +9807,6 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
                 if (!matches) shouldShow = false;
             }
 
-            if (filters.boardExamTypes.length > 0) {
-                const matches = filters.boardExamTypes.some(type => {
-                    // Match by ID or by name
-                    const typeStr = String(type);
-                    return rowData.boardExamType.includes(typeStr.toLowerCase()) ||
-                        (window.BOARD_EXAM_TYPE_MAP && window.BOARD_EXAM_TYPE_MAP[type] &&
-                            rowData.boardExamType.includes(window.BOARD_EXAM_TYPE_MAP[type]
-                                .toLowerCase()));
-                });
-                if (!matches) shouldShow = false;
-            }
-
             // Show/hide row
             if (shouldShow) {
                 row.style.display = '';
@@ -9848,20 +9819,12 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         // Update record count
         updateRecordCount(visibleCount);
 
-        // Show filter applied message with search info
-        const searchTerm = document.getElementById('nameSearch').value.trim();
+        // Show filter applied message
         let message = `Showing ${visibleCount} of ${allRows.length} records`;
-        if (searchTerm) {
-            message += ` for "${searchTerm}"`;
-        }
         showFilterMessage(message);
     }
 
     function clearFilters() {
-        // Reset search input
-        document.getElementById('nameSearch').value = '';
-        document.getElementById('clearSearch').classList.remove('show');
-
         // Reset all multi-select filter inputs
         const clearMultiSelect = (id) => {
             const select = document.getElementById(id);
@@ -9870,16 +9833,10 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             }
         };
 
-        clearMultiSelect('courseFilter');
-        clearMultiSelect('yearFilter');
+        clearMultiSelect('boardExamTypeFilter');
+        clearMultiSelect('examDateFilter');
         clearMultiSelect('resultFilter');
         clearMultiSelect('examTypeFilter');
-        clearMultiSelect('boardExamTypeFilter');
-
-        // Reset exam date filter and disable it
-        const examDateFilter = document.getElementById('examDateFilter');
-        examDateFilter.innerHTML = '<option value="" disabled>-- Select board exam type first --</option>';
-        examDateFilter.disabled = true;
 
         // Show all rows
         allRows.forEach(row => {
@@ -9890,7 +9847,7 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
         updateRecordCount(allRows.length);
 
         // Show cleared message
-        showFilterMessage('All filters and search cleared');
+        showFilterMessage('All filters cleared');
     }
 
     function updateRecordCount(count) {
@@ -11988,7 +11945,62 @@ if ($board_exam_dates_result && $board_exam_dates_result->num_rows > 0) {
             }
         });
     })();
+
+    // Setup logout modal event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        const confirmBtn = document.getElementById('confirmLogoutBtn');
+        const cancelBtn = document.getElementById('cancelLogout');
+        const modal = document.getElementById('logoutModal');
+
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', function() {
+                window.location.href = 'logout.php';
+            });
+        }
+
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', function() {
+                if (modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                }
+            });
+        }
+
+        // Close modal when clicking outside
+        if (modal) {
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                    modal.classList.remove('show');
+                }
+            });
+        }
+    });
     </script>
+
+    <!-- Logout Modal - Bulletproof Version -->
+    <div id="logoutModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.85); backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px); z-index:999999; justify-content:center; align-items:center;">
+        <div style="background:linear-gradient(145deg,#1e293b,#0f172a); border-radius:20px; padding:40px; max-width:420px; width:90%; box-shadow:0 25px 60px rgba(0,0,0,0.5); text-align:center; border:1px solid rgba(255,255,255,0.1);">
+            <div style="width:80px; height:80px; background:linear-gradient(135deg,#8B4513,#654321); border-radius:50%; margin:0 auto 20px; display:flex; align-items:center; justify-content:center;">
+                <i class="fas fa-sign-out-alt" style="font-size:32px; color:#fff;"></i>
+            </div>
+            <h2 style="color:#fff; font-size:24px; margin-bottom:10px; font-weight:600;">Confirm Logout</h2>
+            <p style="color:#94a3b8; font-size:14px; margin-bottom:15px;">Are you sure you want to leave?</p>
+            <p style="color:#64748b; font-size:13px; margin-bottom:30px; line-height:1.6;">
+                You are about to log out from the CTE Admin Dashboard. Any unsaved changes will be lost.
+            </p>
+            <div style="display:flex; gap:15px; justify-content:center;">
+                <button onclick="document.getElementById('logoutModal').style.display='none';" style="padding:12px 30px; border:none; border-radius:10px; font-size:15px; font-weight:500; cursor:pointer; background:linear-gradient(135deg,#64748b,#475569); color:#fff; display:flex; align-items:center; gap:8px; transition:transform 0.2s;">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+                <button onclick="window.location.href='logout.php';" style="padding:12px 30px; border:none; border-radius:10px; font-size:15px; font-weight:500; cursor:pointer; background:linear-gradient(135deg,#8B4513,#654321); color:#fff; display:flex; align-items:center; gap:8px; transition:transform 0.2s;">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>
